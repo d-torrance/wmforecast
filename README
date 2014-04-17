@@ -1,0 +1,47 @@
+                      _|                                |   
+\ \  \   / __ `__ \  |    _ \   __| _ \  __|  _` |  __| __| 
+ \ \  \ /  |   |   | __| (   | |    __/ (    (   |\__ \ |   
+  \_/\_/  _|  _|  _|_|  \___/ _|  \___|\___|\__,_|____/\__| 
+                                                            
+===========================================================
+
+wmforecast is a weather dockapp for Window Maker using the Yahoo Weather API 
+(https://developer.yahoo.com/weather/)
+
+Installation
+============
+./configure
+make
+sudo make install
+(see INSTALL for more details)
+
+Usage
+=====
+wmforecast [<options>]
+    -v, --version       print the version number
+    -h, --help          print this help screen
+    -u, --units <c|f>   whether to use Celsius or Fahrenheit (default is f)
+    -w, --woeid <woeid> Where on Earth ID (default is 2502265 for Sunnyvale,
+                        CA -- to find your WOEID, search for your city at
+                        http://weather.yahoo.com and look in the URL.)
+    -z, --zip <zip>     ZIP code or Location ID (Yahoo has deprecated this
+                        option and it is not guaranteed to work)
+(note that one of -w or -z may be used, not both)
+
+Copyright
+=========
+wmforecast:
+	2014 Doug Torrance <dtorrance@monmouthcollege.edu>
+	GNU General Public License v3+
+
+icons:
+	2010 MerlinTheRed <http://merlinthered.deviantart.com/>
+	Creative Commons Attribution-NonCommercial-ShareAlike License
+
+
+
+
+
+
+
+

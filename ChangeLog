@@ -1,0 +1,10 @@
+2015-04-15  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* wmforecast.c: fixed bug where window was still drawn with --help or
+  	  --version by moving the call to setPreferences earlier;
+	  for the benefit of help2man, copyright and author information added
+	  to --version, description and bug report information added to --help
+	* configure.ac, Makefile.am: call help2man during make to automatically
+	  build manpage
+	* configure.ac: set version 0.2
+
