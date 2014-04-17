@@ -52,7 +52,7 @@ typedef struct {
 	char *text;
 	char *title;
 	ForecastArray *forecasts;
-	WMPixmap *icon;
+	RImage *icon;
 } Weather;
 
 typedef struct {
@@ -104,24 +104,44 @@ Weather *newWeather()
 	return weather;
 }
 
+void freeForecast(Forecast *forecast)
+{
+	if (forecast->day)
+		free(forecast->day);
+	if (forecast->low)
+		free(forecast->low);
+	if (forecast->high)
+		free(forecast->high);
+	if (forecast->text)
+		free(forecast->text);
 
+}
+
+void freeForecastArray(ForecastArray *array)
+{
+	int i;
+	for (i = 0; i < array->length; i++)
+		if (&array->forecasts[i])
+			freeForecast(&array->forecasts[i]);
+	if (array)
+		free(array);
+}
 
 void freeWeather(Weather *weather)
 {
-	if (weather->temp) 
+	if (weather->temp)
 		free(weather->temp);
 	if (weather->text)
 		free(weather->text);
 	if (weather->title)
 		free(weather->title);
-	if (weather->icon) 
-		free(weather->icon);
 	if (weather->forecasts) {
 		if (weather->forecasts->forecasts)
 			free(weather->forecasts->forecasts);
 		free(weather->forecasts);
 	}
-	free(weather);
+	if (weather)
+		free(weather);
 }
 
 void setTitle(Weather *weather, const char *title)
@@ -138,7 +158,6 @@ void setConditions(Weather *weather,
 	)
 {
 	RContext *context;
-	RImage *image;
 	char *filename;
 
 	weather->temp = realloc(weather->temp, strlen(temp) + 1);
@@ -148,9 +167,7 @@ void setConditions(Weather *weather,
 
 	context = WMScreenRContext(screen);
 	filename = wstrconcat(wstrconcat(DATADIR"/",code),".png");
-	image = RLoadImage(context,filename,0);
-	weather->icon = WMCreatePixmapFromRImage(screen,image,0);
-
+	weather->icon = RLoadImage(context,filename,0);
 }
 
 void setForecast(Forecast *forecast,
@@ -418,11 +435,17 @@ Weather *getWeather(WMScreen *screen, Preferences *prefs)
 void updateDockapp(WMScreen *screen, Dockapp *dockapp, Preferences *prefs)
 {
 	Weather *weather;
+	WMPixmap *icon;
 
 	weather = getWeather(screen, prefs);
+     
 	WMSetLabelText(dockapp->text,wstrconcat(weather->temp,"°"));
-	WMSetLabelImage(dockapp->icon,weather->icon);
+	
+	icon = WMCreatePixmapFromRImage(screen,weather->icon,0);
+	WMSetLabelImage(dockapp->icon,icon);
+	
 	WMSetBalloonTextForView(getBalloonText(weather), WMWidgetView(dockapp->icon)); 
+	
 	WMRedisplayWidget(dockapp->icon);
 	WMRedisplayWidget(dockapp->text);
 
@@ -494,7 +517,8 @@ Preferences *setPreferences(int argc, char **argv)
 			       "    -z, --zip <zip>     ZIP code or Location ID (Yahoo has deprecated this\n"
 			       "                        option and it is not guaranteed to work)\n"
 			       "(note that only one of -w or -z may be used, not both)\n\n"
-			       "Report bugs to <dtorrance@monmouthcollege.edu>.\n"
+			       "Report bugs to <%s>.\n",
+			       PACKAGE_BUGREPORT
 				);
 			
 			exit(0);
@@ -546,9 +570,9 @@ ThreadData *newThreadData(WMScreen *screen, Dockapp *dockapp, Preferences *prefs
 	return data;
 }
 	
-void *timerLoop(void *args)
+void *timerLoop(void *dataVoid)
 {
-	ThreadData *data = args;
+	ThreadData *data = dataVoid;
 	for (;;) {
 		updateDockapp(data->screen, data->dockapp, data->prefs);
 		sleep(60*60);
@@ -559,7 +583,6 @@ int main(int argc, char **argv)
 {
 	Display *display;
 	Dockapp *dockapp;
-	int interval = 5;
 	Preferences *prefs;
 	pthread_t thread;
 	ThreadData *data;
@@ -575,7 +598,7 @@ int main(int argc, char **argv)
 	screen = WMCreateScreen(display, DefaultScreen(display));
 	dockapp = newDockapp(screen, argc, argv);
 	data = newThreadData(screen, dockapp, prefs);
-
+	
 	pthread_create(&thread, NULL, timerLoop, data);
 	WMScreenMainLoop(screen);
 }

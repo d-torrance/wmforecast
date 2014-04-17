@@ -1,3 +1,13 @@
+2015-04-16  Doug Torrance <dtorrance@monmouthcollege.edu>
+	* wmforecast.c: bugfix -- After downloading the weather, the Weather
+	  struct was being freed, but it contained the pointer to the icon
+	  currently used by the dockapp, causing a crash.  This has been fixed.
+	  In addition, functions have been added to properly free the
+	  Forecast and ForecastArray structs inside each Weather struct.
+	* wmforecast.c, configure.ac: PACKAGE_BUGREPORT now set to my email
+	  address, printed by --help (for the benefit fo help2man)
+	* README: expanded description
+
 2015-04-15  Doug Torrance <dtorrance@monmouthcollege.edu>
 
 	* wmforecast.c: fixed bug where window was still drawn with --help or
@@ -7,4 +17,3 @@
 	* configure.ac, Makefile.am: call help2man during make to automatically
 	  build manpage
 	* configure.ac: set version 0.2
-
