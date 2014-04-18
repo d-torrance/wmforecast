@@ -13,7 +13,6 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 ************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -53,6 +52,8 @@ typedef struct {
 	char *title;
 	ForecastArray *forecasts;
 	RImage *icon;
+	int errorFlag;
+	char *errorText;
 } Weather;
 
 typedef struct {
@@ -101,6 +102,8 @@ Weather *newWeather()
 	weather->title = NULL;
 	weather->icon = NULL;
 	weather->forecasts = newForecastArray();
+	weather->errorFlag = 0;
+	weather->errorText = NULL;
 	return weather;
 }
 
@@ -135,13 +138,11 @@ void freeWeather(Weather *weather)
 		free(weather->text);
 	if (weather->title)
 		free(weather->title);
-	if (weather->forecasts) {
-		if (weather->forecasts->forecasts)
-			free(weather->forecasts->forecasts);
-		free(weather->forecasts);
-	}
-	if (weather)
-		free(weather);
+	if (weather->forecasts)
+		freeForecastArray(weather->forecasts);
+	if (weather->errorText)
+		free(weather->errorText);
+	free(weather);
 }
 
 void setTitle(Weather *weather, const char *title)
@@ -280,6 +281,19 @@ char *getBalloonText(Weather *weather)
 	return text;
 }
 
+void setError(Weather *weather, WMScreen *screen, const char *errorText)
+{
+	weather->errorFlag = 1;
+	weather->errorText = realloc(weather->errorText, strlen(errorText) + 1);
+	strcpy(weather->errorText, errorText);
+
+	
+	
+
+}
+	
+
+
 
 /**************************************************
 from http://curl.haxx.se/libcurl/c/getinmemory.html
@@ -310,34 +324,12 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 	return realsize;
 }
 
-struct MemoryStruct downloadWeather(char *url)
-{
-	CURL *curl_handle;
-  	CURLcode res;
- 	struct MemoryStruct chunk;
-	chunk.memory = malloc(1);
-	chunk.size = 0;
- 
-	curl_global_init(CURL_GLOBAL_ALL);
-	curl_handle = curl_easy_init();
-	curl_easy_setopt(curl_handle, CURLOPT_URL, url);
-	curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
-	curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&chunk);
-	curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
-	res = curl_easy_perform(curl_handle);
-	if(res != CURLE_OK) {
-		fprintf(stderr, "curl_easy_perform() failed: %s\n",
-			curl_easy_strerror(res));
-	}
-	curl_easy_cleanup(curl_handle);
-	curl_global_cleanup();
-	return chunk;
-}
-
 Weather *getWeather(WMScreen *screen, Preferences *prefs)
 {
 	char *url;
-	struct MemoryStruct chunk;
+	CURL *curl_handle;
+  	CURLcode res;
+ 	struct MemoryStruct chunk;
 	Weather *weather;
 	xmlDocPtr doc;
 	xmlNodePtr cur;
@@ -352,24 +344,43 @@ Weather *getWeather(WMScreen *screen, Preferences *prefs)
 		url = wstrappend(url, prefs->zip);
 	}
 		
-
-
 	weather = newWeather();
-	chunk = downloadWeather(url);
+	chunk.memory = malloc(1);
+	chunk.size = 0;
+ 
+	curl_global_init(CURL_GLOBAL_ALL);
+	curl_handle = curl_easy_init();
+	curl_easy_setopt(curl_handle, CURLOPT_URL, url);
+	curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+	curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&chunk);
+	curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+	res = curl_easy_perform(curl_handle);
+	if(res != CURLE_OK) {
+		setError(weather, screen, curl_easy_strerror(res));
+		curl_easy_cleanup(curl_handle);
+		curl_global_cleanup();
+		if(chunk.memory)
+			free(chunk.memory);
+		return weather;
+	}
+	curl_easy_cleanup(curl_handle);
+	curl_global_cleanup();
 
 	doc = xmlParseMemory(chunk.memory, chunk.size);
 	if (doc == NULL) {
-		fprintf(stderr,"Document not parsed successfully. \n");
+		setError(weather, screen, "Document not parsed successfully");
+		xmlFreeDoc(doc);
 		return;
 	}
 	cur = xmlDocGetRootElement(doc);
 	if (cur == NULL) {
-		fprintf(stderr,"empty document\n");
+		setError(weather, screen,"Empty document");
 		xmlFreeDoc(doc);
 		return;
 	}
 	
 	if (xmlStrcmp(cur->name, (const xmlChar *) "rss")) {
+		setError(weather, screen,"Empty document");
 		fprintf(stderr,"document of the wrong type, root node != rss");
 		xmlFreeDoc(doc);
 		return;
@@ -438,14 +449,30 @@ void updateDockapp(WMScreen *screen, Dockapp *dockapp, Preferences *prefs)
 	WMPixmap *icon;
 
 	weather = getWeather(screen, prefs);
-     
-	WMSetLabelText(dockapp->text,wstrconcat(weather->temp,"°"));
+
+	if (weather->errorFlag == 1) {
+		RContext *context;
+
+		WMSetLabelText(dockapp->text,"ERROR");
+
+		context = WMScreenRContext(screen);
+		weather->icon = RLoadImage(context,DATADIR"/na.png",0);
+
+		icon = WMCreatePixmapFromRImage(screen,weather->icon,0);
+		WMSetLabelImage(dockapp->icon,icon);
+
+		WMSetBalloonTextForView(weather->errorText, WMWidgetView(dockapp->icon)); 
+
+	}
+	else {
+		WMSetLabelText(dockapp->text,wstrconcat(weather->temp,"°"));
 	
-	icon = WMCreatePixmapFromRImage(screen,weather->icon,0);
-	WMSetLabelImage(dockapp->icon,icon);
+		icon = WMCreatePixmapFromRImage(screen,weather->icon,0);
+		WMSetLabelImage(dockapp->icon,icon);
 	
-	WMSetBalloonTextForView(getBalloonText(weather), WMWidgetView(dockapp->icon)); 
-	
+		WMSetBalloonTextForView(getBalloonText(weather), WMWidgetView(dockapp->icon)); 
+	}
+
 	WMRedisplayWidget(dockapp->icon);
 	WMRedisplayWidget(dockapp->text);
 
@@ -517,7 +544,7 @@ Preferences *setPreferences(int argc, char **argv)
 			       "    -z, --zip <zip>     ZIP code or Location ID (Yahoo has deprecated this\n"
 			       "                        option and it is not guaranteed to work)\n"
 			       "(note that only one of -w or -z may be used, not both)\n\n"
-			       "Report bugs to <%s>.\n",
+			       "Report bugs to %s\n",
 			       PACKAGE_BUGREPORT
 				);
 			
@@ -570,9 +597,9 @@ ThreadData *newThreadData(WMScreen *screen, Dockapp *dockapp, Preferences *prefs
 	return data;
 }
 	
-void *timerLoop(void *dataVoid)
+void *timerLoop(void *args)
 {
-	ThreadData *data = dataVoid;
+	ThreadData *data = args;
 	for (;;) {
 		updateDockapp(data->screen, data->dockapp, data->prefs);
 		sleep(60*60);
@@ -583,6 +610,7 @@ int main(int argc, char **argv)
 {
 	Display *display;
 	Dockapp *dockapp;
+	int interval = 5;
 	Preferences *prefs;
 	pthread_t thread;
 	ThreadData *data;
@@ -598,7 +626,7 @@ int main(int argc, char **argv)
 	screen = WMCreateScreen(display, DefaultScreen(display));
 	dockapp = newDockapp(screen, argc, argv);
 	data = newThreadData(screen, dockapp, prefs);
-	
+
 	pthread_create(&thread, NULL, timerLoop, data);
 	WMScreenMainLoop(screen);
 }

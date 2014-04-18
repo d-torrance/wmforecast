@@ -1,11 +1,18 @@
+2015-04-17  Doug Torrance <dtorrance@monmouthcollege.edu>
+	* wmforecast.c: improved error handling -- Weather struct now contains
+	  errorFlag and errorText.  If errorFlag set to 1, "ERROR" is displayed
+	  in dockapp along along with an icon with a question mark, and
+	  errorText is displayed in a balloon tooltip, instead of drawing the
+	  dockapp as usual.  Previous calls to libcurl and libxml that used
+	  stderr for errors now use this.  This avoids, e.g., a segfault when
+	  the internet is down.
+
 2015-04-16  Doug Torrance <dtorrance@monmouthcollege.edu>
 	* wmforecast.c: bugfix -- After downloading the weather, the Weather
 	  struct was being freed, but it contained the pointer to the icon
 	  currently used by the dockapp, causing a crash.  This has been fixed.
 	  In addition, functions have been added to properly free the
 	  Forecast and ForecastArray structs inside each Weather struct.
-	* wmforecast.c, configure.ac: PACKAGE_BUGREPORT now set to my email
-	  address, printed by --help (for the benefit fo help2man)
 	* README: expanded description
 
 2015-04-15  Doug Torrance <dtorrance@monmouthcollege.edu>
@@ -15,5 +22,5 @@
 	  for the benefit of help2man, copyright and author information added
 	  to --version, description and bug report information added to --help
 	* configure.ac, Makefile.am: call help2man during make to automatically
-	  build manpage
+	  build manpagec
 	* configure.ac: set version 0.2
