@@ -61,6 +61,7 @@ typedef struct {
 	char *woeid;
 	char *zip;
 	char *woeid_or_zip;
+	long int interval;
 } Preferences;
 
 typedef struct {
@@ -489,21 +490,23 @@ Preferences *setPreferences(int argc, char **argv)
 	prefs->woeid = "2502265";
 	prefs->zip = NULL;
 	prefs->woeid_or_zip = NULL;
+	prefs->interval = 60;
 
 	while (1)
 	{
 		static struct option long_options[] =
 			{
-				{"version",     no_argument,       0, 'v'},
-				{"help",  no_argument,       0, 'h'},
-				{"woeid",  required_argument, 0, 'w'},
-				{"units",  required_argument, 0, 'u'},
-				{"zip",    required_argument, 0, 'z'},
+				{"version", no_argument, 0, 'v'},
+				{"help", no_argument, 0, 'h'},
+				{"woeid", required_argument, 0, 'w'},
+				{"units", required_argument, 0, 'u'},
+				{"zip", required_argument, 0, 'z'},
+				{"interval", required_argument, 0, 'i'},
 				{0, 0, 0, 0}
 			};
 		int option_index = 0;
      
-		c = getopt_long (argc, argv, "vhw:u:z:",
+		c = getopt_long (argc, argv, "vhw:u:z:i:",
 				 long_options, &option_index);
      
 		if (c == -1)
@@ -571,7 +574,11 @@ Preferences *setPreferences(int argc, char **argv)
 			prefs->woeid_or_zip = "z";
 			prefs->zip = optarg;
 			break;
-     
+
+		case 'i':
+			prefs->interval = strtol(optarg,NULL,10);
+			break;
+
 		case '?':
 			/* getopt_long already printed an error message. */
 			break;
@@ -602,7 +609,7 @@ void *timerLoop(void *args)
 	ThreadData *data = args;
 	for (;;) {
 		updateDockapp(data->screen, data->dockapp, data->prefs);
-		sleep(60*60);
+		sleep(60*data->prefs->interval);
 	}
 }
 
@@ -610,7 +617,6 @@ int main(int argc, char **argv)
 {
 	Display *display;
 	Dockapp *dockapp;
-	int interval = 5;
 	Preferences *prefs;
 	pthread_t thread;
 	ThreadData *data;
