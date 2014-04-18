@@ -1,0 +1,16 @@
+Source: wmforecast
+Section: utils
+Priority: extra
+Maintainer: Doug Torrance <dtorrance@monmouthcollege.edu>
+Build-Depends: debhelper (>= 9), libxml2-dev, libcurl4-gnutls-dev, libwings-dev, 
+Standards-Version: 3.9.5
+Homepage: http://wmforecast.sourceforge.net
+
+Package: wmforecast
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: weather dockapp for Window Maker using the Yahoo Weather API
+ wmforecast is a weather dockapp for Window Maker. It displays the current
+ temperature and an icon representing the current conditions.  A balloon
+ tooltip displays forecast information.  The weather information comes from
+ the Yahoo Weather API.
