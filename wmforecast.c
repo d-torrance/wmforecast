@@ -243,7 +243,6 @@ Dockapp *newDockapp(WMScreen *screen, int argc, char **argv)
 	dockapp->icon = WMCreateLabel(frame);
 	WMSetWidgetBackgroundColor(dockapp->icon,color("black"));
 	WMRealizeWidget(dockapp->icon);
-
 	WMSetLabelImagePosition(dockapp->icon,WIPImageOnly);
 	WMResizeWidget(dockapp->icon,32,32);
 	WMMoveWidget(dockapp->icon,12,5);
@@ -449,9 +448,12 @@ void updateDockapp(WMScreen *screen, Dockapp *dockapp, Preferences *prefs)
 	Weather *weather;
 	WMPixmap *icon;
 
+	WMSetLabelText(dockapp->text,"loading");
+	WMRedisplayWidget(dockapp->text);
+
 	weather = getWeather(screen, prefs);
 
-	if (weather->errorFlag == 1) {
+	if (weather->errorFlag) {
 		RContext *context;
 
 		WMSetLabelText(dockapp->text,"ERROR");
@@ -613,6 +615,13 @@ void *timerLoop(void *args)
 	}
 }
 
+static void refresh(XEvent *event, void *args)
+{
+	ThreadData *data = args;
+	if (WMIsDoubleClick(event) && event->xbutton.button == Button1) 
+		updateDockapp(data->screen, data->dockapp, data->prefs);
+}
+
 int main(int argc, char **argv)
 {
 	Display *display;
@@ -634,10 +643,9 @@ int main(int argc, char **argv)
 	data = newThreadData(screen, dockapp, prefs);
 
 	pthread_create(&thread, NULL, timerLoop, data);
+
+	WMCreateEventHandler(WMWidgetView(dockapp->icon), ButtonPressMask,
+			     refresh, data);
+
 	WMScreenMainLoop(screen);
 }
-
-
-
-
-

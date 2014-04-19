@@ -1,3 +1,9 @@
+2015-04-18  Doug Torrance <dtorrance@monmouthcollege.edu>
+	* wmforecast.c (updateDockapp): added "loading" text while downloading
+	  new weather data
+	* wmforecast.c (refresh, main): new function, refreshes weather data
+	  when icon double clicked
+
 2015-04-17  Doug Torrance <dtorrance@monmouthcollege.edu>
 	* wmforecast.c: improved error handling -- Weather struct now contains
 	  errorFlag and errorText.  If errorFlag set to 1, "ERROR" is displayed
