@@ -14,11 +14,14 @@ print the version number
 .TP
 \fB\-h\fR, \fB\-\-help\fR
 print this help screen
+.HP
+\fB\-i\fR, \fB\-\-interval\fR <min> number of minutes between refreshes (default 60)
 .TP
 \fB\-u\fR, \fB\-\-units\fR <c|f>
-whether to use Celsius or Fahrenheit (default is f)
+whether to use Celsius or Fahrenheit (default f)
 .TP
-\fB\-w\fR, \fB\-\-woeid\fR <woeid> Where on Earth ID (default is 2502265 for
+\fB\-w\fR, \fB\-\-woeid\fR <woeid>
+Where on Earth ID (default is 2502265 for
 Sunnyvale, CA \fB\-\-\fR to find your WOEID, search
 for your city at http://weather.yahoo.com and
 look in the URL.)
@@ -27,7 +30,10 @@ look in the URL.)
 ZIP code or Location ID (Yahoo has deprecated this
 option and it is not guaranteed to work)
 .PP
-(note that only one of \fB\-w\fR or \fB\-z\fR may be used, not both)
+Notes:
+* only one of \fB\-w\fR or \fB\-z\fR may be used, not both
+.PP
+* double click the icon at any time to refresh data
 .SH AUTHOR
 Written by Doug Torrance
 .SH "REPORTING BUGS"

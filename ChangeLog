@@ -1,6 +1,6 @@
 2015-04-19  Doug Torrance <dtorrance@monmouthcollege.edu>
 	* switched timer handler from pthread to WING's native WMAddPersistent-
-	  TimerHandler, resulting in numerous changes:
+	  TimerHandler and added --interval option, resulting in numerous changes:
 	* configure.ac: removed check for pthread
 	* wmforecast.c (UpdateData): struct formerly known as ThreadData, added
 	  long int minutesLeft (keeps track of the number of minutes until the
@@ -11,6 +11,7 @@
 	* wmforecast.c (timerHandler): counts down number of minutes until next
 	  refresh (needed because WMAddPersistentTimerHandler fails when
 	  milliseconds argument too large, e.g., one hour)
+	* wmforecast.c (setPreferences): documented --interval option
 	* wmforecast.c: changed all calls to malloc and realloc to use WINGs's
 	  native wmalloc and wrealloc
 	* wmforecast.c (refresh): new function, refreshes weather data when icon
