@@ -1,4 +1,10 @@
 2015-04-18  Doug Torrance <dtorrance@monmouthcollege.edu>
+	* wmforecast.c: switched timer handler from pthread to WINGs's native
+	  WMAddPersistentTimerHandler; as a result, ThreadData struct renamed
+	  UpdateData; updateDockapp now takes UpdateData as an argument
+	* configure.ac: removed check for pthread
+	* wmforecast.c: changed all calls to malloc and realloc to use WINGs's
+	  native wmalloc and wrealloc
 	* wmforecast.c (updateDockapp): added "loading" text while downloading
 	  new weather data
 	* wmforecast.c (refresh, main): new function, refreshes weather data

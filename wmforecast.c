@@ -25,7 +25,6 @@
 #include <curl/curl.h>
 #include <libxml/tree.h>
 #include <getopt.h>
-#include <pthread.h>
 
 #define color(c) WMCreateNamedColor(screen,c,True)
 
@@ -68,11 +67,11 @@ typedef struct {
 	WMScreen *screen;
 	Dockapp *dockapp;
 	Preferences *prefs;
-} ThreadData;
+} UpdateData;
 
 Forecast *newForecast()
 {
-	Forecast *forecast = malloc(sizeof(Forecast));
+	Forecast *forecast = wmalloc(sizeof(Forecast));
 	forecast->day = NULL;
 	forecast->low = NULL;
 	forecast->high = NULL;
@@ -82,7 +81,7 @@ Forecast *newForecast()
 
 ForecastArray *newForecastArray()
 {
-	ForecastArray *array = malloc(sizeof(ForecastArray));
+	ForecastArray *array = wmalloc(sizeof(ForecastArray));
 	array->length = 0;
 	array->forecasts = NULL;
 	return array;
@@ -91,13 +90,13 @@ ForecastArray *newForecastArray()
 void appendForecast(ForecastArray *array, Forecast *forecast)
 {
 	array->length++;
-	array->forecasts = (Forecast *)realloc(array->forecasts, sizeof(Forecast)*(array->length));
+	array->forecasts = (Forecast *)wrealloc(array->forecasts, sizeof(Forecast)*(array->length));
 	array->forecasts[(array->length)-1] = *forecast;
 }
 
 Weather *newWeather()
 {
-	Weather *weather = malloc(sizeof(Weather));
+	Weather *weather = wmalloc(sizeof(Weather));
 	weather->temp = NULL;
 	weather->text = NULL;
 	weather->title = NULL;
@@ -148,7 +147,7 @@ void freeWeather(Weather *weather)
 
 void setTitle(Weather *weather, const char *title)
 {
-	weather->title = realloc(weather->title, strlen(title) + 1);
+	weather->title = wrealloc(weather->title, strlen(title) + 1);
 	strcpy(weather->title, title);
 }
 
@@ -162,9 +161,9 @@ void setConditions(Weather *weather,
 	RContext *context;
 	char *filename;
 
-	weather->temp = realloc(weather->temp, strlen(temp) + 1);
+	weather->temp = wrealloc(weather->temp, strlen(temp) + 1);
 	strcpy(weather->temp, temp);
-	weather->text = realloc(weather->text, strlen(text) + 1);
+	weather->text = wrealloc(weather->text, strlen(text) + 1);
 	strcpy(weather->text, text);
 
 	context = WMScreenRContext(screen);
@@ -179,13 +178,13 @@ void setForecast(Forecast *forecast,
 		 const char *text
 	)
 {
-	forecast->day = realloc(forecast->day, strlen(day) + 1);
+	forecast->day = wrealloc(forecast->day, strlen(day) + 1);
 	strcpy(forecast->day, day);
-	forecast->low = realloc(forecast->low, strlen(low) + 1);
+	forecast->low = wrealloc(forecast->low, strlen(low) + 1);
 	strcpy(forecast->low, low);
-	forecast->high = realloc(forecast->high, strlen(high) + 1);
+	forecast->high = wrealloc(forecast->high, strlen(high) + 1);
 	strcpy(forecast->high, high);
-	forecast->text = realloc(forecast->text, strlen(text) + 1);
+	forecast->text = wrealloc(forecast->text, strlen(text) + 1);
 	strcpy(forecast->text, text);
 }
 
@@ -219,7 +218,7 @@ WMWindow *WMCreateDockapp(WMScreen *screen, const char *name, int argc, char **a
 
 Dockapp *newDockapp(WMScreen *screen, int argc, char **argv)
 {
-	Dockapp *dockapp = malloc(sizeof(Dockapp));
+	Dockapp *dockapp = wmalloc(sizeof(Dockapp));
 	WMFrame *frame;
 	WMWindow *window;
 
@@ -284,7 +283,7 @@ char *getBalloonText(Weather *weather)
 void setError(Weather *weather, WMScreen *screen, const char *errorText)
 {
 	weather->errorFlag = 1;
-	weather->errorText = realloc(weather->errorText, strlen(errorText) + 1);
+	weather->errorText = wrealloc(weather->errorText, strlen(errorText) + 1);
 	strcpy(weather->errorText, errorText);
 
 	
@@ -310,10 +309,10 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 	size_t realsize = size * nmemb;
 	struct MemoryStruct *mem = (struct MemoryStruct *)userp;
  
-	mem->memory = realloc(mem->memory, mem->size + realsize + 1);
+	mem->memory = wrealloc(mem->memory, mem->size + realsize + 1);
 	if(mem->memory == NULL) {
 		/* out of memory! */ 
-		printf("not enough memory (realloc returned NULL)\n");
+		printf("not enough memory (wrealloc returned NULL)\n");
 		return 0;
 	}
  
@@ -345,7 +344,7 @@ Weather *getWeather(WMScreen *screen, Preferences *prefs)
 	}
 		
 	weather = newWeather();
-	chunk.memory = malloc(1);
+	chunk.memory = wmalloc(1);
 	chunk.size = 0;
  
 	curl_global_init(CURL_GLOBAL_ALL);
@@ -443,8 +442,13 @@ Weather *getWeather(WMScreen *screen, Preferences *prefs)
 	return weather;
 }
 
-void updateDockapp(WMScreen *screen, Dockapp *dockapp, Preferences *prefs)
+static void updateDockapp(void *data)
 {
+	UpdateData *d = (UpdateData *)data;
+
+	WMScreen *screen = d->screen;
+	Dockapp *dockapp = d->dockapp;
+	Preferences *prefs = d->prefs;
 	Weather *weather;
 	WMPixmap *icon;
 
@@ -485,7 +489,7 @@ void updateDockapp(WMScreen *screen, Dockapp *dockapp, Preferences *prefs)
 Preferences *setPreferences(int argc, char **argv)
 {
 	int c;
-	Preferences *prefs = malloc(sizeof(Preferences));
+	Preferences *prefs = wmalloc(sizeof(Preferences));
 	
 	//set defaults
 	prefs->units = "f";
@@ -597,29 +601,19 @@ Preferences *setPreferences(int argc, char **argv)
 	return prefs;
 }
 
-ThreadData *newThreadData(WMScreen *screen, Dockapp *dockapp, Preferences *prefs)
+UpdateData *newUpdateData(WMScreen *screen, Dockapp *dockapp, Preferences *prefs)
 {
-	ThreadData *data = malloc(sizeof(ThreadData));
+	UpdateData *data = wmalloc(sizeof(UpdateData));
 	data->screen = screen;
 	data->dockapp = dockapp;
 	data->prefs = prefs;
 	return data;
 }
 	
-void *timerLoop(void *args)
+static void refresh(XEvent *event, void *data)
 {
-	ThreadData *data = args;
-	for (;;) {
-		updateDockapp(data->screen, data->dockapp, data->prefs);
-		sleep(60*data->prefs->interval);
-	}
-}
-
-static void refresh(XEvent *event, void *args)
-{
-	ThreadData *data = args;
 	if (WMIsDoubleClick(event) && event->xbutton.button == Button1) 
-		updateDockapp(data->screen, data->dockapp, data->prefs);
+		updateDockapp(data);
 }
 
 int main(int argc, char **argv)
@@ -627,25 +621,24 @@ int main(int argc, char **argv)
 	Display *display;
 	Dockapp *dockapp;
 	Preferences *prefs;
-	pthread_t thread;
-	ThreadData *data;
+	UpdateData *data;
 	WMScreen *screen;
 
 	prefs = setPreferences(argc, argv);
-
-	XInitThreads();
 
 	WMInitializeApplication("wmforecast", &argc, argv);
 	display = XOpenDisplay("");
 
 	screen = WMCreateScreen(display, DefaultScreen(display));
 	dockapp = newDockapp(screen, argc, argv);
-	data = newThreadData(screen, dockapp, prefs);
-
-	pthread_create(&thread, NULL, timerLoop, data);
+	data = newUpdateData(screen, dockapp, prefs);
 
 	WMCreateEventHandler(WMWidgetView(dockapp->icon), ButtonPressMask,
 			     refresh, data);
+
+	updateDockapp(data);
+	WMAddPersistentTimerHandler(1000*60*prefs->interval,
+				    updateDockapp, data);
 
 	WMScreenMainLoop(screen);
 }
