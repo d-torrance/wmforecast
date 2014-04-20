@@ -67,6 +67,7 @@ typedef struct {
 	WMScreen *screen;
 	Dockapp *dockapp;
 	Preferences *prefs;
+	long int minutesLeft;
 } UpdateData;
 
 Forecast *newForecast()
@@ -607,13 +608,25 @@ UpdateData *newUpdateData(WMScreen *screen, Dockapp *dockapp, Preferences *prefs
 	data->screen = screen;
 	data->dockapp = dockapp;
 	data->prefs = prefs;
+	data->minutesLeft = prefs->interval;
 	return data;
 }
-	
+
 static void refresh(XEvent *event, void *data)
 {
 	if (WMIsDoubleClick(event) && event->xbutton.button == Button1) 
 		updateDockapp(data);
+}
+
+static void timerHandler(void *data)
+{
+	UpdateData *d = (UpdateData *)data;
+	
+	d->minutesLeft--;
+	if (d->minutesLeft == 0) {
+		d->minutesLeft = d->prefs->interval;
+		updateDockapp(data);
+	}
 }
 
 int main(int argc, char **argv)
@@ -637,8 +650,8 @@ int main(int argc, char **argv)
 			     refresh, data);
 
 	updateDockapp(data);
-	WMAddPersistentTimerHandler(1000*60*prefs->interval,
-				    updateDockapp, data);
+	WMAddPersistentTimerHandler(60*1000, //one minute
+				    timerHandler, data);
 
 	WMScreenMainLoop(screen);
 }

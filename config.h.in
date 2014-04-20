@@ -1,8 +1,5 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
-/* Define to 1 if you have the `pthread' library (-lpthread). */
-#undef HAVE_LIBPTHREAD
-
 /* Define to 1 if you have the `WINGs' library (-lWINGs). */
 #undef HAVE_LIBWINGS
 
