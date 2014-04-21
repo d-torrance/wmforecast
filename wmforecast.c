@@ -166,6 +166,9 @@ void setConditions(Weather *weather,
 	weather->text = wrealloc(weather->text, strlen(text) + 1);
 	strcpy(weather->text, text);
 
+	if (strlen(code) == 1)
+		code = wstrconcat("0", code);
+
 	context = WMScreenRContext(screen);
 	filename = wstrconcat(wstrconcat(DATADIR"/",code),".png");
 	weather->icon = RLoadImage(context,filename,0);

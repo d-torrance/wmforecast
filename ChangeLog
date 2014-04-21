@@ -13,9 +13,13 @@
 	* ChangeLog: corrected year in all entries (it's not 2015 yet...)
 	* NEWS, README: updated with version 0.3 info
 	* configure.ac: set version 0.3
+
+	* the following changes took place after the v0.3 release:
+
 	* Makefile.am: wmforecast.1 target now depends on config.h; this will
-	  cause manpage to reflect changes in version and bug report email (this
-	  change occured after the v0.3 release)
+	  cause manpage to reflect changes in version and bug report email
+	* wmforecast.c (setConditions): append a "0" to one-digit codes so that
+	  the icon is correctly displayed
 
 2014-04-19  Doug Torrance <dtorrance@monmouthcollege.edu>
 	* switched timer handler from pthread to WING's native WMAddPersistent-
