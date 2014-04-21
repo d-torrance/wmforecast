@@ -110,14 +110,10 @@ Weather *newWeather()
 
 void freeForecast(Forecast *forecast)
 {
-	if (forecast->day)
-		free(forecast->day);
-	if (forecast->low)
-		free(forecast->low);
-	if (forecast->high)
-		free(forecast->high);
-	if (forecast->text)
-		free(forecast->text);
+	wfree(forecast->day);
+	wfree(forecast->low);
+	wfree(forecast->high);
+	wfree(forecast->text);
 
 }
 
@@ -127,23 +123,18 @@ void freeForecastArray(ForecastArray *array)
 	for (i = 0; i < array->length; i++)
 		if (&array->forecasts[i])
 			freeForecast(&array->forecasts[i]);
-	if (array)
-		free(array);
+	wfree(array);
 }
 
 void freeWeather(Weather *weather)
 {
-	if (weather->temp)
-		free(weather->temp);
-	if (weather->text)
-		free(weather->text);
-	if (weather->title)
-		free(weather->title);
+	wfree(weather->temp);
+	wfree(weather->text);
+	wfree(weather->title);
 	if (weather->forecasts)
 		freeForecastArray(weather->forecasts);
-	if (weather->errorText)
-		free(weather->errorText);
-	free(weather);
+	wfree(weather->errorText);
+	wfree(weather);
 }
 
 void setTitle(Weather *weather, const char *title)
@@ -359,8 +350,7 @@ Weather *getWeather(WMScreen *screen, Preferences *prefs)
 		setError(weather, screen, curl_easy_strerror(res));
 		curl_easy_cleanup(curl_handle);
 		curl_global_cleanup();
-		if(chunk.memory)
-			free(chunk.memory);
+		wfree(chunk.memory);
 		return weather;
 	}
 	curl_easy_cleanup(curl_handle);
@@ -437,8 +427,7 @@ Weather *getWeather(WMScreen *screen, Preferences *prefs)
 	xmlFreeDoc(doc);
 // finishing parsing xml
 
-	if(chunk.memory)
-		free(chunk.memory);
+	wfree(chunk.memory);
 
 	return weather;
 }

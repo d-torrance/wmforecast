@@ -1,4 +1,8 @@
-2015-04-19  Doug Torrance <dtorrance@monmouthcollege.edu>
+2014-04-21  Doug Torrance <dtorrance@monmouthcollege.edu>
+	* wmforecast.c: changed all calls to free to use WINGs's native wfree
+	* ChangeLog: corrected year in all entries (it's not 2015 yet...)
+
+2014-04-19  Doug Torrance <dtorrance@monmouthcollege.edu>
 	* switched timer handler from pthread to WING's native WMAddPersistent-
 	  TimerHandler and added --interval option, resulting in numerous changes:
 	* configure.ac: removed check for pthread
@@ -17,7 +21,7 @@
 	* wmforecast.c (refresh): new function, refreshes weather data when icon
 	  double clicked
 
-2015-04-17  Doug Torrance <dtorrance@monmouthcollege.edu>
+2014-04-17  Doug Torrance <dtorrance@monmouthcollege.edu>
 	* wmforecast.c: improved error handling -- Weather struct now contains
 	  errorFlag and errorText.  If errorFlag set to 1, "ERROR" is displayed
 	  in dockapp along along with an icon with a question mark, and
@@ -26,7 +30,7 @@
 	  stderr for errors now use this.  This avoids, e.g., a segfault when
 	  the internet is down.
 
-2015-04-16  Doug Torrance <dtorrance@monmouthcollege.edu>
+2014-04-16  Doug Torrance <dtorrance@monmouthcollege.edu>
 	* wmforecast.c: bugfix -- After downloading the weather, the Weather
 	  struct was being freed, but it contained the pointer to the icon
 	  currently used by the dockapp, causing a crash.  This has been fixed.
@@ -34,7 +38,7 @@
 	  Forecast and ForecastArray structs inside each Weather struct.
 	* README: expanded description
 
-2015-04-15  Doug Torrance <dtorrance@monmouthcollege.edu>
+2014-04-15  Doug Torrance <dtorrance@monmouthcollege.edu>
 
 	* wmforecast.c: fixed bug where window was still drawn with --help or
   	  --version by moving the call to setPreferences earlier;
