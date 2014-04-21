@@ -927,7 +927,7 @@ uninstall-man: uninstall-man1
 	uninstall-man1
 
 
-wmforecast.1: wmforecast.c
+wmforecast.1: wmforecast.c config.h
 	$(HELP2MAN) --output=$@ -N -n "a weather dockapp for Window Maker using the Yahoo Weather API" ./wmforecast
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
