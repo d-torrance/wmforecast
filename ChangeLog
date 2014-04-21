@@ -1,5 +1,9 @@
 2014-04-21  Doug Torrance <dtorrance@monmouthcollege.edu>
-	* wmforecast.c: changed all calls to free to use WINGs's native wfree
+	* wmforecast.c: changed all calls to free to use WINGs's native wfree;
+	  removed if statements before calls to free, since wfree already does
+	  this
+	* wmforecast.c (WriteMemoryCallback): removed check to see if result of
+	  wrealloc was NULL (wrealloc already does this)
 	* ChangeLog: corrected year in all entries (it's not 2015 yet...)
 
 2014-04-19  Doug Torrance <dtorrance@monmouthcollege.edu>
