@@ -2,6 +2,12 @@
 	* wmforecast.c: changed all calls to free to use WINGs's native wfree;
 	  removed if statements before calls to free, since wfree already does
 	  this
+	* wmforecast.c (setError): moved earlier, so that it can be called from
+	  setConditions
+	* wmforecast.c (setConditions): now returns an error when icon image
+	  not found
+	* wmforecast.c (updateDockapp): checks to see if na.png will load before
+	  using it
 	* wmforecast.c (WriteMemoryCallback): removed check to see if result of
 	  wrealloc was NULL (wrealloc already does this)
 	* ChangeLog: corrected year in all entries (it's not 2015 yet...)

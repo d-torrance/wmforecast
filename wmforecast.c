@@ -143,6 +143,14 @@ void setTitle(Weather *weather, const char *title)
 	strcpy(weather->title, title);
 }
 
+void setError(Weather *weather, WMScreen *screen, const char *errorText)
+{
+	weather->errorFlag = 1;
+	weather->errorText = wrealloc(weather->errorText, strlen(errorText) + 1);
+	strcpy(weather->errorText, errorText);
+}
+
+
 void setConditions(Weather *weather,
 		   WMScreen *screen,
 		   const char *temp,
@@ -161,6 +169,8 @@ void setConditions(Weather *weather,
 	context = WMScreenRContext(screen);
 	filename = wstrconcat(wstrconcat(DATADIR"/",code),".png");
 	weather->icon = RLoadImage(context,filename,0);
+	if (!weather->icon)
+		setError(weather, screen, wstrconcat(filename, " not found"));
 }
 
 void setForecast(Forecast *forecast,
@@ -272,16 +282,6 @@ char *getBalloonText(Weather *weather)
 	return text;
 }
 
-void setError(Weather *weather, WMScreen *screen, const char *errorText)
-{
-	weather->errorFlag = 1;
-	weather->errorText = wrealloc(weather->errorText, strlen(errorText) + 1);
-	strcpy(weather->errorText, errorText);
-
-	
-	
-
-}
 	
 
 
@@ -448,9 +448,10 @@ static void updateDockapp(void *data)
 
 		context = WMScreenRContext(screen);
 		weather->icon = RLoadImage(context,DATADIR"/na.png",0);
-
-		icon = WMCreatePixmapFromRImage(screen,weather->icon,0);
-		WMSetLabelImage(dockapp->icon,icon);
+		if (weather->icon) {
+			icon = WMCreatePixmapFromRImage(screen,weather->icon,0);
+			WMSetLabelImage(dockapp->icon,icon);
+		}
 
 		WMSetBalloonTextForView(weather->errorText, WMWidgetView(dockapp->icon)); 
 

@@ -1,2 +1,11 @@
 config.h.in~
 autom4te.cache/
+.deps/
+Makefile
+config.h
+config.log
+config.status
+icons/Makefile
+stamp-h1
+wmforecast
+wmforecast.o
