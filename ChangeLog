@@ -11,6 +11,8 @@
 	* wmforecast.c (WriteMemoryCallback): removed check to see if result of
 	  wrealloc was NULL (wrealloc already does this)
 	* ChangeLog: corrected year in all entries (it's not 2015 yet...)
+	* NEWS, README: updated with version 0.3 info
+	* configure.ac: set version 0.3
 
 2014-04-19  Doug Torrance <dtorrance@monmouthcollege.edu>
 	* switched timer handler from pthread to WING's native WMAddPersistent-
