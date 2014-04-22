@@ -20,6 +20,11 @@
 	  cause manpage to reflect changes in version and bug report email
 	* wmforecast.c (setConditions): append a "0" to one-digit codes so that
 	  the icon is correctly displayed
+	* wmforecast.c (WMGetPLStringForKey): new function to simplify reading
+	  values from WMPropLists (inspired by WMGetUDStringForKey), used for
+	  the following new feature...
+	* wmforecast.c (setPreferences): reads user defined preferences from
+	  XDG_CONFIG_DIR/wmforecast/wmforecastrc
 
 2014-04-19  Doug Torrance <dtorrance@monmouthcollege.edu>
 	* switched timer handler from pthread to WING's native WMAddPersistent-

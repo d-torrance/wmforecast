@@ -474,10 +474,22 @@ static void updateDockapp(void *data)
 	freeWeather(weather);
 }
 
+char *WMGetPLStringForKey(WMPropList *propList, char *key)
+{
+	WMPropList *value;
+	value = WMGetFromPLDictionary(propList,WMCreatePLString(key));
+	if (value)
+		return WMGetPropListDescription(value, False);
+	else
+		return NULL;
+}
+
 Preferences *setPreferences(int argc, char **argv)
 {
+	char *filename;
 	int c;
 	Preferences *prefs = wmalloc(sizeof(Preferences));
+	WMPropList *propList;
 	
 	//set defaults
 	prefs->units = "f";
@@ -486,6 +498,32 @@ Preferences *setPreferences(int argc, char **argv)
 	prefs->woeid_or_zip = NULL;
 	prefs->interval = 60;
 
+	//read from wmforecastrc
+	filename = getenv("XDG_CONFIG_DIR");
+	if (!filename)
+		filename = wstrconcat(getenv("HOME"), "/.config");
+	filename = wstrappend(filename, "/wmforecast/wmforecastrc");
+	propList = WMReadPropListFromFile(filename); 
+	if (propList) {
+		char *value;
+		value = WMGetPLStringForKey(propList, "units");
+		if (value)
+			prefs->units = value;
+		value = WMGetPLStringForKey(propList, "woeid");
+		if (value)
+			prefs->woeid = value;
+		value = WMGetPLStringForKey(propList, "zip");
+		if (value)
+			prefs->zip = value;
+		value = WMGetPLStringForKey(propList, "woeid_or_zip");
+		if (value)
+			prefs->woeid_or_zip = value;
+		value = WMGetPLStringForKey(propList, "interval");
+		if (value)
+			prefs->interval = strtol(value, NULL, 10);
+	}
+
+	//command line
 	while (1)
 	{
 		static struct option long_options[] =
@@ -584,7 +622,7 @@ Preferences *setPreferences(int argc, char **argv)
 			abort ();
 		}
 	}
-	
+
 	if (!prefs->woeid_or_zip) {
 		prefs->woeid_or_zip = "w";
 	}
