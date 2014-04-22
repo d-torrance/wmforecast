@@ -1,3 +1,9 @@
+wmforecast (0.3-0ppa1) saucy; urgency=low
+
+  * New upstream release.
+
+ -- Doug Torrance <dtorrance@monmouthcollege.edu>  Mon, 21 Apr 2014 00:58:02 -0500
+
 wmforecast (0.2-0ppa1) saucy; urgency=low
 
   * Initial release.
