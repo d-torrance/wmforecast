@@ -1,3 +1,7 @@
+2014-05-07  Doug Torrance <dtorrance@monmouthcollege.edu>
+	* wmforecast.c (editPreferences): new function, GUI for editing user
+	  preferences; currently non-functioning
+
 2014-04-21  Doug Torrance <dtorrance@monmouthcollege.edu>
 	* wmforecast.c: changed all calls to free to use WINGs's native wfree;
 	  removed if statements before calls to free, since wfree already does
