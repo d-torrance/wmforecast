@@ -29,8 +29,42 @@
 #define color(c) WMCreateNamedColor(screen,c,True)
 
 typedef struct {
+	char *units;
+	char *woeid;
+	char *zip;
+	char *woeid_or_zip;
+	long int interval;
+} Preferences;
+
+typedef struct {
+	Preferences *prefs;
+	WMButton *celsius;
+	WMButton *close;
+	WMButton *fahrenheit;
+	WMButton *save;
+	WMButton *woeid;
+	WMButton *zip;
+	WMFrame *intervalFrame;
+	WMFrame *locationFrame;
+	WMFrame *units;
+	WMLabel *minutes;
+	WMLabel *woeid_zip;
+	WMScreen *screen;
+	WMTextField *interval;
+	WMTextField *location;
+	WMTextField *woeidField;
+	WMTextField *zipField;
+	WMWindow *window;
+} PreferencesWindow;
+
+typedef struct {
+	int prefsWindowPresent;
+	long int minutesLeft;
+	Preferences *prefs;
+	PreferencesWindow *prefsWindow;
 	WMLabel *icon;
 	WMLabel *text;
+	WMScreen *screen;
 } Dockapp;
 
 typedef struct {
@@ -54,21 +88,6 @@ typedef struct {
 	int errorFlag;
 	char *errorText;
 } Weather;
-
-typedef struct {
-	char *units;
-	char *woeid;
-	char *zip;
-	char *woeid_or_zip;
-	long int interval;
-} Preferences;
-
-typedef struct {
-	WMScreen *screen;
-	Dockapp *dockapp;
-	Preferences *prefs;
-	long int minutesLeft;
-} UpdateData;
 
 Forecast *newForecast()
 {
@@ -221,11 +240,16 @@ WMWindow *WMCreateDockapp(WMScreen *screen, const char *name, int argc, char **a
 	return dockapp;
 }
 
-Dockapp *newDockapp(WMScreen *screen, int argc, char **argv)
+Dockapp *newDockapp(WMScreen *screen, Preferences *prefs, int argc, char **argv)
 {
 	Dockapp *dockapp = wmalloc(sizeof(Dockapp));
 	WMFrame *frame;
 	WMWindow *window;
+
+	dockapp->screen = screen;
+	dockapp->prefs = prefs;
+	dockapp->minutesLeft = prefs->interval;
+	dockapp->prefsWindowPresent = 0;
 
 	window = WMCreateDockapp(screen, "", argc, argv);
 
@@ -383,8 +407,7 @@ Weather *getWeather(WMScreen *screen, Preferences *prefs)
 			while (cur != NULL) {
 				if ((!xmlStrcmp(cur->name, (const xmlChar *)"title"))) {
 					if ((!xmlStrcmp(xmlNodeListGetString(doc, cur->children, 1), (const xmlChar *)"City not found"))) {
-						printf("Location not found\n");
-						exit(0);
+						setError(weather, screen, "Location not found\n");
 					}
 					setTitle(
 						weather,
@@ -431,11 +454,10 @@ Weather *getWeather(WMScreen *screen, Preferences *prefs)
 
 static void updateDockapp(void *data)
 {
-	UpdateData *d = (UpdateData *)data;
+	Dockapp *dockapp = (Dockapp *)data;
 
-	WMScreen *screen = d->screen;
-	Dockapp *dockapp = d->dockapp;
-	Preferences *prefs = d->prefs;
+	WMScreen *screen = dockapp->screen;
+	Preferences *prefs = dockapp->prefs;
 	Weather *weather;
 	WMPixmap *icon;
 
@@ -484,25 +506,24 @@ char *WMGetPLStringForKey(WMPropList *propList, char *key)
 		return NULL;
 }
 
-Preferences *setPreferences(int argc, char **argv)
+char *getPreferencesFilename()
 {
 	char *filename;
-	int c;
-	Preferences *prefs = wmalloc(sizeof(Preferences));
-	WMPropList *propList;
-	
-	//set defaults
-	prefs->units = "f";
-	prefs->woeid = "2502265";
-	prefs->zip = NULL;
-	prefs->woeid_or_zip = NULL;
-	prefs->interval = 60;
 
-	//read from wmforecastrc
 	filename = getenv("XDG_CONFIG_DIR");
 	if (!filename)
 		filename = wstrconcat(getenv("HOME"), "/.config");
 	filename = wstrappend(filename, "/wmforecast/wmforecastrc");
+
+	return filename;
+}
+
+void readPreferences(Preferences *prefs) 
+{
+	char *filename;
+	WMPropList *propList;
+
+	filename = getPreferencesFilename();
 	propList = WMReadPropListFromFile(filename); 
 	if (propList) {
 		char *value;
@@ -522,6 +543,23 @@ Preferences *setPreferences(int argc, char **argv)
 		if (value)
 			prefs->interval = strtol(value, NULL, 10);
 	}
+
+
+}
+
+Preferences *setPreferences(int argc, char **argv)
+{
+	int c;
+	Preferences *prefs = wmalloc(sizeof(Preferences));
+
+	//set defaults
+	prefs->units = "f";
+	prefs->woeid = "2502265";
+	prefs->zip = NULL;
+	prefs->woeid_or_zip = NULL;
+	prefs->interval = 60;
+
+	readPreferences(prefs);
 
 	//command line
 	while (1)
@@ -580,8 +618,10 @@ Preferences *setPreferences(int argc, char **argv)
 			       "    -z, --zip <zip>      ZIP code or Location ID (Yahoo has deprecated this\n"
 			       "                         option and it is not guaranteed to work)\n"
 			       "Notes:\n"
-			       "* only one of -w or -z may be used, not both\n\n"
 			       "* double click the icon at any time to refresh data\n\n"
+			       "* right click the icon to edit your preferences in a GUI\n\n"
+			       "* preferences may be manually configured in\n"
+			       "  XDG_CONFIG_DIR/wmforecast/wmforecastrc\n\n"
 			       "Report bugs to %s\n",
 			       PACKAGE_BUGREPORT
 				);
@@ -602,10 +642,6 @@ Preferences *setPreferences(int argc, char **argv)
 			break;
      
 		case 'z':
-			if (prefs->woeid_or_zip) {
-				printf("only one of -w or -z may be used, not both\n");
-				exit(0);
-			}
 			prefs->woeid_or_zip = "z";
 			prefs->zip = optarg;
 			break;
@@ -630,177 +666,207 @@ Preferences *setPreferences(int argc, char **argv)
 	return prefs;
 }
 
-UpdateData *newUpdateData(WMScreen *screen, Dockapp *dockapp, Preferences *prefs)
-{
-	UpdateData *data = wmalloc(sizeof(UpdateData));
-	data->screen = screen;
-	data->dockapp = dockapp;
-	data->prefs = prefs;
-	data->minutesLeft = prefs->interval;
-	return data;
-}
-
-typedef struct {
-	Preferences *prefs;
-	WMButton *apply;
-	WMButton *celsius;
-	WMButton *close;
-	WMButton *fahrenheit;
-	WMButton *save;
-	WMButton *woeid;
-	WMButton *zip;
-	WMFrame *intervalFrame;
-	WMFrame *locationFrame;
-	WMFrame *units;
-	WMLabel *minutes;
-	WMLabel *woeid_zip;
-	WMScreen *screen;
-	WMTextField *interval;
-	WMTextField *location;
-	WMTextField *woeidField;
-	WMTextField *zipField;
-	WMWindow *window;
-} PreferencesWindow;
-
 static void closePreferences(WMWidget *widget, void *data)
 {
-	PreferencesWindow *pw;
+	Dockapp *d = (Dockapp *)data;
+	WMDestroyWidget(d->prefsWindow->window);
+	d->prefsWindowPresent = 0;
+}
 
-	pw = (PreferencesWindow *)data;
-	WMDestroyWidget(pw->window);
+static void savePreferences(WMWidget *widget, void *data)
+{
+	char *filename;
+	char *prefsString;
+	Dockapp *d = (Dockapp *)data;
+	FILE *file;
+	WMPropList *prefsPL;
+	WMPropList *key;
+	WMPropList *object;
+
+	prefsPL = WMCreatePLDictionary(NULL,NULL);
+
+	key = WMCreatePLString("units");
+	if (WMGetButtonSelected(d->prefsWindow->celsius)) {
+		object = WMCreatePLString("c");
+		WMPutInPLDictionary(prefsPL, key, object);
+	}
+	if (WMGetButtonSelected(d->prefsWindow->fahrenheit)) {
+		object = WMCreatePLString("f");
+		WMPutInPLDictionary(prefsPL, key, object);
+	}
+
+	key = WMCreatePLString("woeid_or_zip");
+	if (WMGetButtonSelected(d->prefsWindow->woeid)) {
+		object = WMCreatePLString("w");
+		WMPutInPLDictionary(prefsPL, key, object);
+	}
+	if (WMGetButtonSelected(d->prefsWindow->zip)) {
+		object = WMCreatePLString("z");
+		WMPutInPLDictionary(prefsPL, key, object);
+	}
+
+	key = WMCreatePLString("woeid");
+	object = WMCreatePLString(WMGetTextFieldText(d->prefsWindow->woeidField));
+	WMPutInPLDictionary(prefsPL, key, object);
+
+	key = WMCreatePLString("zip");
+	object = WMCreatePLString(WMGetTextFieldText(d->prefsWindow->zipField));
+	WMPutInPLDictionary(prefsPL, key, object);
+
+	key = WMCreatePLString("interval");
+	object = WMCreatePLString(WMGetTextFieldText(d->prefsWindow->interval));
+	WMPutInPLDictionary(prefsPL, key, object);
+	
+	prefsString = WMGetPropListDescription(prefsPL, True);
+
+	filename = getPreferencesFilename();
+
+	// since WMWritePropListToFile only writes to files in 
+	// GNUSTEP_USER_ROOT, we need to write our own version
+	file = fopen(filename, "w");
+	if (file)
+	{
+		fputs(prefsString, file);
+		fclose(file);
+	}
+
+	readPreferences(d->prefs);
+	updateDockapp(d);
+
 }
 
 static void editPreferences(void *data)
 {
 	char intervalPtr[50];
-	PreferencesWindow *pw;
+	Dockapp *d = (Dockapp *)data;
 
-	pw = wmalloc(sizeof(PreferencesWindow));
+	d->prefsWindowPresent = 1;
 
-	UpdateData *d = (UpdateData *)data;
-	pw->screen = d->screen;
-	pw->prefs = d->prefs;
+	d->prefsWindow = wmalloc(sizeof(PreferencesWindow));
+
+	d->prefsWindow->screen = d->screen;
+	d->prefsWindow->prefs = d->prefs;
 
 
-	pw->window = WMCreateWindow(pw->screen, "wmforecast");
-	WMSetWindowTitle(pw->window, "wmforecast");
-	WMSetWindowCloseAction (pw->window, closePreferences, pw);
-	WMResizeWidget(pw->window, 424, 130);
-	WMRealizeWidget(pw->window);
-	WMMapWidget(pw->window);
+	d->prefsWindow->window = WMCreateWindow(d->prefsWindow->screen, "wmforecast");
+	WMSetWindowTitle(d->prefsWindow->window, "wmforecast");
+	WMSetWindowCloseAction (d->prefsWindow->window, closePreferences, d);
+	WMResizeWidget(d->prefsWindow->window, 424, 130);
+	WMRealizeWidget(d->prefsWindow->window);
+	WMMapWidget(d->prefsWindow->window);
 
-	pw->units = WMCreateFrame(pw->window);
-	WMSetFrameTitle(pw->units, "Units");
-	WMResizeWidget(pw->units, 112, 80);
-	WMMoveWidget(pw->units, 10, 10);
-	WMRealizeWidget(pw->units);
-	WMMapWidget(pw->units);
+	d->prefsWindow->units = WMCreateFrame(d->prefsWindow->window);
+	WMSetFrameTitle(d->prefsWindow->units, "Units");
+	WMResizeWidget(d->prefsWindow->units, 112, 80);
+	WMMoveWidget(d->prefsWindow->units, 10, 10);
+	WMRealizeWidget(d->prefsWindow->units);
+	WMMapWidget(d->prefsWindow->units);
 
-	pw->celsius = WMCreateButton(pw->units, WBTRadio);
-	WMSetButtonText(pw->celsius, "Celsius");
-	WMMoveWidget(pw->celsius, 10, 20);
-	if (strcmp(pw->prefs->units,"c") == 0)
-		WMSetButtonSelected(pw->celsius,1);
-	WMRealizeWidget(pw->celsius);
-	WMMapWidget(pw->celsius);
+	d->prefsWindow->celsius = WMCreateButton(d->prefsWindow->units, WBTRadio);
+	WMSetButtonText(d->prefsWindow->celsius, "Celsius");
+	WMMoveWidget(d->prefsWindow->celsius, 10, 20);
+	if (strcmp(d->prefsWindow->prefs->units,"c") == 0)
+		WMSetButtonSelected(d->prefsWindow->celsius,1);
+	WMRealizeWidget(d->prefsWindow->celsius);
+	WMMapWidget(d->prefsWindow->celsius);
 
-	pw->fahrenheit = WMCreateButton(pw->units, WBTRadio);
-	WMSetButtonText(pw->fahrenheit, "Fahrenheit");
-	WMMoveWidget(pw->fahrenheit, 10, 44);
-	if (strcmp(pw->prefs->units,"f") == 0)
-		WMSetButtonSelected(pw->fahrenheit,1);
-	WMRealizeWidget(pw->fahrenheit);
-	WMMapWidget(pw->fahrenheit);
+	d->prefsWindow->fahrenheit = WMCreateButton(d->prefsWindow->units, WBTRadio);
+	WMSetButtonText(d->prefsWindow->fahrenheit, "Fahrenheit");
+	WMMoveWidget(d->prefsWindow->fahrenheit, 10, 44);
+	if (strcmp(d->prefsWindow->prefs->units,"f") == 0)
+		WMSetButtonSelected(d->prefsWindow->fahrenheit,1);
+	WMRealizeWidget(d->prefsWindow->fahrenheit);
+	WMMapWidget(d->prefsWindow->fahrenheit);
 
-	pw->locationFrame = WMCreateFrame(pw->window);
-	WMSetFrameTitle(pw->locationFrame, "Location");
-	WMResizeWidget(pw->locationFrame, 160, 80);
-	WMMoveWidget(pw->locationFrame, 132, 10);
-	WMRealizeWidget(pw->locationFrame);
-	WMMapWidget(pw->locationFrame);
+	WMGroupButtons(d->prefsWindow->celsius, d->prefsWindow->fahrenheit);
 
-	pw->woeid = WMCreateButton(pw->locationFrame, WBTRadio);
-	WMSetButtonText(pw->woeid, "WOEID");
-	WMMoveWidget(pw->woeid, 10, 20);
-	if (strcmp(pw->prefs->woeid_or_zip,"w") == 0)
-		WMSetButtonSelected(pw->woeid,1);
-	WMRealizeWidget(pw->woeid);
-	WMMapWidget(pw->woeid);
+	d->prefsWindow->locationFrame = WMCreateFrame(d->prefsWindow->window);
+	WMSetFrameTitle(d->prefsWindow->locationFrame, "Location");
+	WMResizeWidget(d->prefsWindow->locationFrame, 160, 80);
+	WMMoveWidget(d->prefsWindow->locationFrame, 132, 10);
+	WMRealizeWidget(d->prefsWindow->locationFrame);
+	WMMapWidget(d->prefsWindow->locationFrame);
 
-	pw->woeidField = WMCreateTextField(pw->locationFrame);
-	WMSetTextFieldText(pw->woeidField, pw->prefs->woeid);
-	WMResizeWidget(pw->woeidField, 60, 20);
-	WMMoveWidget(pw->woeidField, 90, 20);
-	WMRealizeWidget(pw->woeidField);
-	WMMapWidget(pw->woeidField);
+	d->prefsWindow->woeid = WMCreateButton(d->prefsWindow->locationFrame, WBTRadio);
+	WMSetButtonText(d->prefsWindow->woeid, "WOEID");
+	WMMoveWidget(d->prefsWindow->woeid, 10, 20);
+	if (strcmp(d->prefsWindow->prefs->woeid_or_zip,"w") == 0)
+		WMSetButtonSelected(d->prefsWindow->woeid,1);
+	WMRealizeWidget(d->prefsWindow->woeid);
+	WMMapWidget(d->prefsWindow->woeid);
 
-	pw->zip = WMCreateButton(pw->locationFrame, WBTRadio);
-	WMSetButtonText(pw->zip, "ZIP code");
-	WMMoveWidget(pw->zip, 10, 44);
-	if (strcmp(pw->prefs->woeid_or_zip,"z") == 0)
-		WMSetButtonSelected(pw->zip,1);
-	WMRealizeWidget(pw->zip);
-	WMMapWidget(pw->zip);
+	d->prefsWindow->woeidField = WMCreateTextField(d->prefsWindow->locationFrame);
+	WMSetTextFieldText(d->prefsWindow->woeidField, d->prefsWindow->prefs->woeid);
+	WMResizeWidget(d->prefsWindow->woeidField, 60, 20);
+	WMMoveWidget(d->prefsWindow->woeidField, 90, 20);
+	WMRealizeWidget(d->prefsWindow->woeidField);
+	WMMapWidget(d->prefsWindow->woeidField);
 
-	pw->zipField = WMCreateTextField(pw->locationFrame);
-	WMSetTextFieldText(pw->zipField, pw->prefs->zip);
-	WMResizeWidget(pw->zipField, 60, 20);
-	WMMoveWidget(pw->zipField, 90, 44);
-	WMRealizeWidget(pw->zipField);
-	WMMapWidget(pw->zipField);
+	d->prefsWindow->zip = WMCreateButton(d->prefsWindow->locationFrame, WBTRadio);
+	WMSetButtonText(d->prefsWindow->zip, "ZIP code");
+	WMMoveWidget(d->prefsWindow->zip, 10, 44);
+	if (strcmp(d->prefsWindow->prefs->woeid_or_zip,"z") == 0)
+		WMSetButtonSelected(d->prefsWindow->zip,1);
+	WMRealizeWidget(d->prefsWindow->zip);
+	WMMapWidget(d->prefsWindow->zip);
 
-	pw->intervalFrame = WMCreateFrame(pw->window);
-	WMSetFrameTitle(pw->intervalFrame, "Refresh interval");
-	WMResizeWidget(pw->intervalFrame, 112, 80);
-	WMMoveWidget(pw->intervalFrame, 302, 10);
-	WMRealizeWidget(pw->intervalFrame);
-	WMMapWidget(pw->intervalFrame);
+	d->prefsWindow->zipField = WMCreateTextField(d->prefsWindow->locationFrame);
+	WMSetTextFieldText(d->prefsWindow->zipField, d->prefsWindow->prefs->zip);
+	WMResizeWidget(d->prefsWindow->zipField, 60, 20);
+	WMMoveWidget(d->prefsWindow->zipField, 90, 44);
+	WMRealizeWidget(d->prefsWindow->zipField);
+	WMMapWidget(d->prefsWindow->zipField);
 
-	pw->interval = WMCreateTextField(pw->intervalFrame);
-	sprintf(intervalPtr, "%lu", pw->prefs->interval);
-	WMSetTextFieldText(pw->interval, intervalPtr);
-	WMResizeWidget(pw->interval, 30, 20);
-	WMMoveWidget(pw->interval, 15, 33);
-	WMRealizeWidget(pw->interval);
-	WMMapWidget(pw->interval);
+	d->prefsWindow->intervalFrame = WMCreateFrame(d->prefsWindow->window);
+	WMSetFrameTitle(d->prefsWindow->intervalFrame, "Refresh interval");
+	WMResizeWidget(d->prefsWindow->intervalFrame, 112, 80);
+	WMMoveWidget(d->prefsWindow->intervalFrame, 302, 10);
+	WMRealizeWidget(d->prefsWindow->intervalFrame);
+	WMMapWidget(d->prefsWindow->intervalFrame);
 
-	pw->minutes = WMCreateLabel(pw->intervalFrame);
-	WMSetLabelText(pw->minutes, "minutes");
-	WMMoveWidget(pw->minutes, 45, 35);
-	WMRealizeWidget(pw->minutes);
-	WMMapWidget(pw->minutes);
+	WMGroupButtons(d->prefsWindow->woeid, d->prefsWindow->zip);
 
-	pw->close = WMCreateButton(pw->window, WBTMomentaryPush);
-	WMSetButtonText(pw->close, "Close");
-	WMSetButtonAction(pw->close, closePreferences, pw);
-	WMMoveWidget(pw->close, 10, 100);
-	WMRealizeWidget(pw->close);
-	WMMapWidget(pw->close);
+	d->prefsWindow->interval = WMCreateTextField(d->prefsWindow->intervalFrame);
+	sprintf(intervalPtr, "%lu", d->prefsWindow->prefs->interval);
+	WMSetTextFieldText(d->prefsWindow->interval, intervalPtr);
+	WMResizeWidget(d->prefsWindow->interval, 30, 20);
+	WMMoveWidget(d->prefsWindow->interval, 15, 33);
+	WMRealizeWidget(d->prefsWindow->interval);
+	WMMapWidget(d->prefsWindow->interval);
 
-	pw->apply = WMCreateButton(pw->window, WBTMomentaryPush);
-	WMSetButtonText(pw->apply, "Apply");
-	WMMoveWidget(pw->apply, 285, 100);
-	WMRealizeWidget(pw->apply);
-	WMMapWidget(pw->apply);
+	d->prefsWindow->minutes = WMCreateLabel(d->prefsWindow->intervalFrame);
+	WMSetLabelText(d->prefsWindow->minutes, "minutes");
+	WMMoveWidget(d->prefsWindow->minutes, 45, 35);
+	WMRealizeWidget(d->prefsWindow->minutes);
+	WMMapWidget(d->prefsWindow->minutes);
 
-	pw->save = WMCreateButton(pw->window, WBTMomentaryPush);
-	WMSetButtonText(pw->save, "Save");
-	WMMoveWidget(pw->save, 353, 100);
-	WMRealizeWidget(pw->save);
-	WMMapWidget(pw->save);
+	d->prefsWindow->save = WMCreateButton(d->prefsWindow->window, WBTMomentaryPush);
+	WMSetButtonText(d->prefsWindow->save, "Save");
+	WMSetButtonAction(d->prefsWindow->save, savePreferences, d);
+	WMMoveWidget(d->prefsWindow->save, 285, 100);
+	WMRealizeWidget(d->prefsWindow->save);
+	WMMapWidget(d->prefsWindow->save);
+
+	d->prefsWindow->close = WMCreateButton(d->prefsWindow->window, WBTMomentaryPush);
+	WMSetButtonText(d->prefsWindow->close, "Close");
+	WMSetButtonAction(d->prefsWindow->close, closePreferences, d);
+	WMMoveWidget(d->prefsWindow->close, 353, 100);
+	WMRealizeWidget(d->prefsWindow->close);
+	WMMapWidget(d->prefsWindow->close);
 }
 
 static void refresh(XEvent *event, void *data)
 {
+	Dockapp *d = (Dockapp *)data;
 	if (WMIsDoubleClick(event) && event->xbutton.button == Button1) 
-		updateDockapp(data);
-	if (event->xbutton.button == Button3)
-		editPreferences(data);
+		updateDockapp(d);
+	if (event->xbutton.button == Button3 && !d->prefsWindowPresent)
+		editPreferences(d);
 }
 
 static void timerHandler(void *data)
 {
-	UpdateData *d = (UpdateData *)data;
+	Dockapp *d = (Dockapp *)data;
 	
 	d->minutesLeft--;
 	if (d->minutesLeft == 0) {
@@ -814,7 +880,6 @@ int main(int argc, char **argv)
 	Display *display;
 	Dockapp *dockapp;
 	Preferences *prefs;
-	UpdateData *data;
 	WMScreen *screen;
 
 	prefs = setPreferences(argc, argv);
@@ -823,15 +888,14 @@ int main(int argc, char **argv)
 	display = XOpenDisplay("");
 
 	screen = WMCreateScreen(display, DefaultScreen(display));
-	dockapp = newDockapp(screen, argc, argv);
-	data = newUpdateData(screen, dockapp, prefs);
+	dockapp = newDockapp(screen, prefs, argc, argv);
 
 	WMCreateEventHandler(WMWidgetView(dockapp->icon), ButtonPressMask,
-			     refresh, data);
+			     refresh, dockapp);
 
-	updateDockapp(data);
+	updateDockapp(dockapp);
 	WMAddPersistentTimerHandler(60*1000, //one minute
-				    timerHandler, data);
+				    timerHandler, dockapp);
 
 	WMScreenMainLoop(screen);
 }

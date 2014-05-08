@@ -31,7 +31,7 @@ sudo make install
 
 Usage
 =====
-wmforecast [OPTIONS]
+Usage: wmforecast [OPTIONS]
 
 Options:
     -v, --version        print the version number
@@ -45,9 +45,12 @@ Options:
     -z, --zip <zip>      ZIP code or Location ID (Yahoo has deprecated this
                          option and it is not guaranteed to work)
 Notes:
-* only one of -w or -z may be used, not both
-
 * double click the icon at any time to refresh data
+
+* right click the icon to edit your preferences in a GUI
+
+* preferences may be manually configured in
+  XDG_CONFIG_DIR/wmforecast/wmforecastrc
 
 Copyright
 =========

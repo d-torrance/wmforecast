@@ -1,6 +1,16 @@
 2014-05-07  Doug Torrance <dtorrance@monmouthcollege.edu>
-	* wmforecast.c (editPreferences): new function, GUI for editing user
-	  preferences; currently non-functioning
+	* wmforecast.c (Dockapp): combined with old UpdateData struct to better
+	  facilitate new feature:
+	* wmforecast.c (editPreferences): new GUI to edit wmforecastrc
+	* wmforecast.c (setPreferences): removed check to see if both -w and -z
+	  options were used, as it was creating a problem when wmforecastrc
+	  existed; new behavior is to just take the last option given
+	* wmforecast.c (getWeather): "Location not found" error now uses setError
+	  instead of exiting
+	* configure.ac: set version 0.4, added PKG_CHECK_MODULES for x11
+	* Makefile.am: added x11 libs and flags, manually add WINGs libs and flag,
+	  since get-wings-flags returns the deprecated lungif
+	* NEWS, README:  updated with version 0.4 info
 
 2014-04-21  Doug Torrance <dtorrance@monmouthcollege.edu>
 	* wmforecast.c: changed all calls to free to use WINGs's native wfree;
