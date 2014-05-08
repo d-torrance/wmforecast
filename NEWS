@@ -1,3 +1,21 @@
+version 0.4
+-----------
+* New features!
+  - Right click the icon to edit preferences in a GUI
+  - Preferences may also be manually configured in XDG_CONFIG_DIR/wmforecast/
+    wmforecastrc, or HOME/.config/wmforecast/wmforecastrc if XDG_CONFIG_DIR is
+    undefined
+* More bug fixes
+
+version 0.3
+-----------
+* New features!
+  - Double click icon to refresh data
+  - Use -i or --interval option to set how frequently data is automatically
+    refreshed
+* Error messages displayed, e.g., when internet down or icon files aren't found
+* Lots of bug fixes and under-the-hood changes
+
 version 0.2
 ___________
 * Added manpage

@@ -13,7 +13,6 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 ************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -26,13 +25,46 @@
 #include <curl/curl.h>
 #include <libxml/tree.h>
 #include <getopt.h>
-#include <pthread.h>
 
 #define color(c) WMCreateNamedColor(screen,c,True)
 
 typedef struct {
+	char *units;
+	char *woeid;
+	char *zip;
+	char *woeid_or_zip;
+	long int interval;
+} Preferences;
+
+typedef struct {
+	Preferences *prefs;
+	WMButton *celsius;
+	WMButton *close;
+	WMButton *fahrenheit;
+	WMButton *save;
+	WMButton *woeid;
+	WMButton *zip;
+	WMFrame *intervalFrame;
+	WMFrame *locationFrame;
+	WMFrame *units;
+	WMLabel *minutes;
+	WMLabel *woeid_zip;
+	WMScreen *screen;
+	WMTextField *interval;
+	WMTextField *location;
+	WMTextField *woeidField;
+	WMTextField *zipField;
+	WMWindow *window;
+} PreferencesWindow;
+
+typedef struct {
+	int prefsWindowPresent;
+	long int minutesLeft;
+	Preferences *prefs;
+	PreferencesWindow *prefsWindow;
 	WMLabel *icon;
 	WMLabel *text;
+	WMScreen *screen;
 } Dockapp;
 
 typedef struct {
@@ -52,25 +84,14 @@ typedef struct {
 	char *text;
 	char *title;
 	ForecastArray *forecasts;
-	WMPixmap *icon;
+	RImage *icon;
+	int errorFlag;
+	char *errorText;
 } Weather;
-
-typedef struct {
-	char *units;
-	char *woeid;
-	char *zip;
-	char *woeid_or_zip;
-} Preferences;
-
-typedef struct {
-	WMScreen *screen;
-	Dockapp *dockapp;
-	Preferences *prefs;
-} ThreadData;
 
 Forecast *newForecast()
 {
-	Forecast *forecast = malloc(sizeof(Forecast));
+	Forecast *forecast = wmalloc(sizeof(Forecast));
 	forecast->day = NULL;
 	forecast->low = NULL;
 	forecast->high = NULL;
@@ -80,7 +101,7 @@ Forecast *newForecast()
 
 ForecastArray *newForecastArray()
 {
-	ForecastArray *array = malloc(sizeof(ForecastArray));
+	ForecastArray *array = wmalloc(sizeof(ForecastArray));
 	array->length = 0;
 	array->forecasts = NULL;
 	return array;
@@ -89,46 +110,65 @@ ForecastArray *newForecastArray()
 void appendForecast(ForecastArray *array, Forecast *forecast)
 {
 	array->length++;
-	array->forecasts = (Forecast *)realloc(array->forecasts, sizeof(Forecast)*(array->length));
+	array->forecasts = (Forecast *)wrealloc(array->forecasts, sizeof(Forecast)*(array->length));
 	array->forecasts[(array->length)-1] = *forecast;
 }
 
 Weather *newWeather()
 {
-	Weather *weather = malloc(sizeof(Weather));
+	Weather *weather = wmalloc(sizeof(Weather));
 	weather->temp = NULL;
 	weather->text = NULL;
 	weather->title = NULL;
 	weather->icon = NULL;
 	weather->forecasts = newForecastArray();
+	weather->errorFlag = 0;
+	weather->errorText = NULL;
 	return weather;
 }
 
+void freeForecast(Forecast *forecast)
+{
+	wfree(forecast->day);
+	wfree(forecast->low);
+	wfree(forecast->high);
+	wfree(forecast->text);
 
+}
+
+void freeForecastArray(ForecastArray *array)
+{
+	int i;
+	for (i = 0; i < array->length; i++)
+		if (&array->forecasts[i])
+			freeForecast(&array->forecasts[i]);
+	wfree(array);
+}
 
 void freeWeather(Weather *weather)
 {
-	if (weather->temp) 
-		free(weather->temp);
-	if (weather->text)
-		free(weather->text);
-	if (weather->title)
-		free(weather->title);
-	if (weather->icon) 
-		free(weather->icon);
-	if (weather->forecasts) {
-		if (weather->forecasts->forecasts)
-			free(weather->forecasts->forecasts);
-		free(weather->forecasts);
-	}
-	free(weather);
+	wfree(weather->temp);
+	wfree(weather->text);
+	wfree(weather->title);
+	if (weather->forecasts)
+		freeForecastArray(weather->forecasts);
+	wfree(weather->errorText);
+	wfree(weather);
 }
 
 void setTitle(Weather *weather, const char *title)
 {
-	weather->title = realloc(weather->title, strlen(title) + 1);
+	weather->title = wrealloc(weather->title, strlen(title) + 1);
 	strcpy(weather->title, title);
 }
+
+void setError(Weather *weather, WMScreen *screen, const char *errorText)
+{
+	weather->errorFlag = 1;
+	weather->errorText = wrealloc(weather->errorText, strlen(errorText) + 1);
+	strcpy(weather->errorText, errorText);
+}
+
 
 void setConditions(Weather *weather,
 		   WMScreen *screen,
@@ -138,19 +178,21 @@ void setConditions(Weather *weather,
 	)
 {
 	RContext *context;
-	RImage *image;
 	char *filename;
 
-	weather->temp = realloc(weather->temp, strlen(temp) + 1);
+	weather->temp = wrealloc(weather->temp, strlen(temp) + 1);
 	strcpy(weather->temp, temp);
-	weather->text = realloc(weather->text, strlen(text) + 1);
+	weather->text = wrealloc(weather->text, strlen(text) + 1);
 	strcpy(weather->text, text);
+
+	if (strlen(code) == 1)
+		code = wstrconcat("0", code);
 
 	context = WMScreenRContext(screen);
 	filename = wstrconcat(wstrconcat(DATADIR"/",code),".png");
-	image = RLoadImage(context,filename,0);
-	weather->icon = WMCreatePixmapFromRImage(screen,image,0);
-
+	weather->icon = RLoadImage(context,filename,0);
+	if (!weather->icon)
+		setError(weather, screen, wstrconcat(filename, " not found"));
 }
 
 void setForecast(Forecast *forecast,
@@ -160,13 +202,13 @@ void setForecast(Forecast *forecast,
 		 const char *text
 	)
 {
-	forecast->day = realloc(forecast->day, strlen(day) + 1);
+	forecast->day = wrealloc(forecast->day, strlen(day) + 1);
 	strcpy(forecast->day, day);
-	forecast->low = realloc(forecast->low, strlen(low) + 1);
+	forecast->low = wrealloc(forecast->low, strlen(low) + 1);
 	strcpy(forecast->low, low);
-	forecast->high = realloc(forecast->high, strlen(high) + 1);
+	forecast->high = wrealloc(forecast->high, strlen(high) + 1);
 	strcpy(forecast->high, high);
-	forecast->text = realloc(forecast->text, strlen(text) + 1);
+	forecast->text = wrealloc(forecast->text, strlen(text) + 1);
 	strcpy(forecast->text, text);
 }
 
@@ -198,11 +240,16 @@ WMWindow *WMCreateDockapp(WMScreen *screen, const char *name, int argc, char **a
 	return dockapp;
 }
 
-Dockapp *newDockapp(WMScreen *screen, int argc, char **argv)
+Dockapp *newDockapp(WMScreen *screen, Preferences *prefs, int argc, char **argv)
 {
-	Dockapp *dockapp = malloc(sizeof(Dockapp));
+	Dockapp *dockapp = wmalloc(sizeof(Dockapp));
 	WMFrame *frame;
 	WMWindow *window;
+
+	dockapp->screen = screen;
+	dockapp->prefs = prefs;
+	dockapp->minutesLeft = prefs->interval;
+	dockapp->prefsWindowPresent = 0;
 
 	window = WMCreateDockapp(screen, "", argc, argv);
 
@@ -224,7 +271,6 @@ Dockapp *newDockapp(WMScreen *screen, int argc, char **argv)
 	dockapp->icon = WMCreateLabel(frame);
 	WMSetWidgetBackgroundColor(dockapp->icon,color("black"));
 	WMRealizeWidget(dockapp->icon);
-
 	WMSetLabelImagePosition(dockapp->icon,WIPImageOnly);
 	WMResizeWidget(dockapp->icon,32,32);
 	WMMoveWidget(dockapp->icon,12,5);
@@ -263,6 +309,9 @@ char *getBalloonText(Weather *weather)
 	return text;
 }
 
+	
+
+
 
 /**************************************************
 from http://curl.haxx.se/libcurl/c/getinmemory.html
@@ -279,13 +328,7 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 	size_t realsize = size * nmemb;
 	struct MemoryStruct *mem = (struct MemoryStruct *)userp;
  
-	mem->memory = realloc(mem->memory, mem->size + realsize + 1);
-	if(mem->memory == NULL) {
-		/* out of memory! */ 
-		printf("not enough memory (realloc returned NULL)\n");
-		return 0;
-	}
- 
+	mem->memory = wrealloc(mem->memory, mem->size + realsize + 1);
 	memcpy(&(mem->memory[mem->size]), contents, realsize);
 	mem->size += realsize;
 	mem->memory[mem->size] = 0;
@@ -293,34 +336,12 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 	return realsize;
 }
 
-struct MemoryStruct downloadWeather(char *url)
-{
-	CURL *curl_handle;
-  	CURLcode res;
- 	struct MemoryStruct chunk;
-	chunk.memory = malloc(1);
-	chunk.size = 0;
- 
-	curl_global_init(CURL_GLOBAL_ALL);
-	curl_handle = curl_easy_init();
-	curl_easy_setopt(curl_handle, CURLOPT_URL, url);
-	curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
-	curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&chunk);
-	curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
-	res = curl_easy_perform(curl_handle);
-	if(res != CURLE_OK) {
-		fprintf(stderr, "curl_easy_perform() failed: %s\n",
-			curl_easy_strerror(res));
-	}
-	curl_easy_cleanup(curl_handle);
-	curl_global_cleanup();
-	return chunk;
-}
-
 Weather *getWeather(WMScreen *screen, Preferences *prefs)
 {
 	char *url;
-	struct MemoryStruct chunk;
+	CURL *curl_handle;
+  	CURLcode res;
+ 	struct MemoryStruct chunk;
 	Weather *weather;
 	xmlDocPtr doc;
 	xmlNodePtr cur;
@@ -335,24 +356,42 @@ Weather *getWeather(WMScreen *screen, Preferences *prefs)
 		url = wstrappend(url, prefs->zip);
 	}
 		
-
-
 	weather = newWeather();
-	chunk = downloadWeather(url);
+	chunk.memory = wmalloc(1);
+	chunk.size = 0;
+ 
+	curl_global_init(CURL_GLOBAL_ALL);
+	curl_handle = curl_easy_init();
+	curl_easy_setopt(curl_handle, CURLOPT_URL, url);
+	curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+	curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&chunk);
+	curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+	res = curl_easy_perform(curl_handle);
+	if(res != CURLE_OK) {
+		setError(weather, screen, curl_easy_strerror(res));
+		curl_easy_cleanup(curl_handle);
+		curl_global_cleanup();
+		wfree(chunk.memory);
+		return weather;
+	}
+	curl_easy_cleanup(curl_handle);
+	curl_global_cleanup();
 
 	doc = xmlParseMemory(chunk.memory, chunk.size);
 	if (doc == NULL) {
-		fprintf(stderr,"Document not parsed successfully. \n");
+		setError(weather, screen, "Document not parsed successfully");
+		xmlFreeDoc(doc);
 		return;
 	}
 	cur = xmlDocGetRootElement(doc);
 	if (cur == NULL) {
-		fprintf(stderr,"empty document\n");
+		setError(weather, screen,"Empty document");
 		xmlFreeDoc(doc);
 		return;
 	}
 	
 	if (xmlStrcmp(cur->name, (const xmlChar *) "rss")) {
+		setError(weather, screen,"Empty document");
 		fprintf(stderr,"document of the wrong type, root node != rss");
 		xmlFreeDoc(doc);
 		return;
@@ -368,8 +407,7 @@ Weather *getWeather(WMScreen *screen, Preferences *prefs)
 			while (cur != NULL) {
 				if ((!xmlStrcmp(cur->name, (const xmlChar *)"title"))) {
 					if ((!xmlStrcmp(xmlNodeListGetString(doc, cur->children, 1), (const xmlChar *)"City not found"))) {
-						printf("Location not found\n");
-						exit(0);
+						setError(weather, screen, "Location not found\n");
 					}
 					setTitle(
 						weather,
@@ -409,51 +447,136 @@ Weather *getWeather(WMScreen *screen, Preferences *prefs)
 	xmlFreeDoc(doc);
 // finishing parsing xml
 
-	if(chunk.memory)
-		free(chunk.memory);
+	wfree(chunk.memory);
 
 	return weather;
 }
 
-void updateDockapp(WMScreen *screen, Dockapp *dockapp, Preferences *prefs)
+static void updateDockapp(void *data)
 {
+	Dockapp *dockapp = (Dockapp *)data;
+
+	WMScreen *screen = dockapp->screen;
+	Preferences *prefs = dockapp->prefs;
 	Weather *weather;
+	WMPixmap *icon;
+
+	WMSetLabelText(dockapp->text,"loading");
+	WMRedisplayWidget(dockapp->text);
 
 	weather = getWeather(screen, prefs);
-	WMSetLabelText(dockapp->text,wstrconcat(weather->temp,"°"));
-	WMSetLabelImage(dockapp->icon,weather->icon);
-	WMSetBalloonTextForView(getBalloonText(weather), WMWidgetView(dockapp->icon)); 
+
+	if (weather->errorFlag) {
+		RContext *context;
+
+		WMSetLabelText(dockapp->text,"ERROR");
+
+		context = WMScreenRContext(screen);
+		weather->icon = RLoadImage(context,DATADIR"/na.png",0);
+		if (weather->icon) {
+			icon = WMCreatePixmapFromRImage(screen,weather->icon,0);
+			WMSetLabelImage(dockapp->icon,icon);
+		}
+
+		WMSetBalloonTextForView(weather->errorText, WMWidgetView(dockapp->icon)); 
+
+	}
+	else {
+		WMSetLabelText(dockapp->text,wstrconcat(weather->temp,"°"));
+	
+		icon = WMCreatePixmapFromRImage(screen,weather->icon,0);
+		WMSetLabelImage(dockapp->icon,icon);
+	
+		WMSetBalloonTextForView(getBalloonText(weather), WMWidgetView(dockapp->icon)); 
+	}
+
 	WMRedisplayWidget(dockapp->icon);
 	WMRedisplayWidget(dockapp->text);
 
 	freeWeather(weather);
 }
 
+char *WMGetPLStringForKey(WMPropList *propList, char *key)
+{
+	WMPropList *value;
+	value = WMGetFromPLDictionary(propList,WMCreatePLString(key));
+	if (value)
+		return WMGetPropListDescription(value, False);
+	else
+		return NULL;
+}
+
+char *getPreferencesFilename()
+{
+	char *filename;
+
+	filename = getenv("XDG_CONFIG_DIR");
+	if (!filename)
+		filename = wstrconcat(getenv("HOME"), "/.config");
+	filename = wstrappend(filename, "/wmforecast/wmforecastrc");
+
+	return filename;
+}
+
+void readPreferences(Preferences *prefs) 
+{
+	char *filename;
+	WMPropList *propList;
+
+	filename = getPreferencesFilename();
+	propList = WMReadPropListFromFile(filename); 
+	if (propList) {
+		char *value;
+		value = WMGetPLStringForKey(propList, "units");
+		if (value)
+			prefs->units = value;
+		value = WMGetPLStringForKey(propList, "woeid");
+		if (value)
+			prefs->woeid = value;
+		value = WMGetPLStringForKey(propList, "zip");
+		if (value)
+			prefs->zip = value;
+		value = WMGetPLStringForKey(propList, "woeid_or_zip");
+		if (value)
+			prefs->woeid_or_zip = value;
+		value = WMGetPLStringForKey(propList, "interval");
+		if (value)
+			prefs->interval = strtol(value, NULL, 10);
+	}
+
+
+}
+
 Preferences *setPreferences(int argc, char **argv)
 {
 	int c;
-	Preferences *prefs = malloc(sizeof(Preferences));
-	
+	Preferences *prefs = wmalloc(sizeof(Preferences));
+
 	//set defaults
 	prefs->units = "f";
 	prefs->woeid = "2502265";
 	prefs->zip = NULL;
 	prefs->woeid_or_zip = NULL;
+	prefs->interval = 60;
 
+	readPreferences(prefs);
+
+	//command line
 	while (1)
 	{
 		static struct option long_options[] =
 			{
-				{"version",     no_argument,       0, 'v'},
-				{"help",  no_argument,       0, 'h'},
-				{"woeid",  required_argument, 0, 'w'},
-				{"units",  required_argument, 0, 'u'},
-				{"zip",    required_argument, 0, 'z'},
+				{"version", no_argument, 0, 'v'},
+				{"help", no_argument, 0, 'h'},
+				{"woeid", required_argument, 0, 'w'},
+				{"units", required_argument, 0, 'u'},
+				{"zip", required_argument, 0, 'z'},
+				{"interval", required_argument, 0, 'i'},
 				{0, 0, 0, 0}
 			};
 		int option_index = 0;
      
-		c = getopt_long (argc, argv, "vhw:u:z:",
+		c = getopt_long (argc, argv, "vhw:u:z:i:",
 				 long_options, &option_index);
      
 		if (c == -1)
@@ -484,17 +607,23 @@ Preferences *setPreferences(int argc, char **argv)
 			printf("a weather dockapp for Window Maker using the Yahoo Weather API\n\n"
 			       "Usage: wmforecast [OPTIONS]\n\n"
 			       "Options:\n"
-			       "    -v, --version       print the version number\n"
-			       "    -h, --help          print this help screen\n" 
-			       "    -u, --units <c|f>   whether to use Celsius or Fahrenheit (default is f)\n"
-			       "    -w, --woeid <woeid> Where on Earth ID (default is 2502265 for\n"
-			       "                        Sunnyvale, CA -- to find your WOEID, search\n"
-			       "                        for your city at http://weather.yahoo.com and\n"
-			       "                        look in the URL.)\n"
-			       "    -z, --zip <zip>     ZIP code or Location ID (Yahoo has deprecated this\n"
-			       "                        option and it is not guaranteed to work)\n"
-			       "(note that only one of -w or -z may be used, not both)\n\n"
-			       "Report bugs to <dtorrance@monmouthcollege.edu>.\n"
+			       "    -v, --version        print the version number\n"
+			       "    -h, --help           print this help screen\n" 
+			       "    -i, --interval <min> number of minutes between refreshes (default 60)\n"
+			       "    -u, --units <c|f>    whether to use Celsius or Fahrenheit (default f)\n"
+			       "    -w, --woeid <woeid>  Where on Earth ID (default is 2502265 for\n"
+			       "                         Sunnyvale, CA -- to find your WOEID, search\n"
+			       "                         for your city at http://weather.yahoo.com and\n"
+			       "                         look in the URL.)\n"
+			       "    -z, --zip <zip>      ZIP code or Location ID (Yahoo has deprecated this\n"
+			       "                         option and it is not guaranteed to work)\n"
+			       "Notes:\n"
+			       "* double click the icon at any time to refresh data\n\n"
+			       "* right click the icon to edit your preferences in a GUI\n\n"
+			       "* preferences may be manually configured in\n"
+			       "  XDG_CONFIG_DIR/wmforecast/wmforecastrc\n\n"
+			       "Report bugs to %s\n",
+			       PACKAGE_BUGREPORT
 				);
 			
 			exit(0);
@@ -513,14 +642,14 @@ Preferences *setPreferences(int argc, char **argv)
 			break;
      
 		case 'z':
-			if (prefs->woeid_or_zip) {
-				printf("only one of -w or -z may be used, not both\n");
-				exit(0);
-			}
 			prefs->woeid_or_zip = "z";
 			prefs->zip = optarg;
 			break;
-     
+
+		case 'i':
+			prefs->interval = strtol(optarg,NULL,10);
+			break;
+
 		case '?':
 			/* getopt_long already printed an error message. */
 			break;
@@ -529,7 +658,7 @@ Preferences *setPreferences(int argc, char **argv)
 			abort ();
 		}
 	}
-	
+
 	if (!prefs->woeid_or_zip) {
 		prefs->woeid_or_zip = "w";
 	}
@@ -537,21 +666,212 @@ Preferences *setPreferences(int argc, char **argv)
 	return prefs;
 }
 
-ThreadData *newThreadData(WMScreen *screen, Dockapp *dockapp, Preferences *prefs)
+static void closePreferences(WMWidget *widget, void *data)
 {
-	ThreadData *data = malloc(sizeof(ThreadData));
-	data->screen = screen;
-	data->dockapp = dockapp;
-	data->prefs = prefs;
-	return data;
+	Dockapp *d = (Dockapp *)data;
+	WMDestroyWidget(d->prefsWindow->window);
+	d->prefsWindowPresent = 0;
 }
-	
-void *timerLoop(void *args)
+
+static void savePreferences(WMWidget *widget, void *data)
 {
-	ThreadData *data = args;
-	for (;;) {
-		updateDockapp(data->screen, data->dockapp, data->prefs);
-		sleep(60*60);
+	char *filename;
+	char *prefsString;
+	Dockapp *d = (Dockapp *)data;
+	FILE *file;
+	WMPropList *prefsPL;
+	WMPropList *key;
+	WMPropList *object;
+
+	prefsPL = WMCreatePLDictionary(NULL,NULL);
+
+	key = WMCreatePLString("units");
+	if (WMGetButtonSelected(d->prefsWindow->celsius)) {
+		object = WMCreatePLString("c");
+		WMPutInPLDictionary(prefsPL, key, object);
+	}
+	if (WMGetButtonSelected(d->prefsWindow->fahrenheit)) {
+		object = WMCreatePLString("f");
+		WMPutInPLDictionary(prefsPL, key, object);
+	}
+
+	key = WMCreatePLString("woeid_or_zip");
+	if (WMGetButtonSelected(d->prefsWindow->woeid)) {
+		object = WMCreatePLString("w");
+		WMPutInPLDictionary(prefsPL, key, object);
+	}
+	if (WMGetButtonSelected(d->prefsWindow->zip)) {
+		object = WMCreatePLString("z");
+		WMPutInPLDictionary(prefsPL, key, object);
+	}
+
+	key = WMCreatePLString("woeid");
+	object = WMCreatePLString(WMGetTextFieldText(d->prefsWindow->woeidField));
+	WMPutInPLDictionary(prefsPL, key, object);
+
+	key = WMCreatePLString("zip");
+	object = WMCreatePLString(WMGetTextFieldText(d->prefsWindow->zipField));
+	WMPutInPLDictionary(prefsPL, key, object);
+
+	key = WMCreatePLString("interval");
+	object = WMCreatePLString(WMGetTextFieldText(d->prefsWindow->interval));
+	WMPutInPLDictionary(prefsPL, key, object);
+	
+	prefsString = WMGetPropListDescription(prefsPL, True);
+
+	filename = getPreferencesFilename();
+
+	// since WMWritePropListToFile only writes to files in 
+	// GNUSTEP_USER_ROOT, we need to write our own version
+	file = fopen(filename, "w");
+	if (file)
+	{
+		fputs(prefsString, file);
+		fclose(file);
+	}
+
+	readPreferences(d->prefs);
+	updateDockapp(d);
+
+}
+
+static void editPreferences(void *data)
+{
+	char intervalPtr[50];
+	Dockapp *d = (Dockapp *)data;
+
+	d->prefsWindowPresent = 1;
+
+	d->prefsWindow = wmalloc(sizeof(PreferencesWindow));
+
+	d->prefsWindow->screen = d->screen;
+	d->prefsWindow->prefs = d->prefs;
+
+
+	d->prefsWindow->window = WMCreateWindow(d->prefsWindow->screen, "wmforecast");
+	WMSetWindowTitle(d->prefsWindow->window, "wmforecast");
+	WMSetWindowCloseAction (d->prefsWindow->window, closePreferences, d);
+	WMResizeWidget(d->prefsWindow->window, 424, 130);
+	WMRealizeWidget(d->prefsWindow->window);
+	WMMapWidget(d->prefsWindow->window);
+
+	d->prefsWindow->units = WMCreateFrame(d->prefsWindow->window);
+	WMSetFrameTitle(d->prefsWindow->units, "Units");
+	WMResizeWidget(d->prefsWindow->units, 112, 80);
+	WMMoveWidget(d->prefsWindow->units, 10, 10);
+	WMRealizeWidget(d->prefsWindow->units);
+	WMMapWidget(d->prefsWindow->units);
+
+	d->prefsWindow->celsius = WMCreateButton(d->prefsWindow->units, WBTRadio);
+	WMSetButtonText(d->prefsWindow->celsius, "Celsius");
+	WMMoveWidget(d->prefsWindow->celsius, 10, 20);
+	if (strcmp(d->prefsWindow->prefs->units,"c") == 0)
+		WMSetButtonSelected(d->prefsWindow->celsius,1);
+	WMRealizeWidget(d->prefsWindow->celsius);
+	WMMapWidget(d->prefsWindow->celsius);
+
+	d->prefsWindow->fahrenheit = WMCreateButton(d->prefsWindow->units, WBTRadio);
+	WMSetButtonText(d->prefsWindow->fahrenheit, "Fahrenheit");
+	WMMoveWidget(d->prefsWindow->fahrenheit, 10, 44);
+	if (strcmp(d->prefsWindow->prefs->units,"f") == 0)
+		WMSetButtonSelected(d->prefsWindow->fahrenheit,1);
+	WMRealizeWidget(d->prefsWindow->fahrenheit);
+	WMMapWidget(d->prefsWindow->fahrenheit);
+
+	WMGroupButtons(d->prefsWindow->celsius, d->prefsWindow->fahrenheit);
+
+	d->prefsWindow->locationFrame = WMCreateFrame(d->prefsWindow->window);
+	WMSetFrameTitle(d->prefsWindow->locationFrame, "Location");
+	WMResizeWidget(d->prefsWindow->locationFrame, 160, 80);
+	WMMoveWidget(d->prefsWindow->locationFrame, 132, 10);
+	WMRealizeWidget(d->prefsWindow->locationFrame);
+	WMMapWidget(d->prefsWindow->locationFrame);
+
+	d->prefsWindow->woeid = WMCreateButton(d->prefsWindow->locationFrame, WBTRadio);
+	WMSetButtonText(d->prefsWindow->woeid, "WOEID");
+	WMMoveWidget(d->prefsWindow->woeid, 10, 20);
+	if (strcmp(d->prefsWindow->prefs->woeid_or_zip,"w") == 0)
+		WMSetButtonSelected(d->prefsWindow->woeid,1);
+	WMRealizeWidget(d->prefsWindow->woeid);
+	WMMapWidget(d->prefsWindow->woeid);
+
+	d->prefsWindow->woeidField = WMCreateTextField(d->prefsWindow->locationFrame);
+	WMSetTextFieldText(d->prefsWindow->woeidField, d->prefsWindow->prefs->woeid);
+	WMResizeWidget(d->prefsWindow->woeidField, 60, 20);
+	WMMoveWidget(d->prefsWindow->woeidField, 90, 20);
+	WMRealizeWidget(d->prefsWindow->woeidField);
+	WMMapWidget(d->prefsWindow->woeidField);
+
+	d->prefsWindow->zip = WMCreateButton(d->prefsWindow->locationFrame, WBTRadio);
+	WMSetButtonText(d->prefsWindow->zip, "ZIP code");
+	WMMoveWidget(d->prefsWindow->zip, 10, 44);
+	if (strcmp(d->prefsWindow->prefs->woeid_or_zip,"z") == 0)
+		WMSetButtonSelected(d->prefsWindow->zip,1);
+	WMRealizeWidget(d->prefsWindow->zip);
+	WMMapWidget(d->prefsWindow->zip);
+
+	d->prefsWindow->zipField = WMCreateTextField(d->prefsWindow->locationFrame);
+	WMSetTextFieldText(d->prefsWindow->zipField, d->prefsWindow->prefs->zip);
+	WMResizeWidget(d->prefsWindow->zipField, 60, 20);
+	WMMoveWidget(d->prefsWindow->zipField, 90, 44);
+	WMRealizeWidget(d->prefsWindow->zipField);
+	WMMapWidget(d->prefsWindow->zipField);
+
+	d->prefsWindow->intervalFrame = WMCreateFrame(d->prefsWindow->window);
+	WMSetFrameTitle(d->prefsWindow->intervalFrame, "Refresh interval");
+	WMResizeWidget(d->prefsWindow->intervalFrame, 112, 80);
+	WMMoveWidget(d->prefsWindow->intervalFrame, 302, 10);
+	WMRealizeWidget(d->prefsWindow->intervalFrame);
+	WMMapWidget(d->prefsWindow->intervalFrame);
+
+	WMGroupButtons(d->prefsWindow->woeid, d->prefsWindow->zip);
+
+	d->prefsWindow->interval = WMCreateTextField(d->prefsWindow->intervalFrame);
+	sprintf(intervalPtr, "%lu", d->prefsWindow->prefs->interval);
+	WMSetTextFieldText(d->prefsWindow->interval, intervalPtr);
+	WMResizeWidget(d->prefsWindow->interval, 30, 20);
+	WMMoveWidget(d->prefsWindow->interval, 15, 33);
+	WMRealizeWidget(d->prefsWindow->interval);
+	WMMapWidget(d->prefsWindow->interval);
+
+	d->prefsWindow->minutes = WMCreateLabel(d->prefsWindow->intervalFrame);
+	WMSetLabelText(d->prefsWindow->minutes, "minutes");
+	WMMoveWidget(d->prefsWindow->minutes, 45, 35);
+	WMRealizeWidget(d->prefsWindow->minutes);
+	WMMapWidget(d->prefsWindow->minutes);
+
+	d->prefsWindow->save = WMCreateButton(d->prefsWindow->window, WBTMomentaryPush);
+	WMSetButtonText(d->prefsWindow->save, "Save");
+	WMSetButtonAction(d->prefsWindow->save, savePreferences, d);
+	WMMoveWidget(d->prefsWindow->save, 285, 100);
+	WMRealizeWidget(d->prefsWindow->save);
+	WMMapWidget(d->prefsWindow->save);
+
+	d->prefsWindow->close = WMCreateButton(d->prefsWindow->window, WBTMomentaryPush);
+	WMSetButtonText(d->prefsWindow->close, "Close");
+	WMSetButtonAction(d->prefsWindow->close, closePreferences, d);
+	WMMoveWidget(d->prefsWindow->close, 353, 100);
+	WMRealizeWidget(d->prefsWindow->close);
+	WMMapWidget(d->prefsWindow->close);
+}
+
+static void refresh(XEvent *event, void *data)
+{
+	Dockapp *d = (Dockapp *)data;
+	if (WMIsDoubleClick(event) && event->xbutton.button == Button1) 
+		updateDockapp(d);
+	if (event->xbutton.button == Button3 && !d->prefsWindowPresent)
+		editPreferences(d);
+}
+
+static void timerHandler(void *data)
+{
+	Dockapp *d = (Dockapp *)data;
+	
+	d->minutesLeft--;
+	if (d->minutesLeft == 0) {
+		d->minutesLeft = d->prefs->interval;
+		updateDockapp(data);
 	}
 }
 
@@ -559,28 +879,23 @@ int main(int argc, char **argv)
 {
 	Display *display;
 	Dockapp *dockapp;
-	int interval = 5;
 	Preferences *prefs;
-	pthread_t thread;
-	ThreadData *data;
 	WMScreen *screen;
 
 	prefs = setPreferences(argc, argv);
-
-	XInitThreads();
 
 	WMInitializeApplication("wmforecast", &argc, argv);
 	display = XOpenDisplay("");
 
 	screen = WMCreateScreen(display, DefaultScreen(display));
-	dockapp = newDockapp(screen, argc, argv);
-	data = newThreadData(screen, dockapp, prefs);
+	dockapp = newDockapp(screen, prefs, argc, argv);
 
-	pthread_create(&thread, NULL, timerLoop, data);
+	WMCreateEventHandler(WMWidgetView(dockapp->icon), ButtonPressMask,
+			     refresh, dockapp);
+
+	updateDockapp(dockapp);
+	WMAddPersistentTimerHandler(60*1000, //one minute
+				    timerHandler, dockapp);
+
 	WMScreenMainLoop(screen);
 }
-
-
-
-
-

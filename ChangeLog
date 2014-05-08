@@ -1,10 +1,87 @@
-2015-04-15  Doug Torrance <dtorrance@monmouthcollege.edu>
+2014-05-07  Doug Torrance <dtorrance@monmouthcollege.edu>
+	* wmforecast.c (Dockapp): combined with old UpdateData struct to better
+	  facilitate new feature:
+	* wmforecast.c (editPreferences): new GUI to edit wmforecastrc
+	* wmforecast.c (setPreferences): removed check to see if both -w and -z
+	  options were used, as it was creating a problem when wmforecastrc
+	  existed; new behavior is to just take the last option given
+	* wmforecast.c (getWeather): "Location not found" error now uses setError
+	  instead of exiting
+	* configure.ac: set version 0.4, added PKG_CHECK_MODULES for x11
+	* Makefile.am: added x11 libs and flags, manually add WINGs libs and flag,
+	  since get-wings-flags returns the deprecated lungif
+	* NEWS, README:  updated with version 0.4 info
+
+2014-04-21  Doug Torrance <dtorrance@monmouthcollege.edu>
+	* wmforecast.c: changed all calls to free to use WINGs's native wfree;
+	  removed if statements before calls to free, since wfree already does
+	  this
+	* wmforecast.c (setError): moved earlier, so that it can be called from
+	  setConditions
+	* wmforecast.c (setConditions): now returns an error when icon image
+	  not found
+	* wmforecast.c (updateDockapp): checks to see if na.png will load before
+	  using it
+	* wmforecast.c (WriteMemoryCallback): removed check to see if result of
+	  wrealloc was NULL (wrealloc already does this)
+	* ChangeLog: corrected year in all entries (it's not 2015 yet...)
+	* NEWS, README: updated with version 0.3 info
+	* configure.ac: set version 0.3
+
+	* the following changes took place after the v0.3 release:
+
+	* Makefile.am: wmforecast.1 target now depends on config.h; this will
+	  cause manpage to reflect changes in version and bug report email
+	* wmforecast.c (setConditions): append a "0" to one-digit codes so that
+	  the icon is correctly displayed
+	* wmforecast.c (WMGetPLStringForKey): new function to simplify reading
+	  values from WMPropLists (inspired by WMGetUDStringForKey), used for
+	  the following new feature...
+	* wmforecast.c (setPreferences): reads user defined preferences from
+	  XDG_CONFIG_DIR/wmforecast/wmforecastrc
+
+2014-04-19  Doug Torrance <dtorrance@monmouthcollege.edu>
+	* switched timer handler from pthread to WING's native WMAddPersistent-
+	  TimerHandler and added --interval option, resulting in numerous changes:
+	* configure.ac: removed check for pthread
+	* wmforecast.c (UpdateData): struct formerly known as ThreadData, added
+	  long int minutesLeft (keeps track of the number of minutes until the
+	  next refresh)
+	* wmforecast.c (updateDockapp): now takes UpdateData struct as argument
+	  instead of WMScreen, Dockapp, and Preferences (for passing via timer
+	  and event handlers); added "loading" text while downloading new data
+	* wmforecast.c (timerHandler): counts down number of minutes until next
+	  refresh (needed because WMAddPersistentTimerHandler fails when
+	  milliseconds argument too large, e.g., one hour)
+	* wmforecast.c (setPreferences): documented --interval option
+	* wmforecast.c: changed all calls to malloc and realloc to use WINGs's
+	  native wmalloc and wrealloc
+	* wmforecast.c (refresh): new function, refreshes weather data when icon
+	  double clicked
+
+2014-04-17  Doug Torrance <dtorrance@monmouthcollege.edu>
+	* wmforecast.c: improved error handling -- Weather struct now contains
+	  errorFlag and errorText.  If errorFlag set to 1, "ERROR" is displayed
+	  in dockapp along along with an icon with a question mark, and
+	  errorText is displayed in a balloon tooltip, instead of drawing the
+	  dockapp as usual.  Previous calls to libcurl and libxml that used
+	  stderr for errors now use this.  This avoids, e.g., a segfault when
+	  the internet is down.
+
+2014-04-16  Doug Torrance <dtorrance@monmouthcollege.edu>
+	* wmforecast.c: bugfix -- After downloading the weather, the Weather
+	  struct was being freed, but it contained the pointer to the icon
+	  currently used by the dockapp, causing a crash.  This has been fixed.
+	  In addition, functions have been added to properly free the
+	  Forecast and ForecastArray structs inside each Weather struct.
+	* README: expanded description
+
+2014-04-15  Doug Torrance <dtorrance@monmouthcollege.edu>
 
 	* wmforecast.c: fixed bug where window was still drawn with --help or
   	  --version by moving the call to setPreferences earlier;
 	  for the benefit of help2man, copyright and author information added
 	  to --version, description and bug report information added to --help
 	* configure.ac, Makefile.am: call help2man during make to automatically
-	  build manpage
+	  build manpagec
 	* configure.ac: set version 0.2
-
