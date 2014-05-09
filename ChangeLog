@@ -1,3 +1,11 @@
+2014-05-08  Doug Torrance <dtorrance@monmouthcollege.edu>
+	* wmforecast.c (getPreferencesDirectory): new function to get directory
+	  of wmforecastrc file
+	* wmforecast.c (getPreferencesFilename): now uses getPreferencesDirectory
+	* wmforecast.c (savePreferences): now calls mkdir to create the directory
+	  containing wmforecastrc; this fixes a bug where the wmforecastrc file
+	  was not created when the directory did not exist yet
+
 2014-05-07  Doug Torrance <dtorrance@monmouthcollege.edu>
 	* wmforecast.c (Dockapp): combined with old UpdateData struct to better
 	  facilitate new feature:
