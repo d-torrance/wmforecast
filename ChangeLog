@@ -1,3 +1,8 @@
+2014-05-11  Doug Torrance <dtorrance@monmouthcollege.edu>
+	* Makefile.am: use dist_man_MANS instead of adding man_MANS to EXTRA_DIST
+	* Makefile.am, wmforecast.desktop: new file, add wmforecast to menus for
+	  desktop environements using freedesktop.org desktop entry standards
+
 2014-05-08  Doug Torrance <dtorrance@monmouthcollege.edu>
 	* wmforecast.c (getPreferencesDirectory): new function to get directory
 	  of wmforecastrc file
