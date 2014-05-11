@@ -19,12 +19,14 @@
 #include <config.h>
 #endif
 
-#include <WINGs/WINGs.h>
+#include <curl/curl.h>
+#include <getopt.h>
+#include <libgen.h>
+#include <libxml/tree.h>
 #include <stdio.h>
 #include <string.h>
-#include <curl/curl.h>
-#include <libxml/tree.h>
-#include <getopt.h>
+#include <sys/stat.h>
+#include <WINGs/WINGs.h>
 
 #define color(c) WMCreateNamedColor(screen,c,True)
 
@@ -506,14 +508,22 @@ char *WMGetPLStringForKey(WMPropList *propList, char *key)
 		return NULL;
 }
 
+char *getPreferencesDirectory()
+{
+	char *dir;
+	dir = getenv("XDG_CONFIG_DIR");
+	if (!dir)
+		dir = wstrconcat(getenv("HOME"), "/.config");
+	dir = wstrconcat(dir, "/wmforecast");
+	return dir;
+}
+
 char *getPreferencesFilename()
 {
 	char *filename;
 
-	filename = getenv("XDG_CONFIG_DIR");
-	if (!filename)
-		filename = wstrconcat(getenv("HOME"), "/.config");
-	filename = wstrappend(filename, "/wmforecast/wmforecastrc");
+	filename = getPreferencesDirectory();
+	filename = wstrappend(filename, "/wmforecastrc");
 
 	return filename;
 }
@@ -675,6 +685,7 @@ static void closePreferences(WMWidget *widget, void *data)
 
 static void savePreferences(WMWidget *widget, void *data)
 {
+	char *dir;
 	char *filename;
 	char *prefsString;
 	Dockapp *d = (Dockapp *)data;
@@ -717,12 +728,14 @@ static void savePreferences(WMWidget *widget, void *data)
 	object = WMCreatePLString(WMGetTextFieldText(d->prefsWindow->interval));
 	WMPutInPLDictionary(prefsPL, key, object);
 	
-	prefsString = WMGetPropListDescription(prefsPL, True);
-
-	filename = getPreferencesFilename();
-
 	// since WMWritePropListToFile only writes to files in 
 	// GNUSTEP_USER_ROOT, we need to write our own version
+	prefsString = WMGetPropListDescription(prefsPL, True);
+
+	dir = getPreferencesDirectory();
+	mkdir(dir, 0777);
+
+	filename = getPreferencesFilename();
 	file = fopen(filename, "w");
 	if (file)
 	{

@@ -1,4 +1,4 @@
-pkgdata_DATA = 00.png \
+dist_pkgdata_DATA = 00.png \
 	01.png \
 	02.png \
 	03.png \
@@ -48,4 +48,8 @@ pkgdata_DATA = 00.png \
 	47.png \
 	na.png
 
-EXTRA_DIST = $(pkgdata_DATA) 
+icons48x48dir = $(datadir)/icons/hicolor/48x48/apps
+dist_icons48x48_DATA = wmforecast.png
+
+iconsscalabledir = $(datadir)/icons/hicolor/scalable/apps
+dist_iconsscalable_DATA = wmforecast.svg

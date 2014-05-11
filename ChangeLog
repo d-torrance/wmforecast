@@ -1,3 +1,18 @@
+2014-05-11  Doug Torrance <dtorrance@monmouthcollege.edu>
+	* Makefile.am: use dist_man_MANS instead of adding man_MANS to EXTRA_DIST
+	* Makefile.am, wmforecast.desktop: new file, add wmforecast to menus for
+	  desktop environements using freedesktop.org desktop entry standards
+	* icons/Makefile.am, icons/wmforecast.*: new files, add icon for menus
+	* NEWS, configure.ac: bump to version 0.5
+
+2014-05-08  Doug Torrance <dtorrance@monmouthcollege.edu>
+	* wmforecast.c (getPreferencesDirectory): new function to get directory
+	  of wmforecastrc file
+	* wmforecast.c (getPreferencesFilename): now uses getPreferencesDirectory
+	* wmforecast.c (savePreferences): now calls mkdir to create the directory
+	  containing wmforecastrc; this fixes a bug where the wmforecastrc file
+	  was not created when the directory did not exist yet
+
 2014-05-07  Doug Torrance <dtorrance@monmouthcollege.edu>
 	* wmforecast.c (Dockapp): combined with old UpdateData struct to better
 	  facilitate new feature:
