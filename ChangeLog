@@ -4,6 +4,8 @@
 	  desktop environements using freedesktop.org desktop entry standards
 	* icons/Makefile.am, icons/wmforecast.*: new files, add icon for menus
 	* NEWS, configure.ac: bump to version 0.5
+	* wmforecast.desktop: (after 0.5 release) added trailing semicolon to
+	  Categories; new Keywords field
 
 2014-05-08  Doug Torrance <dtorrance@monmouthcollege.edu>
 	* wmforecast.c (getPreferencesDirectory): new function to get directory
