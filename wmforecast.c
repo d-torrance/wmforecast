@@ -220,11 +220,11 @@ WMWindow *WMCreateDockapp(WMScreen *screen, const char *name, int argc, char **a
 	XWMHints *hints;
 	Display *display;
 	Window window;
-	
+
 	display = WMScreenDisplay(screen);
 	dockapp = WMCreateWindow(screen,name);
 	WMRealizeWidget(dockapp);
-	
+
 	window = WMWidgetXID(dockapp);
 
 	hints = XGetWMHints(display, window);
@@ -284,7 +284,7 @@ Dockapp *newDockapp(WMScreen *screen, Preferences *prefs, int argc, char **argv)
 	return dockapp;
 }
 
-char *getBalloonText(Weather *weather) 
+char *getBalloonText(Weather *weather)
 {
 	char *text;
 	int i;
@@ -311,7 +311,7 @@ char *getBalloonText(Weather *weather)
 	return text;
 }
 
-	
+
 
 
 
@@ -322,19 +322,19 @@ struct MemoryStruct {
 	char *memory;
 	size_t size;
 };
- 
- 
+
+
 static size_t
 WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 {
 	size_t realsize = size * nmemb;
 	struct MemoryStruct *mem = (struct MemoryStruct *)userp;
- 
+
 	mem->memory = wrealloc(mem->memory, mem->size + realsize + 1);
 	memcpy(&(mem->memory[mem->size]), contents, realsize);
 	mem->size += realsize;
 	mem->memory[mem->size] = 0;
- 
+
 	return realsize;
 }
 
@@ -357,11 +357,11 @@ Weather *getWeather(WMScreen *screen, Preferences *prefs)
 		url = wstrappend(url,"&p=");
 		url = wstrappend(url, prefs->zip);
 	}
-		
+
 	weather = newWeather();
 	chunk.memory = wmalloc(1);
 	chunk.size = 0;
- 
+
 	curl_global_init(CURL_GLOBAL_ALL);
 	curl_handle = curl_easy_init();
 	curl_easy_setopt(curl_handle, CURLOPT_URL, url);
@@ -383,22 +383,22 @@ Weather *getWeather(WMScreen *screen, Preferences *prefs)
 	if (doc == NULL) {
 		setError(weather, screen, "Document not parsed successfully");
 		xmlFreeDoc(doc);
-		return;
+		return weather;
 	}
 	cur = xmlDocGetRootElement(doc);
 	if (cur == NULL) {
 		setError(weather, screen,"Empty document");
 		xmlFreeDoc(doc);
-		return;
+		return weather;
 	}
-	
+
 	if (xmlStrcmp(cur->name, (const xmlChar *) "rss")) {
 		setError(weather, screen,"Empty document");
 		fprintf(stderr,"document of the wrong type, root node != rss");
 		xmlFreeDoc(doc);
-		return;
+		return weather;
 	}
-		
+
 	cur = cur->children;
 	cur = cur->next;
 	cur = cur->children;
@@ -415,7 +415,7 @@ Weather *getWeather(WMScreen *screen, Preferences *prefs)
 						weather,
 						xmlNodeListGetString(doc, cur->children, 1)
 						);
-					
+
 				}
 				if ((!xmlStrcmp(cur->name, (const xmlChar *)"condition"))) {
 					setConditions(
@@ -438,7 +438,7 @@ Weather *getWeather(WMScreen *screen, Preferences *prefs)
 					appendForecast(weather->forecasts,forecast);
 				}
 
-				
+
 				cur = cur->next;
 			}
 		}
@@ -480,16 +480,16 @@ static void updateDockapp(void *data)
 			WMSetLabelImage(dockapp->icon,icon);
 		}
 
-		WMSetBalloonTextForView(weather->errorText, WMWidgetView(dockapp->icon)); 
+		WMSetBalloonTextForView(weather->errorText, WMWidgetView(dockapp->icon));
 
 	}
 	else {
 		WMSetLabelText(dockapp->text,wstrconcat(weather->temp,"°"));
-	
+
 		icon = WMCreatePixmapFromRImage(screen,weather->icon,0);
 		WMSetLabelImage(dockapp->icon,icon);
-	
-		WMSetBalloonTextForView(getBalloonText(weather), WMWidgetView(dockapp->icon)); 
+
+		WMSetBalloonTextForView(getBalloonText(weather), WMWidgetView(dockapp->icon));
 	}
 
 	WMRedisplayWidget(dockapp->icon);
@@ -528,13 +528,13 @@ char *getPreferencesFilename()
 	return filename;
 }
 
-void readPreferences(Preferences *prefs) 
+void readPreferences(Preferences *prefs)
 {
 	char *filename;
 	WMPropList *propList;
 
 	filename = getPreferencesFilename();
-	propList = WMReadPropListFromFile(filename); 
+	propList = WMReadPropListFromFile(filename);
 	if (propList) {
 		char *value;
 		value = WMGetPLStringForKey(propList, "units");
@@ -585,13 +585,13 @@ Preferences *setPreferences(int argc, char **argv)
 				{0, 0, 0, 0}
 			};
 		int option_index = 0;
-     
+
 		c = getopt_long (argc, argv, "vhw:u:z:i:",
 				 long_options, &option_index);
-     
+
 		if (c == -1)
 			break;
-     
+
 		switch (c)
 		{
 		case 0:
@@ -602,23 +602,23 @@ Preferences *setPreferences(int argc, char **argv)
 				printf (" with arg %s", optarg);
 			printf ("\n");
 			break;
-     
+
 		case 'v':
 			printf("wmforecast %s\n\n"
 			       "Copyright (C) 2014 Doug Torrance\n"
 			       "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
 			       "This is free software: you are free to change and redistribute it.\n"
-			       "There is NO WARRANTY, to the extent permitted by law.\n\n"		       
+			       "There is NO WARRANTY, to the extent permitted by law.\n\n"
 			       "Written by Doug Torrance\n"
 			       , VERSION);
 			exit(0);
-     
+
 		case 'h':
 			printf("a weather dockapp for Window Maker using the Yahoo Weather API\n\n"
 			       "Usage: wmforecast [OPTIONS]\n\n"
 			       "Options:\n"
 			       "    -v, --version        print the version number\n"
-			       "    -h, --help           print this help screen\n" 
+			       "    -h, --help           print this help screen\n"
 			       "    -i, --interval <min> number of minutes between refreshes (default 60)\n"
 			       "    -u, --units <c|f>    whether to use Celsius or Fahrenheit (default f)\n"
 			       "    -w, --woeid <woeid>  Where on Earth ID (default is 2502265 for\n"
@@ -635,14 +635,14 @@ Preferences *setPreferences(int argc, char **argv)
 			       "Report bugs to %s\n",
 			       PACKAGE_BUGREPORT
 				);
-			
+
 			exit(0);
-     
+
 		case 'w':
 			prefs->woeid_or_zip = "w";
 			prefs->woeid = optarg;
 			break;
-     
+
 		case 'u':
 			if ((strcmp(optarg,"f") != 0)&&(strcmp(optarg,"c") != 0)) {
 				printf("units must be 'f' or 'c'\n");
@@ -650,7 +650,7 @@ Preferences *setPreferences(int argc, char **argv)
 			}
 			prefs->units = optarg;
 			break;
-     
+
 		case 'z':
 			prefs->woeid_or_zip = "z";
 			prefs->zip = optarg;
@@ -663,7 +663,7 @@ Preferences *setPreferences(int argc, char **argv)
 		case '?':
 			/* getopt_long already printed an error message. */
 			break;
-     
+
 		default:
 			abort ();
 		}
@@ -727,8 +727,8 @@ static void savePreferences(WMWidget *widget, void *data)
 	key = WMCreatePLString("interval");
 	object = WMCreatePLString(WMGetTextFieldText(d->prefsWindow->interval));
 	WMPutInPLDictionary(prefsPL, key, object);
-	
-	// since WMWritePropListToFile only writes to files in 
+
+	// since WMWritePropListToFile only writes to files in
 	// GNUSTEP_USER_ROOT, we need to write our own version
 	prefsString = WMGetPropListDescription(prefsPL, True);
 
@@ -871,7 +871,7 @@ static void editPreferences(void *data)
 static void refresh(XEvent *event, void *data)
 {
 	Dockapp *d = (Dockapp *)data;
-	if (WMIsDoubleClick(event) && event->xbutton.button == Button1) 
+	if (WMIsDoubleClick(event) && event->xbutton.button == Button1)
 		updateDockapp(d);
 	if (event->xbutton.button == Button3 && !d->prefsWindowPresent)
 		editPreferences(d);
@@ -880,7 +880,7 @@ static void refresh(XEvent *event, void *data)
 static void timerHandler(void *data)
 {
 	Dockapp *d = (Dockapp *)data;
-	
+
 	d->minutesLeft--;
 	if (d->minutesLeft == 0) {
 		d->minutesLeft = d->prefs->interval;
