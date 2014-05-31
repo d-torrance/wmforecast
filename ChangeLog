@@ -1,6 +1,7 @@
 2014-05-30  Doug Torrance <dtorrance@monmouthcollege.edu>
 	* wmforecast.c (getWeather): fix missing return statements (Coverity
-	  65086)
+	  65086); function annotation to remove Coverity false positive
+	  (Coverity 65084)
 	* wmforecast.c (savePreferences): check return value of mkdir (Coverity
 	  65085)
 
