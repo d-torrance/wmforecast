@@ -1,6 +1,8 @@
 2014-05-30  Doug Torrance <dtorrance@monmouthcollege.edu>
 	* wmforecast.c (getWeather): fix missing return statements (Coverity
 	  65086)
+	* wmforecast.c (savePreferences): check return value of mkdir (Coverity
+	  65085)
 
 2014-05-11  Doug Torrance <dtorrance@monmouthcollege.edu>
 	* Makefile.am: use dist_man_MANS instead of adding man_MANS to EXTRA_DIST

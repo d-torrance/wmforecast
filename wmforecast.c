@@ -20,6 +20,7 @@
 #endif
 
 #include <curl/curl.h>
+#include <errno.h>
 #include <getopt.h>
 #include <libgen.h>
 #include <libxml/tree.h>
@@ -690,6 +691,7 @@ static void savePreferences(WMWidget *widget, void *data)
 	char *prefsString;
 	Dockapp *d = (Dockapp *)data;
 	FILE *file;
+	int md;
 	WMPropList *prefsPL;
 	WMPropList *key;
 	WMPropList *object;
@@ -733,12 +735,15 @@ static void savePreferences(WMWidget *widget, void *data)
 	prefsString = WMGetPropListDescription(prefsPL, True);
 
 	dir = getPreferencesDirectory();
-	mkdir(dir, 0777);
+	md = mkdir(dir, 0777);
+	if (md < 0) {
+		printf("Error making directory %s: %s\n", dir,
+		       strerror(errno));
+	}
 
 	filename = getPreferencesFilename();
 	file = fopen(filename, "w");
-	if (file)
-	{
+	if (file) {
 		fputs(prefsString, file);
 		fclose(file);
 	}
