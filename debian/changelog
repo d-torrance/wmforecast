@@ -1,3 +1,9 @@
+wmforecast (0.6-0ppa1) trusty; urgency=low
+
+  * New upstream version.
+
+ -- Doug Torrance <dtorrance@monmouthcollege.edu>  Tue, 03 Jun 2014 10:08:36 -0600
+
 wmforecast (0.5-0ppa1) trusty; urgency=low
 
   * New upstream version.
