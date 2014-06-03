@@ -1,3 +1,6 @@
+2014-06-03  Doug Torrance <dtorrance@monmouthcollege.edu>
+	* NEWS, configure.ac: bump to version 0.6
+
 2014-05-30  Doug Torrance <dtorrance@monmouthcollege.edu>
 	* wmforecast.c (getWeather): fix missing return statements (Coverity
 	  65086); function annotation to remove Coverity false positive
