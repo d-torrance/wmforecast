@@ -4,4 +4,5 @@ Name=wmforecast
 Comment=A weather dockapp for Window Maker using the Yahoo Weather API
 Exec=wmforecast
 Icon=wmforecast
-Categories=Education;Science;Geoscience
+Categories=Education;Science;Geoscience;
+Keywords=weather;dockapp;window maker;
