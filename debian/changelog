@@ -1,29 +1,5 @@
-wmforecast (0.6-0ppa1) trusty; urgency=low
+wmforecast (0.6-1) unstable; urgency=low
 
-  * New upstream version.
+  * Initial release. (Closes: #750926)
 
- -- Doug Torrance <dtorrance@monmouthcollege.edu>  Tue, 03 Jun 2014 10:08:36 -0600
-
-wmforecast (0.5-0ppa1) trusty; urgency=low
-
-  * New upstream version.
-
- -- Doug Torrance <dtorrance@monmouthcollege.edu>  Sun, 11 May 2014 18:02:47 -0500
-
-wmforecast (0.4-0ppa1) trusty; urgency=low
-
-  * New upstream version.
-
- -- Doug Torrance <dtorrance@monmouthcollege.edu>  Wed, 07 May 2014 23:11:47 -0500
-
-wmforecast (0.3-0ppa1) saucy; urgency=low
-
-  * New upstream release.
-
- -- Doug Torrance <dtorrance@monmouthcollege.edu>  Mon, 21 Apr 2014 00:58:02 -0500
-
-wmforecast (0.2-0ppa1) saucy; urgency=low
-
-  * Initial release.
-
- -- Doug Torrance <dtorrance@monmouthcollege.edu>  Tue, 15 Apr 2014 08:01:30 -0500
+ -- Doug Torrance <dtorrance@monmouthcollege.edu>  Sun, 08 Jun 2014 07:54:45 -0600
