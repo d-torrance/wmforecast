@@ -1,19 +1,19 @@
-                      _|                                |   
-\ \  \   / __ `__ \  |    _ \   __| _ \  __|  _` |  __| __| 
- \ \  \ /  |   |   | __| (   | |    __/ (    (   |\__ \ |   
-  \_/\_/  _|  _|  _|_|  \___/ _|  \___|\___|\__,_|____/\__| 
-                                                            
+                      _|                                |
+\ \  \   / __ `__ \  |    _ \   __| _ \  __|  _` |  __| __|
+ \ \  \ /  |   |   | __| (   | |    __/ (    (   |\__ \ |
+  \_/\_/  _|  _|  _|_|  \___/ _|  \___|\___|\__,_|____/\__|
+
 ===========================================================
 
 http://wmforecast.sourceforge.net
 
-wmforecast is a weather dockapp for Window Maker using the Yahoo Weather API 
+wmforecast is a weather dockapp for Window Maker using the Yahoo Weather API
 (https://developer.yahoo.com/weather/)
 
-It is designed to combine the look and field of traditional dockapps, e.g., 
+It is designed to combine the look and field of traditional dockapps, e.g.,
 light sea green text on a black background, with a more modern simplicity.
 Instead of cramming lots of information in one 64x64 icon, only the current
-temperature and an icon representing the conditions are given.  Further 
+temperature and an icon representing the conditions are given.  Further
 information is available via a balloon tooltip.
 
 Note that wmforecast is written using WINGs, Window Maker's native widget
@@ -60,4 +60,4 @@ wmforecast:
 
 icons:
 	2010 MerlinTheRed <http://merlinthered.deviantart.com/>
-	Creative Commons Attribution-NonCommercial-ShareAlike License
+	Creative Commons Attribution-ShareAlike 3.0 License

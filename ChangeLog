@@ -1,3 +1,7 @@
+2014-07-17  Doug Torrance <dtorrance@monmouthcollege.edu>
+	* README: Update license for icons to CC BY-SA 3.0.
+	* NEWS, configure.ac: bump to version 0.7
+
 2014-06-03  Doug Torrance <dtorrance@monmouthcollege.edu>
 	* NEWS, configure.ac: bump to version 0.6
 
