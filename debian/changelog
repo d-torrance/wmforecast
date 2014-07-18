@@ -1,5 +1,5 @@
-wmforecast (0.6-1) unstable; urgency=low
+wmforecast (0.7-1) unstable; urgency=low
 
   * Initial release. (Closes: #750926)
 
- -- Doug Torrance <dtorrance@monmouthcollege.edu>  Sun, 08 Jun 2014 07:54:45 -0600
+ -- Doug Torrance <dtorrance@monmouthcollege.edu>  Thu, 17 Jul 2014 18:51:16 -0500
