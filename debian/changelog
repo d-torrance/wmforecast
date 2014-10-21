@@ -1,3 +1,22 @@
+wmforecast (0.8-1) UNRELEASED; urgency=medium
+
+  * New upstream release.
+    - Update license information in icons/wmforecast.svg (Closes: #766208).
+  * debian/control
+    - Update Homepage and Vcs-*.
+    - Bump Standards-Version to 3.9.6, no changes required.
+  * debian/copyright
+    - Update Source.
+  * debian/docs
+    - New file.
+  * debian/rules
+    - Remove "export DH_VERBOSE=1".
+    - Add get-orig-source target.
+  * debian/watch
+    - Update with new location.
+
+ -- Doug Torrance <dtorrance@monmouthcollege.edu>  Tue, 21 Oct 2014 10:49:52 -0500
+
 wmforecast (0.7-1) unstable; urgency=low
 
   * Initial release. (Closes: #750926)
