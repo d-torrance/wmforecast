@@ -2,3 +2,6 @@
 
 %:
 	dh  $@
+
+get-orig-source:
+	uscan --verbose --force-download --rename
