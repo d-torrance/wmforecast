@@ -4,9 +4,9 @@ Priority: extra
 Maintainer: Doug Torrance <dtorrance@monmouthcollege.edu>
 Build-Depends: debhelper (>= 9), libxml2-dev, libcurl4-gnutls-dev, libwings-dev, help2man
 Standards-Version: 3.9.5
-Homepage: http://wmforecast.sourceforge.net
-Vcs-Browser: http://sourceforge.net/p/wmforecast/git/ci/debian/tree/
-Vcs-Git: git://git.code.sf.net/p/wmforecast/git -b debian
+Homepage: https://github.com/d-torrance/wmforecast
+Vcs-Browser: https://github.com/d-torrance/wmforecast
+Vcs-Git: https://github.com/d-torrance/wmforecast.git
 
 Package: wmforecast
 Architecture: any
