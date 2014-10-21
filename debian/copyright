@@ -1,7 +1,7 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: wmforecast
 Upstream-Contact: Doug Torrance <dtorrance@monmouthcollege.edu>
-Source: http://wmforecast.sourceforge.net/
+Source: https://github.com/d-torrance/wmforecast
 
 Files: *
 Copyright: 2014 Doug Torrance
