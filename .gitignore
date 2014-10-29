@@ -17,3 +17,7 @@ configure
 aclocal.m4
 Makefile.in
 wmforecast.1
+INSTALL
+config.h.in
+depcomp
+install-sh
