@@ -617,31 +617,6 @@ Preferences *setPreferences(int argc, char **argv)
 			       , PACKAGE_STRING);
 			exit(0);
 
-		case 'h':
-			printf("a weather dockapp for Window Maker using the Yahoo Weather API\n\n"
-			       "Usage: wmforecast [OPTIONS]\n\n"
-			       "Options:\n"
-			       "    -v, --version        print the version number\n"
-			       "    -h, --help           print this help screen\n"
-			       "    -i, --interval <min> number of minutes between refreshes (default 60)\n"
-			       "    -u, --units <c|f>    whether to use Celsius or Fahrenheit (default f)\n"
-			       "    -w, --woeid <woeid>  Where on Earth ID (default is 2502265 for\n"
-			       "                         Sunnyvale, CA -- to find your WOEID, search\n"
-			       "                         for your city at http://weather.yahoo.com and\n"
-			       "                         look in the URL.)\n"
-			       "    -z, --zip <zip>      ZIP code or Location ID (Yahoo has deprecated this\n"
-			       "                         option and it is not guaranteed to work)\n"
-			       "Notes:\n"
-			       "* double click the icon at any time to refresh data\n\n"
-			       "* right click the icon to edit your preferences in a GUI\n\n"
-			       "* preferences may be manually configured in\n"
-			       "  XDG_CONFIG_DIR/wmforecast/wmforecastrc\n\n"
-			       "Report bugs to %s\n",
-			       PACKAGE_BUGREPORT
-				);
-
-			exit(0);
-
 		case 'w':
 			prefs->woeid_or_zip = "w";
 			prefs->woeid = optarg;
@@ -665,8 +640,29 @@ Preferences *setPreferences(int argc, char **argv)
 			break;
 
 		case '?':
-			/* getopt_long already printed an error message. */
-			break;
+		case 'h':
+			printf("a weather dockapp for Window Maker using the Yahoo Weather API\n\n"
+			       "Usage: wmforecast [OPTIONS]\n\n"
+			       "Options:\n"
+			       "    -v, --version        print the version number\n"
+			       "    -h, --help           print this help screen\n"
+			       "    -i, --interval <min> number of minutes between refreshes (default 60)\n"
+			       "    -u, --units <c|f>    whether to use Celsius or Fahrenheit (default f)\n"
+			       "    -w, --woeid <woeid>  Where on Earth ID (default is 2502265 for\n"
+			       "                         Sunnyvale, CA -- to find your WOEID, search\n"
+			       "                         for your city at http://weather.yahoo.com and\n"
+			       "                         look in the URL.)\n"
+			       "    -z, --zip <zip>      ZIP code or Location ID (Yahoo has deprecated this\n"
+			       "                         option and it is not guaranteed to work)\n"
+			       "Notes:\n"
+			       "* double click the icon at any time to refresh data\n\n"
+			       "* right click the icon to edit your preferences in a GUI\n\n"
+			       "* preferences may be manually configured in\n"
+			       "  XDG_CONFIG_DIR/wmforecast/wmforecastrc\n\n"
+			       "Report bugs to %s\n",
+			       PACKAGE_BUGREPORT
+				);
+			exit(0);
 
 		default:
 			abort ();
