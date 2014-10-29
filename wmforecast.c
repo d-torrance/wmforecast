@@ -31,6 +31,9 @@
 
 #define color(c) WMCreateNamedColor(screen,c,True)
 
+#define DEFAULT_TEXT_COLOR "light sea green"
+#define DEFAULT_BG_COLOR "black"
+
 typedef struct {
 	char *units;
 	char *woeid;
@@ -259,20 +262,20 @@ Dockapp *newDockapp(WMScreen *screen, Preferences *prefs, int argc, char **argv)
 	frame = WMCreateFrame(window);
 	WMSetFrameRelief(frame,WRSunken);
 	WMResizeWidget(frame,56,56);
-	WMSetWidgetBackgroundColor(frame,color("black"));
+	WMSetWidgetBackgroundColor(frame,color(DEFAULT_BG_COLOR));
 	WMRealizeWidget(frame);
 
 	dockapp->text = WMCreateLabel(frame);
-	WMSetWidgetBackgroundColor(dockapp->text, color("black"));
+	WMSetWidgetBackgroundColor(dockapp->text, color(DEFAULT_BG_COLOR));
 	WMSetLabelFont(dockapp->text, WMCreateFont(screen, "-Misc-Fixed-Medium-R-SemiCondensed--13-120-75-75-C-60-ISO10646-1"));
-	WMSetLabelTextColor(dockapp->text, color("Light sea green"));
+	WMSetLabelTextColor(dockapp->text, color(DEFAULT_TEXT_COLOR));
 	WMSetLabelTextAlignment (dockapp->text, WACenter);
 	WMResizeWidget(dockapp->text,52,14);
 	WMMoveWidget(dockapp->text,2,40);
 	WMRealizeWidget(dockapp->text);
 
 	dockapp->icon = WMCreateLabel(frame);
-	WMSetWidgetBackgroundColor(dockapp->icon,color("black"));
+	WMSetWidgetBackgroundColor(dockapp->icon,color(DEFAULT_BG_COLOR));
 	WMRealizeWidget(dockapp->icon);
 	WMSetLabelImagePosition(dockapp->icon,WIPImageOnly);
 	WMResizeWidget(dockapp->icon,32,32);
