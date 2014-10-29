@@ -641,8 +641,8 @@ Preferences *setPreferences(int argc, char **argv)
 
 		case '?':
 		case 'h':
-			printf("a weather dockapp for Window Maker using the Yahoo Weather API\n\n"
-			       "Usage: wmforecast [OPTIONS]\n\n"
+			printf("A weather dockapp for Window Maker using the Yahoo Weather API\n"
+			       "Usage: wmforecast [OPTIONS]\n"
 			       "Options:\n"
 			       "    -v, --version        print the version number\n"
 			       "    -h, --help           print this help screen\n"
@@ -654,12 +654,8 @@ Preferences *setPreferences(int argc, char **argv)
 			       "                         look in the URL.)\n"
 			       "    -z, --zip <zip>      ZIP code or Location ID (Yahoo has deprecated this\n"
 			       "                         option and it is not guaranteed to work)\n"
-			       "Notes:\n"
-			       "* double click the icon at any time to refresh data\n\n"
-			       "* right click the icon to edit your preferences in a GUI\n\n"
-			       "* preferences may be manually configured in\n"
-			       "  XDG_CONFIG_DIR/wmforecast/wmforecastrc\n\n"
-			       "Report bugs to %s\n",
+			       "Report bugs to: %s\n"
+			       "wmforecast home page: https://github.com/d-torrance/wmforecast\n",
 			       PACKAGE_BUGREPORT
 				);
 			exit(0);
