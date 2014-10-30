@@ -29,8 +29,6 @@
 #include <sys/stat.h>
 #include <WINGs/WINGs.h>
 
-#define color(c) WMCreateNamedColor(screen,c,True)
-
 #define DEFAULT_TEXT_COLOR "light sea green"
 #define DEFAULT_BG_COLOR "black"
 
@@ -40,6 +38,8 @@ typedef struct {
 	char *zip;
 	char *woeid_or_zip;
 	long int interval;
+	char *background;
+	char *text;
 } Preferences;
 
 typedef struct {
@@ -249,6 +249,8 @@ WMWindow *WMCreateDockapp(WMScreen *screen, const char *name, int argc, char **a
 Dockapp *newDockapp(WMScreen *screen, Preferences *prefs, int argc, char **argv)
 {
 	Dockapp *dockapp = wmalloc(sizeof(Dockapp));
+	WMColor *background;
+	WMColor *text;
 	WMFrame *frame;
 	WMWindow *window;
 
@@ -259,23 +261,34 @@ Dockapp *newDockapp(WMScreen *screen, Preferences *prefs, int argc, char **argv)
 
 	window = WMCreateDockapp(screen, "", argc, argv);
 
+	background = WMCreateNamedColor(screen, prefs->background, True);
+	if (!background) {
+		background = WMCreateNamedColor(screen, DEFAULT_BG_COLOR, True);
+		prefs->background = DEFAULT_BG_COLOR;
+	}
+	text = WMCreateNamedColor(screen, prefs->text, True);
+	if (!text) {
+		text = WMCreateNamedColor(screen, DEFAULT_TEXT_COLOR, True);
+		prefs->text = DEFAULT_TEXT_COLOR;
+	}
+
 	frame = WMCreateFrame(window);
 	WMSetFrameRelief(frame,WRSunken);
 	WMResizeWidget(frame,56,56);
-	WMSetWidgetBackgroundColor(frame,color(DEFAULT_BG_COLOR));
+	WMSetWidgetBackgroundColor(frame, background);
 	WMRealizeWidget(frame);
 
 	dockapp->text = WMCreateLabel(frame);
-	WMSetWidgetBackgroundColor(dockapp->text, color(DEFAULT_BG_COLOR));
+	WMSetWidgetBackgroundColor(dockapp->text, background);
 	WMSetLabelFont(dockapp->text, WMCreateFont(screen, "-Misc-Fixed-Medium-R-SemiCondensed--13-120-75-75-C-60-ISO10646-1"));
-	WMSetLabelTextColor(dockapp->text, color(DEFAULT_TEXT_COLOR));
+	WMSetLabelTextColor(dockapp->text, text);
 	WMSetLabelTextAlignment (dockapp->text, WACenter);
 	WMResizeWidget(dockapp->text,52,14);
 	WMMoveWidget(dockapp->text,2,40);
 	WMRealizeWidget(dockapp->text);
 
 	dockapp->icon = WMCreateLabel(frame);
-	WMSetWidgetBackgroundColor(dockapp->icon,color(DEFAULT_BG_COLOR));
+	WMSetWidgetBackgroundColor(dockapp->icon, background);
 	WMRealizeWidget(dockapp->icon);
 	WMSetLabelImagePosition(dockapp->icon,WIPImageOnly);
 	WMResizeWidget(dockapp->icon,32,32);
@@ -557,6 +570,12 @@ void readPreferences(Preferences *prefs)
 		value = WMGetPLStringForKey(propList, "interval");
 		if (value)
 			prefs->interval = strtol(value, NULL, 10);
+		value = WMGetPLStringForKey(propList, "background");
+		if (value)
+			prefs->background = value;
+		value = WMGetPLStringForKey(propList, "text");
+		if (value)
+			prefs->text = value;
 	}
 
 
@@ -573,6 +592,8 @@ Preferences *setPreferences(int argc, char **argv)
 	prefs->zip = NULL;
 	prefs->woeid_or_zip = NULL;
 	prefs->interval = 60;
+	prefs->background = DEFAULT_BG_COLOR;
+	prefs->text = DEFAULT_TEXT_COLOR;
 
 	readPreferences(prefs);
 
@@ -587,11 +608,13 @@ Preferences *setPreferences(int argc, char **argv)
 				{"units", required_argument, 0, 'u'},
 				{"zip", required_argument, 0, 'z'},
 				{"interval", required_argument, 0, 'i'},
+				{"background", required_argument, 0, 'b'},
+				{"text", required_argument, 0, 't'},
 				{0, 0, 0, 0}
 			};
 		int option_index = 0;
 
-		c = getopt_long (argc, argv, "vhw:u:z:i:",
+		c = getopt_long (argc, argv, "vhw:u:z:i:b:t:",
 				 long_options, &option_index);
 
 		if (c == -1)
@@ -639,21 +662,31 @@ Preferences *setPreferences(int argc, char **argv)
 			prefs->interval = strtol(optarg,NULL,10);
 			break;
 
+		case 'b':
+			prefs->background = optarg;
+			break;
+
+		case 't':
+			prefs->text = optarg;
+			break;
+
 		case '?':
 		case 'h':
 			printf("A weather dockapp for Window Maker using the Yahoo Weather API\n"
 			       "Usage: wmforecast [OPTIONS]\n"
 			       "Options:\n"
-			       "    -v, --version        print the version number\n"
-			       "    -h, --help           print this help screen\n"
-			       "    -i, --interval <min> number of minutes between refreshes (default 60)\n"
-			       "    -u, --units <c|f>    whether to use Celsius or Fahrenheit (default f)\n"
-			       "    -w, --woeid <woeid>  Where on Earth ID (default is 2502265 for\n"
-			       "                         Sunnyvale, CA -- to find your WOEID, search\n"
-			       "                         for your city at http://weather.yahoo.com and\n"
-			       "                         look in the URL.)\n"
-			       "    -z, --zip <zip>      ZIP code or Location ID (Yahoo has deprecated this\n"
-			       "                         option and it is not guaranteed to work)\n"
+			       "    -v, --version            print the version number\n"
+			       "    -h, --help               print this help screen\n"
+			       "    -i, --interval <min>     number of minutes between refreshes (default 60)\n"
+			       "    -u, --units <c|f>        whether to use Celsius or Fahrenheit (default f)\n"
+			       "    -w, --woeid <woeid>      Where on Earth ID (default is 2502265 for\n"
+			       "                             Sunnyvale, CA -- to find your WOEID, search\n"
+			       "                             for your city at http://weather.yahoo.com and\n"
+			       "                             look in the URL.)\n"
+			       "    -z, --zip <zip>          ZIP code or Location ID (Yahoo has deprecated this\n"
+			       "                             option and it is not guaranteed to work)\n"
+			       "    -b, --background <color> set background color\n"
+			       "    -t, --text <color>       set text color\n"
 			       "Report bugs to: %s\n"
 			       "wmforecast home page: https://github.com/d-torrance/wmforecast\n",
 			       PACKAGE_BUGREPORT
