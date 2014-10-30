@@ -50,11 +50,16 @@ typedef struct {
 	WMButton *save;
 	WMButton *woeid;
 	WMButton *zip;
+	WMColorWell *background;
+	WMColorWell *text;
 	WMFrame *intervalFrame;
 	WMFrame *locationFrame;
 	WMFrame *units;
+	WMFrame *colors;
 	WMLabel *minutes;
 	WMLabel *woeid_zip;
+	WMLabel *backgroundLabel;
+	WMLabel *textLabel;
 	WMScreen *screen;
 	WMTextField *interval;
 	WMTextField *location;
@@ -758,6 +763,14 @@ static void savePreferences(WMWidget *widget, void *data)
 	object = WMCreatePLString(WMGetTextFieldText(d->prefsWindow->interval));
 	WMPutInPLDictionary(prefsPL, key, object);
 
+	key = WMCreatePLString("background");
+	object = WMCreatePLString(WMGetColorRGBDescription(WMGetColorWellColor(d->prefsWindow->background)));
+	WMPutInPLDictionary(prefsPL, key, object);
+
+	key = WMCreatePLString("text");
+	object = WMCreatePLString(WMGetColorRGBDescription(WMGetColorWellColor(d->prefsWindow->text)));
+	WMPutInPLDictionary(prefsPL, key, object);
+
 	// since WMWritePropListToFile only writes to files in
 	// GNUSTEP_USER_ROOT, we need to write our own version
 	prefsString = WMGetPropListDescription(prefsPL, True);
@@ -797,7 +810,7 @@ static void editPreferences(void *data)
 	d->prefsWindow->window = WMCreateWindow(d->prefsWindow->screen, "wmforecast");
 	WMSetWindowTitle(d->prefsWindow->window, "wmforecast");
 	WMSetWindowCloseAction (d->prefsWindow->window, closePreferences, d);
-	WMResizeWidget(d->prefsWindow->window, 424, 130);
+	WMResizeWidget(d->prefsWindow->window, 424, 150);
 	WMRealizeWidget(d->prefsWindow->window);
 	WMMapWidget(d->prefsWindow->window);
 
@@ -886,17 +899,52 @@ static void editPreferences(void *data)
 	WMRealizeWidget(d->prefsWindow->minutes);
 	WMMapWidget(d->prefsWindow->minutes);
 
+	d->prefsWindow->colors = WMCreateFrame(d->prefsWindow->window);
+	WMSetFrameTitle(d->prefsWindow->colors, "Colors");
+	WMResizeWidget(d->prefsWindow->colors, 265, 50);
+	WMMoveWidget(d->prefsWindow->colors, 10, 92);
+	WMRealizeWidget(d->prefsWindow->colors);
+	WMMapWidget(d->prefsWindow->colors);
+
+	d->prefsWindow->backgroundLabel = WMCreateLabel(d->prefsWindow->colors);
+	WMSetLabelText(d->prefsWindow->backgroundLabel, "Background");
+	WMSetLabelTextAlignment(d->prefsWindow->backgroundLabel, WACenter);
+	WMResizeWidget(d->prefsWindow->backgroundLabel, 70, 20);
+	WMMoveWidget(d->prefsWindow->backgroundLabel, 10, 20);
+	WMRealizeWidget(d->prefsWindow->backgroundLabel);
+	WMMapWidget(d->prefsWindow->backgroundLabel);
+
+	d->prefsWindow->background = WMCreateColorWell(d->prefsWindow->colors);
+	WMSetColorWellColor(d->prefsWindow->background, WMCreateNamedColor(d->screen, d->prefs->background, True));
+	WMMoveWidget(d->prefsWindow->background, 88, 16);
+	WMRealizeWidget(d->prefsWindow->background);
+	WMMapWidget(d->prefsWindow->background);
+
+	d->prefsWindow->textLabel = WMCreateLabel(d->prefsWindow->colors);
+	WMSetLabelText(d->prefsWindow->textLabel, "Text");
+	WMSetLabelTextAlignment(d->prefsWindow->textLabel, WACenter);
+	WMResizeWidget(d->prefsWindow->textLabel, 26, 20);
+	WMMoveWidget(d->prefsWindow->textLabel, 156, 20);
+	WMRealizeWidget(d->prefsWindow->textLabel);
+	WMMapWidget(d->prefsWindow->textLabel);
+
+	d->prefsWindow->text = WMCreateColorWell(d->prefsWindow->colors);
+	WMSetColorWellColor(d->prefsWindow->text, WMCreateNamedColor(d->screen, d->prefs->text, True));
+	WMMoveWidget(d->prefsWindow->text, 190, 16);
+	WMRealizeWidget(d->prefsWindow->text);
+	WMMapWidget(d->prefsWindow->text);
+
 	d->prefsWindow->save = WMCreateButton(d->prefsWindow->window, WBTMomentaryPush);
 	WMSetButtonText(d->prefsWindow->save, "Save");
 	WMSetButtonAction(d->prefsWindow->save, savePreferences, d);
-	WMMoveWidget(d->prefsWindow->save, 285, 100);
+	WMMoveWidget(d->prefsWindow->save, 285, 110);
 	WMRealizeWidget(d->prefsWindow->save);
 	WMMapWidget(d->prefsWindow->save);
 
 	d->prefsWindow->close = WMCreateButton(d->prefsWindow->window, WBTMomentaryPush);
 	WMSetButtonText(d->prefsWindow->close, "Close");
 	WMSetButtonAction(d->prefsWindow->close, closePreferences, d);
-	WMMoveWidget(d->prefsWindow->close, 353, 100);
+	WMMoveWidget(d->prefsWindow->close, 353, 110);
 	WMRealizeWidget(d->prefsWindow->close);
 	WMMapWidget(d->prefsWindow->close);
 }
