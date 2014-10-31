@@ -40,6 +40,7 @@ typedef struct {
 	long int interval;
 	char *background;
 	char *text;
+	WMUserDefaults *defaults;
 } Preferences;
 
 typedef struct {
@@ -530,69 +531,32 @@ static void updateDockapp(void *data)
 	freeWeather(weather);
 }
 
-char *WMGetPLStringForKey(WMPropList *propList, char *key)
-{
-	WMPropList *value;
-	value = WMGetFromPLDictionary(propList,WMCreatePLString(key));
-	if (value)
-		return WMGetPropListDescription(value, False);
-	else
-		return NULL;
-}
-
-char *getPreferencesDirectory()
-{
-	char *dir;
-	dir = getenv("XDG_CONFIG_DIR");
-	if (!dir)
-		dir = wstrconcat(getenv("HOME"), "/.config");
-	dir = wstrconcat(dir, "/wmforecast");
-	return dir;
-}
-
-char *getPreferencesFilename()
-{
-	char *filename;
-
-	filename = getPreferencesDirectory();
-	filename = wstrappend(filename, "/wmforecastrc");
-
-	return filename;
-}
-
 void readPreferences(Preferences *prefs)
 {
-	char *filename;
-	WMPropList *propList;
-
-	filename = getPreferencesFilename();
-	propList = WMReadPropListFromFile(filename);
-	if (propList) {
+	if (prefs->defaults) {
 		char *value;
-		value = WMGetPLStringForKey(propList, "units");
+		value = WMGetUDStringForKey(prefs->defaults, "units");
 		if (value)
 			prefs->units = value;
-		value = WMGetPLStringForKey(propList, "woeid");
+		value = WMGetUDStringForKey(prefs->defaults, "woeid");
 		if (value)
 			prefs->woeid = value;
-		value = WMGetPLStringForKey(propList, "zip");
+		value = WMGetUDStringForKey(prefs->defaults, "zip");
 		if (value)
 			prefs->zip = value;
-		value = WMGetPLStringForKey(propList, "woeid_or_zip");
+		value = WMGetUDStringForKey(prefs->defaults, "woeid_or_zip");
 		if (value)
 			prefs->woeid_or_zip = value;
-		value = WMGetPLStringForKey(propList, "interval");
+		value = WMGetUDStringForKey(prefs->defaults, "interval");
 		if (value)
 			prefs->interval = strtol(value, NULL, 10);
-		value = WMGetPLStringForKey(propList, "background");
+		value = WMGetUDStringForKey(prefs->defaults, "background");
 		if (value)
 			prefs->background = value;
-		value = WMGetPLStringForKey(propList, "text");
+		value = WMGetUDStringForKey(prefs->defaults, "text");
 		if (value)
 			prefs->text = value;
 	}
-
-
 }
 
 Preferences *setPreferences(int argc, char **argv)
@@ -608,7 +572,7 @@ Preferences *setPreferences(int argc, char **argv)
 	prefs->interval = 60;
 	prefs->background = DEFAULT_BG_COLOR;
 	prefs->text = DEFAULT_TEXT_COLOR;
-
+	prefs->defaults = WMGetStandardUserDefaults();
 	readPreferences(prefs);
 
 	//command line
@@ -728,75 +692,37 @@ static void closePreferences(WMWidget *widget, void *data)
 
 static void savePreferences(WMWidget *widget, void *data)
 {
-	char *dir;
-	char *filename;
-	char *prefsString;
 	Dockapp *d = (Dockapp *)data;
-	FILE *file;
-	int md;
-	WMPropList *prefsPL;
-	WMPropList *key;
-	WMPropList *object;
 
-	prefsPL = WMCreatePLDictionary(NULL,NULL);
+	if (WMGetButtonSelected(d->prefsWindow->celsius))
+		WMSetUDStringForKey(d->prefs->defaults, "c", "units");
+	if (WMGetButtonSelected(d->prefsWindow->fahrenheit))
+		WMSetUDStringForKey(d->prefs->defaults, "f", "units");
+	if (WMGetButtonSelected(d->prefsWindow->woeid))
+		WMSetUDStringForKey(d->prefs->defaults, "w", "woeid_or_zip");
+	if (WMGetButtonSelected(d->prefsWindow->zip))
+		WMSetUDStringForKey(d->prefs->defaults, "z", "woeid_or_zip");
+	WMSetUDStringForKey(d->prefs->defaults,
+			    WMGetTextFieldText(d->prefsWindow->woeidField),
+			    "woeid");
+	WMSetUDStringForKey(d->prefs->defaults,
+			    WMGetTextFieldText(d->prefsWindow->zipField),
+			    "zip");
+	WMSetUDStringForKey(d->prefs->defaults,
+			    WMGetTextFieldText(d->prefsWindow->interval),
+			    "interval");
+	WMSetUDStringForKey(d->prefs->defaults,
+			    WMGetColorRGBDescription(
+				    WMGetColorWellColor(
+					    d->prefsWindow->background)),
+			    "background");
+	WMSetUDStringForKey(d->prefs->defaults,
+			    WMGetColorRGBDescription(
+				    WMGetColorWellColor(
+					    d->prefsWindow->text)),
+			    "text");
 
-	key = WMCreatePLString("units");
-	if (WMGetButtonSelected(d->prefsWindow->celsius)) {
-		object = WMCreatePLString("c");
-		WMPutInPLDictionary(prefsPL, key, object);
-	}
-	if (WMGetButtonSelected(d->prefsWindow->fahrenheit)) {
-		object = WMCreatePLString("f");
-		WMPutInPLDictionary(prefsPL, key, object);
-	}
-
-	key = WMCreatePLString("woeid_or_zip");
-	if (WMGetButtonSelected(d->prefsWindow->woeid)) {
-		object = WMCreatePLString("w");
-		WMPutInPLDictionary(prefsPL, key, object);
-	}
-	if (WMGetButtonSelected(d->prefsWindow->zip)) {
-		object = WMCreatePLString("z");
-		WMPutInPLDictionary(prefsPL, key, object);
-	}
-
-	key = WMCreatePLString("woeid");
-	object = WMCreatePLString(WMGetTextFieldText(d->prefsWindow->woeidField));
-	WMPutInPLDictionary(prefsPL, key, object);
-
-	key = WMCreatePLString("zip");
-	object = WMCreatePLString(WMGetTextFieldText(d->prefsWindow->zipField));
-	WMPutInPLDictionary(prefsPL, key, object);
-
-	key = WMCreatePLString("interval");
-	object = WMCreatePLString(WMGetTextFieldText(d->prefsWindow->interval));
-	WMPutInPLDictionary(prefsPL, key, object);
-
-	key = WMCreatePLString("background");
-	object = WMCreatePLString(WMGetColorRGBDescription(WMGetColorWellColor(d->prefsWindow->background)));
-	WMPutInPLDictionary(prefsPL, key, object);
-
-	key = WMCreatePLString("text");
-	object = WMCreatePLString(WMGetColorRGBDescription(WMGetColorWellColor(d->prefsWindow->text)));
-	WMPutInPLDictionary(prefsPL, key, object);
-
-	// since WMWritePropListToFile only writes to files in
-	// GNUSTEP_USER_ROOT, we need to write our own version
-	prefsString = WMGetPropListDescription(prefsPL, True);
-
-	dir = getPreferencesDirectory();
-	md = mkdir(dir, 0777);
-	if (md < 0) {
-		printf("Error making directory %s: %s\n", dir,
-		       strerror(errno));
-	}
-
-	filename = getPreferencesFilename();
-	file = fopen(filename, "w");
-	if (file) {
-		fputs(prefsString, file);
-		fclose(file);
-	}
+	WMSaveUserDefaults(d->prefs->defaults);
 
 	readPreferences(d->prefs);
 	updateDockapp(d);
@@ -985,9 +911,10 @@ int main(int argc, char **argv)
 	Preferences *prefs;
 	WMScreen *screen;
 
+	WMInitializeApplication("wmforecast", &argc, argv);
+
 	prefs = setPreferences(argc, argv);
 
-	WMInitializeApplication("wmforecast", &argc, argv);
 	display = XOpenDisplay("");
 
 	screen = WMCreateScreen(display, DefaultScreen(display));
