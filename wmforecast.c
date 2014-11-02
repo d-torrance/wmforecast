@@ -187,7 +187,8 @@ void setConditions(Weather *weather,
 		   WMScreen *screen,
 		   const char *temp,
 		   const char *text,
-		   const char *code
+		   const char *code,
+		   const char *background
 	)
 {
 	RContext *context;
@@ -204,8 +205,14 @@ void setConditions(Weather *weather,
 	context = WMScreenRContext(screen);
 	filename = wstrconcat(wstrconcat(DATADIR"/",code),".png");
 	weather->icon = RLoadImage(context,filename,0);
-	if (!weather->icon)
+	if (!weather->icon) {
 		setError(weather, screen, wstrconcat(filename, " not found"));
+	} else {
+		RColor color;
+		color = WMGetRColorFromColor(
+			WMCreateNamedColor(screen, background, True));
+		RCombineImageWithColor(weather->icon,&color);
+	}
 }
 
 void setForecast(Forecast *forecast,
@@ -447,7 +454,8 @@ Weather *getWeather(WMScreen *screen, Preferences *prefs)
 						screen,
 						xmlGetProp(cur,"temp"),
 						xmlGetProp(cur,"text"),
-						xmlGetProp(cur,"code")
+						xmlGetProp(cur,"code"),
+						prefs->background
 						);
 				}
 				if ((!xmlStrcmp(cur->name, (const xmlChar *)"forecast"))) {
@@ -509,6 +517,12 @@ static void updateDockapp(void *data)
 		context = WMScreenRContext(screen);
 		weather->icon = RLoadImage(context,DATADIR"/na.png",0);
 		if (weather->icon) {
+			RColor color;
+
+			color = WMGetRColorFromColor(
+				WMCreateNamedColor(screen,
+						   prefs->background, True));
+			RCombineImageWithColor(weather->icon,&color);
 			icon = WMCreatePixmapFromRImage(screen,weather->icon,0);
 			WMSetLabelImage(dockapp->icon,icon);
 		}
