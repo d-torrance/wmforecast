@@ -8,5 +8,4 @@ PKG_CHECK_MODULES([libcurl],[libcurl])
 PKG_CHECK_MODULES([X11],[x11])
 AC_CHECK_LIB(WINGs,WMCreateWindow)
 AC_CONFIG_FILES([Makefile icons/Makefile])
-AM_MISSING_PROG(HELP2MAN, help2man, $missing_dir)
 AC_OUTPUT
