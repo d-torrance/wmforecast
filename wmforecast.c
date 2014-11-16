@@ -100,6 +100,7 @@ typedef struct {
 	RImage *icon;
 	int errorFlag;
 	char *errorText;
+	char retrieved[20];
 } Weather;
 
 Forecast *newForecast()
@@ -181,7 +182,6 @@ void setError(Weather *weather, WMScreen *screen, const char *errorText)
 	strcpy(weather->errorText, errorText);
 }
 
-
 void setConditions(Weather *weather,
 		   WMScreen *screen,
 		   const char *temp,
@@ -192,6 +192,7 @@ void setConditions(Weather *weather,
 {
 	RContext *context;
 	char *filename;
+	time_t currentTime;
 
 	weather->temp = wrealloc(weather->temp, strlen(temp) + 1);
 	strcpy(weather->temp, temp);
@@ -212,6 +213,10 @@ void setConditions(Weather *weather,
 			WMCreateNamedColor(screen, background, True));
 		RCombineImageWithColor(weather->icon, &color);
 	}
+
+	currentTime = time(NULL);
+	strftime(weather->retrieved, sizeof weather->retrieved, "%l:%M %P %Z",
+		 localtime(&currentTime));
 }
 
 void setForecast(Forecast *forecast,
@@ -323,6 +328,8 @@ char *getBalloonText(Weather *weather)
 	int i;
 
 	text = wstrconcat("\n", weather->title);
+	text = wstrappend(text, "\nRetrieved: ");
+	text = wstrappend(text, weather->retrieved);
 	text = wstrappend(text, "\n\nCurrent Conditions:\n");
 	text = wstrappend(text, weather->text);
 	text = wstrappend(text, ", ");
