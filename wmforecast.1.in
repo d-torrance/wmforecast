@@ -1,0 +1,57 @@
+.TH WMFORECAST "1" "@DATE@" "@PACKAGE_STRING@" "User Commands"
+.SH NAME
+wmforecast \- a weather dockapp for Window Maker using the Yahoo Weather API
+.SH SYNOPSIS
+.B wmforecast
+[\fI\,OPTIONS\/\fR]
+.SH OPTIONS
+.TP
+\fB\-v\fR, \fB\-\-version\fR
+print the version number
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+print the help screen
+.HP
+\fB\-i\fR, \fB\-\-interval\fR <min> number of minutes between refreshes (default 60)
+.TP
+\fB\-u\fR, \fB\-\-units\fR <c|f>
+whether to use Celsius or Fahrenheit (default f)
+.TP
+\fB\-w\fR, \fB\-\-woeid\fR <woeid>
+Where on Earth ID (default is 2502265 for
+Sunnyvale, CA \fB\-\-\fR to find your WOEID, search
+for your city at http://weather.yahoo.com and
+look in the URL.)
+.TP
+\fB\-z\fR, \fB\-\-zip\fR <zip>
+ZIP code or Location ID (Yahoo has deprecated this
+option and it is not guaranteed to work)
+.TP
+\fB\-b\fR, \fB\-\-background\fR <color>
+set background color
+.TP
+\fB\-t\fR, \fB\-\-text\fR <color>
+set text color
+.SH NOTES
+.IP \[bu]
+Double click the icon at any time to refresh data.
+.IP \[bu]
+Right click the icon to edit your preferences in a GUI.
+.IP \[bu]
+Preferences may be manually configured in
+GNUSTEP_USER_ROOT/Defaults/wmforecast
+(usually ~/GNUstep/Defaults/wmforecast).  This file is in proplist format,
+e.g.,
+.br
+{
+  interval = 60;
+  units = f;
+  woeid_or_zip = w;
+  woeid = 2502265;
+  background = "black";
+  text = "light sea green"
+.br
+}
+
+.SH AUTHOR
+Doug Torrance <dtorrance@monmouthcollege.edu>
