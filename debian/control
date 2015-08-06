@@ -2,7 +2,11 @@ Source: wmforecast
 Section: utils
 Priority: extra
 Maintainer: Doug Torrance <dtorrance@piedmont.edu>
-Build-Depends: debhelper (>= 9), libxml2-dev, libcurl4-gnutls-dev, libwings-dev, help2man
+Build-Depends: debhelper (>= 9),
+               help2man,
+               libcurl4-gnutls-dev,
+               libwings-dev,
+               libxml2-dev
 Standards-Version: 3.9.6
 Homepage: https://github.com/d-torrance/wmforecast
 Vcs-Browser: https://github.com/d-torrance/wmforecast
@@ -10,7 +14,7 @@ Vcs-Git: https://github.com/d-torrance/wmforecast.git
 
 Package: wmforecast
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${misc:Depends}, ${shlibs:Depends}
 Description: weather dockapp for Window Maker using the Yahoo Weather API
  wmforecast is a weather dockapp for Window Maker. It displays the current
  temperature and an icon representing the current conditions.  A balloon
