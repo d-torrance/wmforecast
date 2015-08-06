@@ -1,3 +1,10 @@
+wmforecast (0.8-2) unstable; urgency=medium
+
+  * Update maintainer email address.
+  * Tidy using wrap-and-sort.
+
+ -- Doug Torrance <dtorrance@piedmont.edu>  Thu, 06 Aug 2015 06:55:28 -0400
+
 wmforecast (0.8-1) unstable; urgency=medium
 
   * New upstream release.
