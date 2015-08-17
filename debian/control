@@ -1,7 +1,8 @@
 Source: wmforecast
 Section: utils
 Priority: extra
-Maintainer: Doug Torrance <dtorrance@piedmont.edu>
+Maintainer: Debian Window Maker Team <pkg-wmaker-devel@lists.alioth.debian.org>
+Uploaders: Doug Torrance <dtorrance@piedmont.edu>
 Build-Depends: debhelper (>= 9),
                help2man,
                libcurl4-gnutls-dev,
