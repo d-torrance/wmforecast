@@ -1,10 +1,10 @@
 wmforecast (0.8-2) unstable; urgency=medium
 
   * debian/control
-    - Tidy using wrap-and-sort.
-    - Update Vcs-*.
-    - Set Debian Window Maker Team as Maintainer; move self to Uploaders with
-      updated email address.
+    - Tidy up using wrap-and-sort.
+    - Update Vcs-* fields.
+    - Set Debian Window Maker Team as Maintainer; move myself to
+      Uploaders with updated email address.
   * debian/copyright
     - Update email address.
 
