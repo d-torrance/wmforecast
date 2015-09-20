@@ -1,21 +1,7 @@
 Future wmforecast features:
 ==========================
-* Keep track of when data was last retrieved; report in balloon
-* Customizable colors (background and text)
-  - command line (-b and -t?)
-  - GUI (use WINGs color panel)
-  - Recreate icons to remove black border.
 * Re-examine code now that I know a little more C.
   - Do the structs all make sense?
   - WMCreateDockapp function -- submit patch to WINGs?
   - Use WMSetApplicationIconWindow?
   - Use tools like valgrind to check things out.
-  - Run checkpatch.pl.
-* Remove dependency on help2man (not really necessary)
-  - Remove some of the stuff from -v and -h that I had put
-    in specifically for help2man.
-  - Speaking of -v, use PACKAGE_STRING for simplicity.
-* Rewrite README
-  - Spelling error s/field/feel/.
-  - "More modern simplicity" sounds kind of elitist
-  - XDG_CONFIG_DIR
