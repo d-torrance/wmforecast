@@ -1,5 +1,5 @@
 /***********************************************************************
-    Copyright (C) 2014 Doug Torrance
+    Copyright (C) 2014-2015 Doug Torrance <dtorrance@piedmont.edu>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
