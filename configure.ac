@@ -1,4 +1,4 @@
-AC_INIT([wmforecast], [0.8], [dtorrance@monmouthcollege.edu])
+AC_INIT([wmforecast], [0.8], [dtorrance@piedmont.edu])
 AM_INIT_AUTOMAKE([-Wall -Werror])
 AC_CONFIG_SRCDIR([configure.ac])
 AC_CONFIG_HEADER([config.h])
