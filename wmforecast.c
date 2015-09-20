@@ -73,6 +73,7 @@ typedef struct {
 	long int minutesLeft;
 	Preferences *prefs;
 	PreferencesWindow *prefsWindow;
+	WMFrame *frame;
 	WMLabel *icon;
 	WMLabel *text;
 	WMScreen *screen;
@@ -256,7 +257,6 @@ Dockapp *newDockapp(WMScreen *screen, Preferences *prefs, int argc, char **argv)
 	Dockapp *dockapp = wmalloc(sizeof(Dockapp));
 	WMColor *background;
 	WMColor *text;
-	WMFrame *frame;
 	WMWindow *window;
 
 	dockapp->screen = screen;
@@ -277,13 +277,13 @@ Dockapp *newDockapp(WMScreen *screen, Preferences *prefs, int argc, char **argv)
 		prefs->text = DEFAULT_TEXT_COLOR;
 	}
 
-	frame = WMCreateFrame(window);
-	WMSetFrameRelief(frame,WRSunken);
-	WMResizeWidget(frame,56,56);
-	WMSetWidgetBackgroundColor(frame, background);
-	WMRealizeWidget(frame);
+	dockapp->frame = WMCreateFrame(window);
+	WMSetFrameRelief(dockapp->frame,WRSunken);
+	WMResizeWidget(dockapp->frame,56,56);
+	WMSetWidgetBackgroundColor(dockapp->frame, background);
+	WMRealizeWidget(dockapp->frame);
 
-	dockapp->text = WMCreateLabel(frame);
+	dockapp->text = WMCreateLabel(dockapp->frame);
 	WMSetWidgetBackgroundColor(dockapp->text, background);
 	WMSetLabelFont(dockapp->text, WMCreateFont(screen, "-Misc-Fixed-Medium-R-SemiCondensed--13-120-75-75-C-60-ISO10646-1"));
 	WMSetLabelTextColor(dockapp->text, text);
@@ -292,7 +292,7 @@ Dockapp *newDockapp(WMScreen *screen, Preferences *prefs, int argc, char **argv)
 	WMMoveWidget(dockapp->text,2,40);
 	WMRealizeWidget(dockapp->text);
 
-	dockapp->icon = WMCreateLabel(frame);
+	dockapp->icon = WMCreateLabel(dockapp->frame);
 	WMSetWidgetBackgroundColor(dockapp->icon, background);
 	WMRealizeWidget(dockapp->icon);
 	WMSetLabelImagePosition(dockapp->icon,WIPImageOnly);
@@ -300,8 +300,8 @@ Dockapp *newDockapp(WMScreen *screen, Preferences *prefs, int argc, char **argv)
 	WMMoveWidget(dockapp->icon,12,5);
 
 	WMMapWidget(window);
-	WMMapWidget(frame);
-	WMMapSubwidgets(frame);
+	WMMapWidget(dockapp->frame);
+	WMMapSubwidgets(dockapp->frame);
 
 	return dockapp;
 }
@@ -480,14 +480,23 @@ Weather *getWeather(WMScreen *screen, Preferences *prefs)
 static void updateDockapp(void *data)
 {
 	Dockapp *dockapp = (Dockapp *)data;
-
+	WMColor *background;
+	WMColor *text;
 	WMScreen *screen = dockapp->screen;
 	Preferences *prefs = dockapp->prefs;
 	Weather *weather;
 	WMPixmap *icon;
 
+	background = WMCreateNamedColor(screen, prefs->background, True);
+	text = WMCreateNamedColor(screen, prefs->text, True);
+
 	WMSetLabelText(dockapp->text,"loading");
+	WMSetWidgetBackgroundColor(dockapp->text, background);
+	WMSetLabelTextColor(dockapp->text, text);
 	WMRedisplayWidget(dockapp->text);
+
+	WMSetWidgetBackgroundColor(dockapp->frame, background);
+	WMSetWidgetBackgroundColor(dockapp->icon, background);
 
 	weather = getWeather(screen, prefs);
 
