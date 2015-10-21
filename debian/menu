@@ -1,6 +1,0 @@
-?package(wmforecast):\
-       needs="X11"\
-       section="Applications/Science/Geoscience"\
-       title="wmforecast"\
-       command="wmforecast" \
-       hints="Weather,Dockapp"
