@@ -1,3 +1,10 @@
+wmforecast (0.8-3) unstable; urgency=medium
+
+  * debian/menu
+    - Remove file since desktop file also exists.
+
+ -- Doug Torrance <dtorrance@piedmont.edu>  Wed, 21 Oct 2015 07:39:09 -0400
+
 wmforecast (0.8-2) unstable; urgency=medium
 
   * debian/control
