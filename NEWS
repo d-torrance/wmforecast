@@ -1,3 +1,15 @@
+version 0.9
+-----------
+* New feature!
+  - You may change the background or text colors either using the command line
+    (-b or --background for background, -t or --text for text), or by using the
+    preferences GUI.
+* The configuration file has been moved to the GNUstep Defaults directory
+  (likely ~/GNUstep/Defaults/wmforecast -- note this is the same directory as
+  the Window Maker configuration files).  You may also store system-wide
+  configuration in, e.g., /etc/GNUstep/Defaults/wmforecast.  This move takes
+  advantage of several built-in WINGs functions.
+
 version 0.8
 -----------
 * Update license information in svg icon.

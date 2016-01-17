@@ -1,3 +1,73 @@
+2016-01-17  Doug Torrance <dtorrance@piedmont.edu>
+
+	* ChangeLog, NEWS, configure.ac: Release version 0.9.
+
+2015-10-28  Doug Torrance <dtorrance@piedmont.edu>
+
+	* configure.ac, wmforecast.1.in: Remove newline at end of DATE which
+	  caused a messed-up manpage.  Also switch PACKAGE_STRING to
+	  PACKAGE_VERSION in manpage.
+
+2015-09-20  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Update copyright header.
+	* configure.ac: Use date from ChangeLog for manpage instead of
+	  system date.  Allows reproducible builds.
+	* AUTHORS, configure.ac, wmforecast.1.in: Update email address.
+	* TODO: Update TODO.
+	* wmforecast.c: wmforecast.c: Add new colors to preferences GUI
+	  (revised).
+
+2014-11-16  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* README: Simplify README.
+	* configure.ac, wmforecast.1.in: Manpage now manually updated. Date
+	  and version inserted by autoconf.
+	* Makefile.am, configure.ac: Remove dependency on help2man.
+	* wmforecast.c: Keep track of last time weather was
+	  retrieved; display in balloon.
+
+2014-11-02  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* wmforecast.c: Use consistent code formatting.  In
+	  particular, minimize warnings from checkpatch.pl in the Window
+	  Maker source tree.
+
+2014-11-01  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* wmforecast.c: Combine background color with icon to
+	  remove black border.
+
+2014-10-31  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* wmforecast.c: Switch preferences to use
+	  WMUserDefaults instead of manually writing my own PropList stuff.
+	  Moves location of preferences file to ~/GNUstep/Defaults/wmforecast.
+
+
+2014-10-30  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* wmforecast.c: Add new colors to preferences GUI.
+	* wmforecast.c: Add command line options to set
+	  colors.  In particular, -b or --background can be used to set the
+	  background color and -t or --text can be used to set the text color.
+	  These can also be set in ~/.config/wmforecast/wmforecastrc by setting
+	  "background" and "text", respectively.
+
+2014-10-29  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* wmforecast.c: Simplify --help output, add homepage.
+	* wmforecast.c: Print -help text when invalid command line option given.
+	* wmforecast.c: Use PACKAGE_STRING for --version; update to reflect GNU
+	  coding standards
+	  (http://www.gnu.org/prep/standards/html_node/_002d_002dversion.html).
+	* configure.ac: Remove AC_SUBST(VERSION); unnecessary.
+	* .gitignore: Add auto-generated files previously under	version control.
+	* INSTALL, config.h.in, depcomp, install-sh: Remove
+	autotools-generated files.
+	* wmforecast.c: Move default colors to #defines.
+	* TODO: TODO: New file.
+
 2014-10-21  Doug Torrance <dtorrance@monmouthcollege.edu>
 	* icons/wmforecast.svg: update license information
 	* README: update homepage
