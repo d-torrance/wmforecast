@@ -5,19 +5,10 @@
 
 ===========================================================
 
-https://github.com/d-torrance/wmforecast
+Homepage: https://github.com/d-torrance/wmforecast
 
 wmforecast is a weather dockapp for Window Maker using the Yahoo Weather API
 (https://developer.yahoo.com/weather/)
-
-It is designed to combine the look and field of traditional dockapps, e.g.,
-light sea green text on a black background, with a more modern simplicity.
-Instead of cramming lots of information in one 64x64 icon, only the current
-temperature and an icon representing the conditions are given.  Further
-information is available via a balloon tooltip.
-
-Note that wmforecast is written using WINGs, Window Maker's native widget
-toolkit.
 
 The icons were designed by MerlinTheRed and are available at
 http://merlinthered.deviantart.com/art/plain-weather-icons-157162192
@@ -31,26 +22,7 @@ sudo make install
 
 Usage
 =====
-Usage: wmforecast [OPTIONS]
-
-Options:
-    -v, --version        print the version number
-    -h, --help           print this help screen
-    -i, --interval <min> number of minutes between refreshes (default 60)
-    -u, --units <c|f>    whether to use Celsius or Fahrenheit (default f)
-    -w, --woeid <woeid>  Where on Earth ID (default is 2502265 for
-                         Sunnyvale, CA -- to find your WOEID, search
-                         for your city at http://weather.yahoo.com and
-                         look in the URL.)
-    -z, --zip <zip>      ZIP code or Location ID (Yahoo has deprecated this
-                         option and it is not guaranteed to work)
-Notes:
-* double click the icon at any time to refresh data
-
-* right click the icon to edit your preferences in a GUI
-
-* preferences may be manually configured in
-  XDG_CONFIG_DIR/wmforecast/wmforecastrc
+Run `wmforecast --help` or `man wmforecast` for more information.
 
 Copyright
 =========
