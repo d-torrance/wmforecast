@@ -1,3 +1,15 @@
+wmforecast (0.10-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/control
+    - Bump Standards-Version to 3.9.7.
+    - Update Vcs-Browser to use https protocol.
+    - Update Homepage field.
+  * debian/rules
+    - Enable all hardening flags.
+
+ -- Doug Torrance <dtorrance@piedmont.edu>  Sat, 26 Mar 2016 19:07:16 -0400
+
 wmforecast (0.9-1) unstable; urgency=medium
 
   * New upstream release.
