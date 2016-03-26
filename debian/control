@@ -10,7 +10,7 @@ Build-Depends: debhelper (>= 9),
                libwings-dev,
                libxml2-dev
 Standards-Version: 3.9.7
-Homepage: https://github.com/d-torrance/wmforecast
+Homepage: https://wmforecast.friedcheese.org
 Vcs-Browser: https://anonscm.debian.org/git/pkg-wmaker/wmforecast.git
 Vcs-Git: https://anonscm.debian.org/git/pkg-wmaker/wmforecast.git
 
