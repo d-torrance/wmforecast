@@ -335,7 +335,7 @@ char *getBalloonText(Weather *weather)
 	text = wstrappend(text, ", ");
 	text = wstrappend(text, weather->temp);
 	text = wstrappend(text, "°\n\nForecast:\n");
-	for (i = 0; i < weather->forecasts->length; i++) {
+	for (i = 0; i < weather->forecasts->length && i < 7; i++) {
 		text = wstrappend(text, weather->forecasts->forecasts[i].day);
 		text = wstrappend(text, " - ");
 		text = wstrappend(text, weather->forecasts->forecasts[i].text);
