@@ -335,7 +335,7 @@ char *getBalloonText(Weather *weather)
 	text = wstrappend(text, ", ");
 	text = wstrappend(text, weather->temp);
 	text = wstrappend(text, "°\n\nForecast:\n");
-	for (i = 0; i < weather->forecasts->length; i++) {
+	for (i = 0; i < weather->forecasts->length && i < 7; i++) {
 		text = wstrappend(text, weather->forecasts->forecasts[i].day);
 		text = wstrappend(text, " - ");
 		text = wstrappend(text, weather->forecasts->forecasts[i].text);
@@ -383,15 +383,20 @@ Weather *getWeather(WMScreen *screen, Preferences *prefs)
 	xmlDocPtr doc;
 	xmlNodePtr cur;
 
-	url = wstrconcat("http://weather.yahooapis.com/forecastrss?u=",
-			 prefs->units);
+	url = wstrdup("https://query.yahooapis.com/v1/public/yql?q="
+		      "select%20*%20from%20weather.forecast%20where%20woeid");
 	if (strcmp(prefs->woeid_or_zip, "w") == 0) {
-		url = wstrappend(url, "&w=");
+		url = wstrappend(url, "%20%3D%20");
 		url = wstrappend(url, prefs->woeid);
 	} else {
-		url = wstrappend(url, "&p=");
+		url = wstrappend(url, "%20in%20(select%20woeid%20from%20"
+				 "geo.places(1)%20where%20text%3D%22");
 		url = wstrappend(url, prefs->zip);
+		url = wstrappend(url, "%22)");
 	}
+	url = wstrappend(url, "%20and%20u%3D'");
+	url = wstrappend(url, prefs->units);
+	url = wstrappend(url, "'&format=xml");
 
 	weather = newWeather();
 	chunk.memory = wmalloc(1);
@@ -428,16 +433,10 @@ Weather *getWeather(WMScreen *screen, Preferences *prefs)
 		return weather;
 	}
 
-	if (xmlStrcmp(cur->name, (const xmlChar *)"rss")) {
-		setError(weather, screen, "Empty document");
-		fprintf(stderr, "document of the wrong type, root node != rss");
-		xmlFreeDoc(doc);
-		return weather;
-	}
-
-	cur = cur->children;
-	cur = cur->next;
-	cur = cur->children;
+	/* cur at "query" */
+	cur = cur->children; /* down to "results" */
+	cur = cur->children; /* down to "channel" */
+	cur = cur->children; /* down one more -- this is where we want to be */
 
 	while (cur != NULL) {
 		if ((!xmlStrcmp(cur->name, (const xmlChar *)"item"))) {

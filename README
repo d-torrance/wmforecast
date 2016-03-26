@@ -5,7 +5,7 @@
 
 ===========================================================
 
-Homepage: https://github.com/d-torrance/wmforecast
+Homepage: http://www.friedcheese.org/wmforecast
 
 wmforecast is a weather dockapp for Window Maker using the Yahoo Weather API
 (https://developer.yahoo.com/weather/)
@@ -27,7 +27,7 @@ Run `wmforecast --help` or `man wmforecast` for more information.
 Copyright
 =========
 wmforecast:
-	2014 Doug Torrance <dtorrance@monmouthcollege.edu>
+	2014 Doug Torrance <dtorrance@piedmont.edu>
 	GNU General Public License v3+
 
 icons:
