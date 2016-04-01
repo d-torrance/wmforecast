@@ -1,5 +1,5 @@
 /***********************************************************************
-    Copyright (C) 2014-2015 Doug Torrance <dtorrance@piedmont.edu>
+    Copyright (C) 2014-2016 Doug Torrance <dtorrance@piedmont.edu>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -647,7 +647,7 @@ Preferences *setPreferences(int argc, char **argv)
 
 		case 'v':
 			printf("%s\n"
-			       "Copyright © 2014 Doug Torrance\n"
+			       "Copyright © 2014-2016 Doug Torrance\n"
 			       "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
 			       "This is free software: you are free to change and redistribute it.\n"
 			       "There is NO WARRANTY, to the extent permitted by law.\n"
