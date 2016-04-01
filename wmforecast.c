@@ -923,8 +923,10 @@ static void editPreferences(void *data)
 static void refresh(XEvent *event, void *data)
 {
 	Dockapp *d = (Dockapp *)data;
-	if (WMIsDoubleClick(event) && event->xbutton.button == Button1)
+	if (WMIsDoubleClick(event) && event->xbutton.button == Button1) {
+		d->minutesLeft = d->prefs->interval;
 		updateDockapp(d);
+	}
 	if (event->xbutton.button == Button3 && !d->prefsWindowPresent)
 		editPreferences(d);
 }
