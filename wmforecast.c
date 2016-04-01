@@ -382,6 +382,7 @@ Weather *getWeather(WMScreen *screen, Preferences *prefs)
 	Weather *weather;
 	xmlDocPtr doc;
 	xmlNodePtr cur;
+	int i;
 
 	url = wstrdup("https://query.yahooapis.com/v1/public/yql?q="
 		      "select%20*%20from%20weather.forecast%20where%20woeid");
@@ -433,10 +434,15 @@ Weather *getWeather(WMScreen *screen, Preferences *prefs)
 		return weather;
 	}
 
-	/* cur at "query" */
-	cur = cur->children; /* down to "results" */
-	cur = cur->children; /* down to "channel" */
-	cur = cur->children; /* down one more -- this is where we want to be */
+	for (i = 0; i < 3; i++) {
+		cur = cur->children;
+		if (cur == NULL) {
+			setError(weather, screen,
+				 "Document not parsed successfully");
+			xmlFreeDoc(doc);
+			return weather;
+		}
+	}
 
 	while (cur != NULL) {
 		if ((!xmlStrcmp(cur->name, (const xmlChar *)"item"))) {
