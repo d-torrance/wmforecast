@@ -702,8 +702,8 @@ Preferences *setPreferences(int argc, char **argv)
 			       "    -b, --background <color> set background color\n"
 			       "    -t, --text <color>       set text color\n"
 			       "Report bugs to: %s\n"
-			       "wmforecast home page: https://github.com/d-torrance/wmforecast\n",
-			       PACKAGE_BUGREPORT
+			       "wmforecast home page: %s\n",
+			       PACKAGE_BUGREPORT, PACKAGE_URL
 				);
 			exit(0);
 
