@@ -1,19 +1,17 @@
-/***********************************************************************
-    Copyright (C) 2014-2015 Doug Torrance <dtorrance@piedmont.edu>
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-************************************************************************/
+/* Copyright (C) 2014-2016 Doug Torrance <dtorrance@piedmont.edu>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>. */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -382,6 +380,7 @@ Weather *getWeather(WMScreen *screen, Preferences *prefs)
 	Weather *weather;
 	xmlDocPtr doc;
 	xmlNodePtr cur;
+	int i;
 
 	url = wstrdup("https://query.yahooapis.com/v1/public/yql?q="
 		      "select%20*%20from%20weather.forecast%20where%20woeid");
@@ -433,10 +432,15 @@ Weather *getWeather(WMScreen *screen, Preferences *prefs)
 		return weather;
 	}
 
-	/* cur at "query" */
-	cur = cur->children; /* down to "results" */
-	cur = cur->children; /* down to "channel" */
-	cur = cur->children; /* down one more -- this is where we want to be */
+	for (i = 0; i < 3; i++) {
+		cur = cur->children;
+		if (cur == NULL) {
+			setError(weather, screen,
+				 "Document not parsed successfully");
+			xmlFreeDoc(doc);
+			return weather;
+		}
+	}
 
 	while (cur != NULL) {
 		if ((!xmlStrcmp(cur->name, (const xmlChar *)"item"))) {
@@ -548,6 +552,9 @@ static void updateDockapp(void *data)
 
 		WMSetBalloonTextForView(weather->errorText,
 					WMWidgetView(dockapp->icon));
+
+		/* try again in 1 minute */
+		dockapp->minutesLeft = 1;
 	} else {
 		WMSetLabelText(dockapp->text, wstrconcat(weather->temp, "°"));
 
@@ -641,7 +648,7 @@ Preferences *setPreferences(int argc, char **argv)
 
 		case 'v':
 			printf("%s\n"
-			       "Copyright © 2014 Doug Torrance\n"
+			       "Copyright © 2014-2016 Doug Torrance\n"
 			       "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
 			       "This is free software: you are free to change and redistribute it.\n"
 			       "There is NO WARRANTY, to the extent permitted by law.\n"
@@ -695,8 +702,8 @@ Preferences *setPreferences(int argc, char **argv)
 			       "    -b, --background <color> set background color\n"
 			       "    -t, --text <color>       set text color\n"
 			       "Report bugs to: %s\n"
-			       "wmforecast home page: https://github.com/d-torrance/wmforecast\n",
-			       PACKAGE_BUGREPORT
+			       "wmforecast home page: %s\n",
+			       PACKAGE_BUGREPORT, PACKAGE_URL
 				);
 			exit(0);
 
@@ -916,8 +923,10 @@ static void editPreferences(void *data)
 static void refresh(XEvent *event, void *data)
 {
 	Dockapp *d = (Dockapp *)data;
-	if (WMIsDoubleClick(event) && event->xbutton.button == Button1)
+	if (WMIsDoubleClick(event) && event->xbutton.button == Button1) {
+		d->minutesLeft = d->prefs->interval;
 		updateDockapp(d);
+	}
 	if (event->xbutton.button == Button3 && !d->prefsWindowPresent)
 		editPreferences(d);
 }

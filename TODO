@@ -1,9 +1,0 @@
-Future wmforecast features:
-==========================
-* Re-examine code now that I know a little more C.
-  - Do the structs all make sense?
-  - WMCreateDockapp function -- submit patch to WINGs?
-  - Use WMSetApplicationIconWindow?
-  - Use tools like valgrind to check things out.
-* Make # of days shown in forecast configurable?
-  - Possibly include dates if > 7 to avoid confusion.

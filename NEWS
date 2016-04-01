@@ -1,3 +1,14 @@
+version 0.11
+------------
+* New Yahoo! API gives us bad xml pretty frequently, which was causing
+  frequent segfaults.  We display an error instead.
+* If we get an error, we try again in 1 minute.
+* If we manually refresh the display, the countdown to the next automatic
+  refresh is reset to the default interval.  (Previously, if it was set to
+  refresh every 60 minutes and we manually refreshed it after 10 minutes,
+  it would refresh again after 50 minutes.  Now it will refresh again after
+  60 minutes.)
+
 version 0.10
 ------------
 * Update to work with new Yahoo! Weather API.

@@ -1,4 +1,5 @@
-AC_INIT([wmforecast], [0.10], [dtorrance@piedmont.edu])
+AC_INIT([wmforecast], [0.11], [dtorrance@piedmont.edu], [wmforecast],
+	[http://wmforecast.friedcheese.org])
 AM_INIT_AUTOMAKE([-Wall -Werror])
 AC_CONFIG_SRCDIR([configure.ac])
 AC_CONFIG_HEADER([config.h])
