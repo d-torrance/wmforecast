@@ -1,55 +1,27 @@
 2016-04-01  Doug Torrance <dtorrance@piedmont.edu>
 
-	* ChangeLog, NEWS, configure.ac: Release version 0.11.
-
-2016-04-01  Doug Torrance <dtorrance@piedmont.edu>
-
-	* README: Add options to README rather than referring user elsewhere.
-
-2016-04-01  Doug Torrance <dtorrance@piedmont.edu>
-
-	* README, configure.ac, wmforecast.c: Update URL.
-
-2016-04-01  Doug Torrance <dtorrance@piedmont.edu>
-
-	* TODO: Remove TODO; we'll use GitHub issues instead.
-
-2016-04-01  Doug Torrance <dtorrance@piedmont.edu>
-
-	* wmforecast.c: Reset timer countdown upon refresh.
-
-2016-04-01  Doug Torrance <dtorrance@piedmont.edu>
-
-	* wmforecast.c: If we have an error, refresh in one minute. (Fixes: #1)
-
-2016-04-01  Doug Torrance <dtorrance@piedmont.edu>
-
-	* wmforecast.c: Change comment style for copyright header.
-
-2016-04-01  Doug Torrance <dtorrance@piedmont.edu>
-
-	* README, wmforecast.c: Update copyright years.
-
-2016-04-01  Doug Torrance <dtorrance@piedmont.edu>
-
 	* wmforecast.c: Improve error handling.  Sometimes (still need to
-	investigate when and how this happens), the xml file we get doesn't
-	have the expected format.  Then we could end up with a NULL xmlNodePtr,
-	which causes a segfault when trying to access its children.
-
-2016-03-26  Doug Torrance <dtorrance@piedmont.edu>
-
-	* ChangeLog, NEWS, configure.ac: Release version 0.10.
-
-2016-03-26  Doug Torrance <dtorrance@piedmont.edu>
-
-	* TODO, wmforecast.c: Limit of number days in forecast to 7 to avoid
-	confusion.  "Which Saturday is it talking about?" Add note in TODO
-	about possibly making this number a configuration option in the future.
+	  investigate when and how this happens), the xml file we get doesn't
+	  have the expected format.  Then we could end up with a NULL
+	  xmlNodePtr, which causes a segfault when trying to access its
+	  children.
+	* README, wmforecast.c: Update copyright years.
+	* wmforecast.c: Change comment style for copyright header.
+	* wmforecast.c: If we have an error, refresh in one minute. (Fixes: #1)
+	* wmforecast.c: Reset timer countdown upon refresh.
+	* TODO: Remove TODO; we'll use GitHub issues instead.
+	* README, configure.ac, wmforecast.c: Update URL.
+	* README: Add options to README rather than referring user elsewhere.
+	* ChangeLog, NEWS, configure.ac: Release version 0.11.
 
 2016-03-26  Doug Torrance <dtorrance@piedmont.edu>
 
 	* wmforecast.c: Update to work with new Yahoo Weather API.
+	* TODO, wmforecast.c: Limit of number days in forecast to 7 to avoid
+	  confusion.  "Which Saturday is it talking about?" Add note in TODO
+	  about possibly making this number a configuration option in the
+	  future.
+	* ChangeLog, NEWS, configure.ac: Release version 0.10.
 
 2016-02-23  Doug Torrance <dtorrance@piedmont.edu>
 
@@ -58,8 +30,6 @@
 2016-02-07  Doug Torrance <dtorrance@piedmont.edu>
 
 	* README: Update homepage and email address in README.
-
-2016-01-17  Doug Torrance <dtorrance@piedmont.edu>
 
 2016-01-17  Doug Torrance <dtorrance@piedmont.edu>
 
