@@ -552,6 +552,9 @@ static void updateDockapp(void *data)
 
 		WMSetBalloonTextForView(weather->errorText,
 					WMWidgetView(dockapp->icon));
+
+		/* try again in 1 minute */
+		dockapp->minutesLeft = 1;
 	} else {
 		WMSetLabelText(dockapp->text, wstrconcat(weather->temp, "°"));
 
