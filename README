@@ -22,7 +22,20 @@ sudo make install
 
 Usage
 =====
-Run `wmforecast --help` or `man wmforecast` for more information.
+wmforecast [OPTIONS]
+Options:
+    -v, --version            print the version number
+    -h, --help               print this help screen
+    -i, --interval <min>     number of minutes between refreshes (default 60)
+    -u, --units <c|f>        whether to use Celsius or Fahrenheit (default f)
+    -w, --woeid <woeid>      Where on Earth ID (default is 2502265 for
+                             Sunnyvale, CA -- to find your WOEID, search
+                             for your city at http://weather.yahoo.com and
+                             look in the URL.)
+    -z, --zip <zip>          ZIP code or Location ID (Yahoo has deprecated this
+                             option and it is not guaranteed to work)
+    -b, --background <color> set background color
+    -t, --text <color>       set text color
 
 Copyright
 =========
