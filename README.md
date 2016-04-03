@@ -9,6 +9,17 @@ wmforecast is a weather dockapp for Window Maker using the
 The icons were designed by MerlinTheRed and are available at
 <http://merlinthered.deviantart.com/art/plain-weather-icons-157162192>
 
+Download
+--------
+
+To download, either fork the git repository:
+
+    git clone https://github.com/d-torrance/wmforecast
+
+or download a tarball from the
+[releases page](https://github.com/d-torrance/wmforecast/releases).
+
+
 Installation
 ------------
 
