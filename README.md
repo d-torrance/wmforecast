@@ -61,6 +61,12 @@ Usage
     -b, --background <color> set background color
     -t, --text <color>       set text color
 
+Bugs
+----
+
+Please report bugs and feature requests at the
+[issues page](https://github.com/d-torrance/wmforecast/issues).
+
 Copyright
 ---------
 
