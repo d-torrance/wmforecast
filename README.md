@@ -12,10 +12,25 @@ The icons were designed by MerlinTheRed and are available at
 Installation
 ------------
 
+To compile wmforecast from source, you will need
+
+* [libcurl](https://curl.haxx.se/libcurl/)
+* [libxml2](http://www.xmlsoft.org/)
+* [WINGs](http://windowmaker.org/)
+
+Then the usual
+
     ./configure
     make
     sudo make install
-    (see INSTALL for more details)
+
+wmforecast binary packages are also available in the Debian and Ubuntu archives,
+but possibly older versions.  To obtain the latest version in Ubuntu, you may
+use the PPA:
+
+    sudo add-apt-repository ppa:profzoom/wmaker
+    sudo apt-get update
+	sudo apt-get install wmforecast
 
 Usage
 -----
