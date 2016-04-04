@@ -10,4 +10,4 @@ LIBS += $(libxml2_LIBS) $(libcurl_LIBS) $(X11_LIBS) $(WINGs_LIBS)
 desktopdir = $(datadir)/applications
 dist_desktop_DATA = wmforecast.desktop
 
-EXTRA_DIST = README.md
+EXTRA_DIST = autogen.sh README.md

@@ -29,6 +29,10 @@ To compile wmforecast from source, you will need
 * [libxml2](http://www.xmlsoft.org/)
 * [WINGs](http://windowmaker.org/)
 
+If building from git (not necessary if using a tarball):
+
+    ./autogen.sh
+
 Then the usual
 
     ./configure
