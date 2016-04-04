@@ -1,6 +1,6 @@
 AC_INIT([wmforecast], [0.11], [dtorrance@piedmont.edu], [wmforecast],
 	[http://wmforecast.friedcheese.org])
-AM_INIT_AUTOMAKE([-Wall -Werror])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_CONFIG_SRCDIR([configure.ac])
 AC_CONFIG_HEADER([config.h])
 AC_PROG_CC
