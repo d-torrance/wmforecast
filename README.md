@@ -12,7 +12,7 @@ The icons were designed by MerlinTheRed and are available at
 Download
 --------
 
-To download, either fork the git repository:
+To download, either clone the git repository:
 
     git clone https://github.com/d-torrance/wmforecast
 
