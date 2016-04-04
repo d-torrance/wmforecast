@@ -19,6 +19,13 @@ To download, either clone the git repository:
 or download a tarball from the
 [releases page](https://github.com/d-torrance/wmforecast/releases).
 
+wmforecast binary packages are also available in the Debian and Ubuntu archives,
+but possibly older versions.  To obtain the latest version in Ubuntu, you may
+use the PPA:
+
+    sudo add-apt-repository ppa:profzoom/wmaker
+    sudo apt-get update
+	sudo apt-get install wmforecast
 
 Installation
 ------------
@@ -38,14 +45,6 @@ Then the usual
     ./configure
     make
     sudo make install
-
-wmforecast binary packages are also available in the Debian and Ubuntu archives,
-but possibly older versions.  To obtain the latest version in Ubuntu, you may
-use the PPA:
-
-    sudo add-apt-repository ppa:profzoom/wmaker
-    sudo apt-get update
-	sudo apt-get install wmforecast
 
 Usage
 -----
