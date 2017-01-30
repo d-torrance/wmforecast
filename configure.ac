@@ -7,6 +7,9 @@ AC_PROG_CC
 PKG_CHECK_MODULES([libxml2],[libxml-2.0])
 PKG_CHECK_MODULES([libcurl],[libcurl])
 PKG_CHECK_MODULES([X11],[x11])
+dnl Eventually, use pkg-config for WINGs.  However, pkg-config files were broken
+dnl until Window Maker 0.95.6, which is not available in older distributions,
+dnl e.g., Ubuntu Precise and Trusty.
 AC_CHECK_LIB(WINGs,WMCreateWindow)
 AC_SUBST(DATE, "esyscmd(head -n 1 ChangeLog | cut -d' ' -f1 | tr -d '\n')")
 AC_CONFIG_FILES([Makefile icons/Makefile wmforecast.1])
