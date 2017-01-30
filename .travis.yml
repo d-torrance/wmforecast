@@ -1,11 +1,14 @@
-dist:
-  - precise
-  - trusty
 language: c
 compiler:
   - clang
   - gcc
 script: ./autogen.sh && ./configure && make distcheck
+matrix:
+  include:
+  - os: linux
+    dist: precise
+  - os: linux
+    dist: trusty
 addons:
   apt:
     packages:
