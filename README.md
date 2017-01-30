@@ -1,5 +1,6 @@
 wmforecast
 ==========
+[![Build Status](https://travis-ci.org/d-torrance/wmforecast.svg?branch=master)](https://travis-ci.org/d-torrance/wmforecast)
 
 <http://wmforecast.friedcheese.org>
 
