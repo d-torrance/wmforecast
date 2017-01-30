@@ -1,4 +1,6 @@
-dist: trusty
+dist:
+  - precise
+  - trusty
 language: c
 compiler:
   - clang
