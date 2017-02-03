@@ -83,6 +83,7 @@ li {
  */
 h1, h2, h3, h4, h5, h6 {
     font-weight: $base-font-weight;
+    color: $brand-color;
 }
 
 
@@ -130,9 +131,9 @@ blockquote {
 pre,
 code {
     font-size: 15px;
-    border: 1px solid $grey-color-light;
+    border: 1px solid darken($text-color, 25%);
     border-radius: 3px;
-    background-color: #eef;
+    color: darken($text-color, 25%);
 }
 
 code {
@@ -156,14 +157,6 @@ pre {
  * Wrapper
  */
 .wrapper {
-background: rgba(255,255,255,1);
-background: -moz-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(32,178,171,1) 5%, rgba(32,178,170,1) 100%);
-background: -webkit-gradient(left top, left bottom, color-stop(0%, rgba(255,255,255,1)), color-stop(5%, rgba(32,178,171,1)), color-stop(100%, rgba(32,178,170,1)));
-background: -webkit-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(32,178,171,1) 5%, rgba(32,178,170,1) 100%);
-background: -o-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(32,178,171,1) 5%, rgba(32,178,170,1) 100%);
-background: -ms-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(32,178,171,1) 5%, rgba(32,178,170,1) 100%);
-background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(32,178,171,1) 5%, rgba(32,178,170,1) 100%);
-filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#20b2aa', GradientType=0 );
     border-radius: 25px;
     max-width: -webkit-calc(#{$content-width} - (#{$spacing-unit} * 2));
     max-width:         calc(#{$content-width} - (#{$spacing-unit} * 2));
