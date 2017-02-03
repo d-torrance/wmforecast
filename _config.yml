@@ -1,0 +1,6 @@
+title: wmforecast
+email: dtorrance@piedmont.edu
+description: Weather dockapp for Window Maker using the Yahoo Weather API
+url: "http://wmforecast.friedcheese.org"
+github_username:  d-torrance
+markdown: kramdown
