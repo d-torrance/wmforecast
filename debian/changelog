@@ -3,6 +3,7 @@ wmforecast (0.11-2) UNRELEASED; urgency=medium
   * Update Vcs-* after migration to Salsa.
   * Update Format in d/copyright to https.
   * Switch Priority from extra to optional.
+  * Bump Standards-Version to 4.1.3.
 
  -- Doug Torrance <dtorrance@piedmont.edu>  Wed, 10 Jan 2018 14:46:10 -0500
 
