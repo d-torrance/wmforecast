@@ -275,6 +275,7 @@ Dockapp *newDockapp(WMScreen *screen, Preferences *prefs, int argc, char **argv)
 	dockapp->prefsWindowPresent = 0;
 
 	window = WMCreateDockapp(screen, "", argc, argv);
+	WMSetWindowTitle(window, "wmforecast");
 
 	background = WMCreateNamedColor(screen, prefs->background, True);
 	if (!background) {
