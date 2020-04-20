@@ -6,6 +6,7 @@ AC_CONFIG_HEADER([config.h])
 AC_PROG_CC
 PKG_CHECK_MODULES([X11],[x11])
 PKG_CHECK_MODULES([libgweather], [gweather-3.0])
+PKG_CHECK_MODULES([geoclue], [libgeoclue-2.0])
 dnl Eventually, use pkg-config for WINGs.  However, pkg-config files were broken
 dnl until Window Maker 0.95.6, which is not available in older distributions,
 dnl e.g., Ubuntu Precise and Trusty.

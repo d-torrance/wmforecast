@@ -17,6 +17,7 @@
 #include <config.h>
 #endif
 
+#include <geoclue.h>
 #include <getopt.h>
 #define GWEATHER_I_KNOW_THIS_IS_UNSTABLE
 #include <libgweather/gweather.h>
@@ -51,6 +52,7 @@ typedef struct {
 	WMButton *close;
 	WMButton *fahrenheit;
 	WMButton *save;
+	WMButton *find_coords;
 	WMColorWell *background;
 	WMColorWell *text;
 	WMFrame *intervalFrame;
@@ -639,6 +641,45 @@ static void savePreferences(WMWidget *widget, void *data)
 
 }
 
+static void foundCoords(GObject *source_object, GAsyncResult *res,
+			gpointer user_data)
+{
+	Dockapp *d = (Dockapp *)user_data;
+	GClueSimple *simple;
+	GError *error;
+	GClueLocation *location;
+	char latitude[10], longitude[10];
+
+	error = NULL;
+	simple = gclue_simple_new_finish(res, &error);
+
+	if (simple)
+		location = gclue_simple_get_location(simple);
+
+	if (location) {
+		sprintf(latitude, "%.2f",
+			gclue_location_get_latitude(location));
+		sprintf(longitude, "%.2f",
+			gclue_location_get_longitude(location));
+		WMSetTextFieldText(d->prefsWindow->latitude, latitude);
+		WMSetTextFieldText(d->prefsWindow->longitude, longitude);
+		WMSetButtonText(d->prefsWindow->find_coords, "Find Coords");
+	} else {
+		WMSetButtonText(d->prefsWindow->find_coords,
+				"Error. Try again?");
+	}
+}
+
+static void findCoords(WMWidget *widget, void *data)
+{
+	Dockapp *d = (Dockapp *)data;
+
+	WMSetButtonText(d->prefsWindow->find_coords, "Finding...");
+
+	gclue_simple_new("wmforecast", GCLUE_ACCURACY_LEVEL_CITY, NULL,
+			 foundCoords, d);
+}
+
 static void editPreferences(void *data)
 {
 	char intervalPtr[50];
@@ -723,6 +764,16 @@ static void editPreferences(void *data)
 	WMMoveWidget(d->prefsWindow->longitude, 80, 36);
 	WMRealizeWidget(d->prefsWindow->longitude);
 	WMMapWidget(d->prefsWindow->longitude);
+
+	d->prefsWindow->find_coords = WMCreateButton(
+		d->prefsWindow->locationFrame, WBTMomentaryPush);
+	WMSetButtonText(d->prefsWindow->find_coords, "Find Coords");
+	WMSetButtonAction(d->prefsWindow->find_coords, findCoords, d);
+	WMResizeWidget(d->prefsWindow->find_coords, 120, 18);
+	WMMoveWidget(d->prefsWindow->find_coords, 20, 57);
+	WMRealizeWidget(d->prefsWindow->find_coords);
+	WMMapWidget(d->prefsWindow->find_coords);
+
 
 	d->prefsWindow->intervalFrame = WMCreateFrame(d->prefsWindow->window);
 	WMSetFrameTitle(d->prefsWindow->intervalFrame, "Refresh interval");
@@ -846,7 +897,7 @@ int main(int argc, char **argv)
 	WMAddPersistentTimerHandler(60*1000, /* one minute */
 				    timerHandler, dockapp);
 
-	WMAddPersistentTimerHandler(1000, do_glib_loop, NULL);
+	WMAddPersistentTimerHandler(100, do_glib_loop, NULL);
 
 	WMScreenMainLoop(screen);
 }
