@@ -657,9 +657,9 @@ static void foundCoords(GObject *source_object, GAsyncResult *res,
 		location = gclue_simple_get_location(simple);
 
 	if (location) {
-		sprintf(latitude, "%.2f",
+		sprintf(latitude, "%.4f",
 			gclue_location_get_latitude(location));
-		sprintf(longitude, "%.2f",
+		sprintf(longitude, "%.4f",
 			gclue_location_get_longitude(location));
 		WMSetTextFieldText(d->prefsWindow->latitude, latitude);
 		WMSetTextFieldText(d->prefsWindow->longitude, longitude);
