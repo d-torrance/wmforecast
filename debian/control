@@ -5,9 +5,9 @@ Maintainer: Debian Window Maker Team <pkg-wmaker-devel@lists.alioth.debian.org>
 Uploaders: Doug Torrance <dtorrance@piedmont.edu>
 Build-Depends: debhelper (>= 9),
                dh-autoreconf,
-               libcurl4-gnutls-dev,
-               libwings-dev,
-               libxml2-dev
+               libgeoclue-2-dev,
+               libgweather-3-dev,
+               libwings-dev
 Standards-Version: 4.1.3
 Homepage: http://wmforecast.friedcheese.org
 Vcs-Browser: https://salsa.debian.org/wmaker-team/wmforecast
