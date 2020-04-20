@@ -17,24 +17,29 @@
 #include <config.h>
 #endif
 
-#include <curl/curl.h>
-#include <errno.h>
+#include <geoclue.h>
 #include <getopt.h>
-#include <libgen.h>
-#include <libxml/tree.h>
+#define GWEATHER_I_KNOW_THIS_IS_UNSTABLE
+#include <libgweather/gweather.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
+#include <time.h>
 #include <WINGs/WINGs.h>
 
 #define DEFAULT_TEXT_COLOR "light sea green"
 #define DEFAULT_BG_COLOR "black"
 
+enum {
+	TEMP_CURRENT,
+	TEMP_LOW,
+	TEMP_HIGH
+};
+
 typedef struct {
 	char *units;
-	char *woeid;
-	char *zip;
-	char *woeid_or_zip;
+	double latitude;
+	double longitude;
 	long int interval;
 	char *background;
 	char *text;
@@ -47,8 +52,7 @@ typedef struct {
 	WMButton *close;
 	WMButton *fahrenheit;
 	WMButton *save;
-	WMButton *woeid;
-	WMButton *zip;
+	WMButton *find_coords;
 	WMColorWell *background;
 	WMColorWell *text;
 	WMFrame *intervalFrame;
@@ -56,14 +60,14 @@ typedef struct {
 	WMFrame *units;
 	WMFrame *colors;
 	WMLabel *minutes;
-	WMLabel *woeid_zip;
 	WMLabel *backgroundLabel;
 	WMLabel *textLabel;
+	WMLabel *latitudeLabel;
+	WMLabel *longitudeLabel;
 	WMScreen *screen;
 	WMTextField *interval;
-	WMTextField *location;
-	WMTextField *woeidField;
-	WMTextField *zipField;
+	WMTextField *latitude;
+	WMTextField *longitude;
 	WMWindow *window;
 } PreferencesWindow;
 
@@ -93,7 +97,6 @@ typedef struct {
 typedef struct {
 	char *temp;
 	char *text;
-	char *title;
 	ForecastArray *forecasts;
 	RImage *icon;
 	int errorFlag;
@@ -131,7 +134,6 @@ Weather *newWeather()
 	Weather *weather = wmalloc(sizeof(Weather));
 	weather->temp = NULL;
 	weather->text = NULL;
-	weather->title = NULL;
 	weather->icon = NULL;
 	weather->forecasts = newForecastArray();
 	weather->errorFlag = 0;
@@ -160,17 +162,10 @@ void freeWeather(Weather *weather)
 {
 	wfree(weather->temp);
 	wfree(weather->text);
-	wfree(weather->title);
 	if (weather->forecasts)
 		freeForecastArray(weather->forecasts);
 	wfree(weather->errorText);
 	wfree(weather);
-}
-
-void setTitle(Weather *weather, const char *title)
-{
-	weather->title = wrealloc(weather->title, strlen(title) + 1);
-	strcpy(weather->title, title);
 }
 
 void setError(Weather *weather, WMScreen *screen, const char *errorText)
@@ -192,16 +187,13 @@ void setConditions(Weather *weather,
 	char *filename;
 	time_t currentTime;
 
-	weather->temp = wrealloc(weather->temp, strlen(temp) + 1);
-	strcpy(weather->temp, temp);
-	weather->text = wrealloc(weather->text, strlen(text) + 1);
-	strcpy(weather->text, text);
 
-	if (strlen(code) == 1)
-		code = wstrconcat("0", code);
+	weather->temp = wstrdup(temp);
+	weather->text = wstrdup(text);
 
 	context = WMScreenRContext(screen);
 	filename = wstrconcat(wstrconcat(DATADIR"/", code), ".png");
+
 	weather->icon = RLoadImage(context, filename, 0);
 	if (!weather->icon) {
 		setError(weather, screen, wstrconcat(filename, " not found"));
@@ -275,6 +267,7 @@ Dockapp *newDockapp(WMScreen *screen, Preferences *prefs, int argc, char **argv)
 	dockapp->prefsWindowPresent = 0;
 
 	window = WMCreateDockapp(screen, "", argc, argv);
+	WMSetWindowTitle(window, "wmforecast");
 
 	background = WMCreateNamedColor(screen, prefs->background, True);
 	if (!background) {
@@ -325,228 +318,94 @@ char *getBalloonText(Weather *weather)
 	char *text;
 	int i;
 
-	text = wstrconcat("\n", weather->title);
 	text = wstrappend(text, "\nRetrieved: ");
 	text = wstrappend(text, weather->retrieved);
 	text = wstrappend(text, "\n\nCurrent Conditions:\n");
 	text = wstrappend(text, weather->text);
 	text = wstrappend(text, ", ");
 	text = wstrappend(text, weather->temp);
-	text = wstrappend(text, "°\n\nForecast:\n");
-	for (i = 0; i < weather->forecasts->length && i < 7; i++) {
-		text = wstrappend(text, weather->forecasts->forecasts[i].day);
-		text = wstrappend(text, " - ");
-		text = wstrappend(text, weather->forecasts->forecasts[i].text);
-		text = wstrappend(text, ". High: ");
-		text = wstrappend(text, weather->forecasts->forecasts[i].high);
-		text = wstrappend(text, "° Low: ");
-		text = wstrappend(text, weather->forecasts->forecasts[i].low);
-		text = wstrappend(text, "°\n");
-	}
- /* as per Yahoo's Attribution Guidelines
-  * (https://developer.yahoo.com/attribution/) */
-	text = wstrappend(text, "\nPowered by Yahoo!\n\n");
+
+	/* skipping for now - metar only has current conditions
+	 * text = wstrappend(text, "°\n\nForecast:\n");
+	 * for (i = 0; i < weather->forecasts->length && i < 7; i++) {
+	 * 	text = wstrappend(text, weather->forecasts->forecasts[i].day);
+	 * 	text = wstrappend(text, " - ");
+	 * 	text = wstrappend(text, weather->forecasts->forecasts[i].text);
+	 * 	text = wstrappend(text, ". High: ");
+	 * 	text = wstrappend(text, weather->forecasts->forecasts[i].high);
+	 * 	text = wstrappend(text, "° Low: ");
+	 * 	text = wstrappend(text, weather->forecasts->forecasts[i].low);
+	 * 	text = wstrappend(text, "°\n");
+	 * } */
+
+	text = wstrappend(text, "\n\n");
 	return text;
 }
 
-/**************************************************
-from http://curl.haxx.se/libcurl/c/getinmemory.html
-***************************************************/
-struct MemoryStruct {
-	char *memory;
-	size_t size;
-};
-
-static size_t
-WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
+char *getTemp(GWeatherInfo *info, char *units, int which_temp)
 {
-	size_t realsize = size * nmemb;
-	struct MemoryStruct *mem = (struct MemoryStruct *)userp;
+	GWeatherTemperatureUnit unit;
+	double temp_double;
+	char temp[4];
 
-	mem->memory = wrealloc(mem->memory, mem->size + realsize + 1);
-	memcpy(&(mem->memory[mem->size]), contents, realsize);
-	mem->size += realsize;
-	mem->memory[mem->size] = 0;
+	if (strcmp(units, "c") == 0)
+		unit = GWEATHER_TEMP_UNIT_CENTIGRADE;
+	else
+		unit = GWEATHER_TEMP_UNIT_FAHRENHEIT;
 
-	return realsize;
+	switch(which_temp) {
+	case TEMP_LOW:
+		gweather_info_get_value_temp_min(info, unit, &temp_double);
+		break;
+
+	case TEMP_HIGH:
+		gweather_info_get_value_temp_min(info, unit, &temp_double);
+		break;
+
+	case TEMP_CURRENT:
+	default:
+		gweather_info_get_value_temp(info, unit, &temp_double);
+	}
+
+	sprintf(temp, "%d", (int)(temp_double + 0.5));
+
+	return wstrdup(temp);
 }
 
-Weather *getWeather(WMScreen *screen, Preferences *prefs)
+void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 {
-	char *url;
-	CURL *curl_handle;
-	CURLcode res;
-	struct MemoryStruct chunk;
+	char *temp, *text;
+	const char *code;
+	WMPixmap *icon;
 	Weather *weather;
-	xmlDocPtr doc;
-	xmlNodePtr cur;
-	int i;
-
-	url = wstrdup("https://query.yahooapis.com/v1/public/yql?q="
-		      "select%20*%20from%20weather.forecast%20where%20woeid");
-	if (strcmp(prefs->woeid_or_zip, "w") == 0) {
-		url = wstrappend(url, "%20%3D%20");
-		url = wstrappend(url, prefs->woeid);
-	} else {
-		url = wstrappend(url, "%20in%20(select%20woeid%20from%20"
-				 "geo.places(1)%20where%20text%3D%22");
-		url = wstrappend(url, prefs->zip);
-		url = wstrappend(url, "%22)");
-	}
-	url = wstrappend(url, "%20and%20u%3D'");
-	url = wstrappend(url, prefs->units);
-	url = wstrappend(url, "'&format=xml");
+	Forecast *forecast;
 
 	weather = newWeather();
-	chunk.memory = wmalloc(1);
-	chunk.size = 0;
 
-	curl_global_init(CURL_GLOBAL_ALL);
-	curl_handle = curl_easy_init();
-	curl_easy_setopt(curl_handle, CURLOPT_URL, url);
-	curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
-	/* coverity[bad_sizeof] */
-	curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&chunk);
-	curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
-	res = curl_easy_perform(curl_handle);
-	if (res != CURLE_OK) {
-		setError(weather, screen, curl_easy_strerror(res));
-		curl_easy_cleanup(curl_handle);
-		curl_global_cleanup();
-		wfree(chunk.memory);
-		return weather;
-	}
-	curl_easy_cleanup(curl_handle);
-	curl_global_cleanup();
+	temp = getTemp(info, dockapp->prefs->units, TEMP_CURRENT);
+	text = gweather_info_get_weather_summary(info);
+	code = gweather_info_get_icon_name(info);
 
-	doc = xmlParseMemory(chunk.memory, chunk.size);
-	if (doc == NULL) {
-		setError(weather, screen, "Document not parsed successfully");
-		xmlFreeDoc(doc);
-		return weather;
-	}
-	cur = xmlDocGetRootElement(doc);
-	if (cur == NULL) {
-		setError(weather, screen, "Empty document");
-		xmlFreeDoc(doc);
-		return weather;
-	}
-
-	for (i = 0; i < 3; i++) {
-		cur = cur->children;
-		if (cur == NULL) {
-			setError(weather, screen,
-				 "Document not parsed successfully");
-			xmlFreeDoc(doc);
-			return weather;
-		}
-	}
-
-	while (cur != NULL) {
-		if ((!xmlStrcmp(cur->name, (const xmlChar *)"item"))) {
-			cur = cur->children;
-			while (cur != NULL) {
-				if ((!xmlStrcmp(cur->name,
-						(const xmlChar *)"title"))) {
-					if ((!xmlStrcmp(
-						     xmlNodeListGetString(
-							     doc,
-							     cur->children, 1),
-						     (const xmlChar *)
-						     "City not found")))
-						setError(
-							weather, screen,
-							"Location not found\n");
-					setTitle(
-						weather,
-						xmlNodeListGetString(
-							doc,
-							cur->children, 1)
-						);
-
-				}
-				if ((!xmlStrcmp(
-					     cur->name,
-					     (const xmlChar *)"condition"))) {
-					setConditions(
-						weather,
-						screen,
-						xmlGetProp(cur, "temp"),
-						xmlGetProp(cur, "text"),
-						xmlGetProp(cur, "code"),
-						prefs->background
-						);
-				}
-				if ((!xmlStrcmp(cur->name,
-						(const xmlChar *)"forecast"))) {
-					Forecast *forecast = newForecast();
-					setForecast(
-						forecast,
-						xmlGetProp(cur, "day"),
-						xmlGetProp(cur, "low"),
-						xmlGetProp(cur, "high"),
-						xmlGetProp(cur, "text")
-						);
-					appendForecast(weather->forecasts,
-						       forecast);
-				}
-
-
-				cur = cur->next;
-			}
-		} else {
-			cur = cur->next;
-		}
-	}
-
-
-	xmlFreeDoc(doc);
-/* finishing parsing xml */
-
-	wfree(chunk.memory);
-
-	return weather;
-}
-
-static void updateDockapp(void *data)
-{
-	Dockapp *dockapp = (Dockapp *)data;
-	WMColor *background;
-	WMColor *text;
-	WMScreen *screen = dockapp->screen;
-	Preferences *prefs = dockapp->prefs;
-	Weather *weather;
-	WMPixmap *icon;
-
-	background = WMCreateNamedColor(screen, prefs->background, True);
-	text = WMCreateNamedColor(screen, prefs->text, True);
-
-	WMSetLabelText(dockapp->text, "loading");
-	WMSetWidgetBackgroundColor(dockapp->text, background);
-	WMSetLabelTextColor(dockapp->text, text);
-	WMRedisplayWidget(dockapp->text);
-
-	WMSetWidgetBackgroundColor(dockapp->frame, background);
-	WMSetWidgetBackgroundColor(dockapp->icon, background);
-
-	weather = getWeather(screen, prefs);
+	setConditions(weather, dockapp->screen, temp, text, code,
+		      dockapp->prefs->background);
 
 	if (weather->errorFlag) {
 		RContext *context;
 
 		WMSetLabelText(dockapp->text, "ERROR");
 
-		context = WMScreenRContext(screen);
+		context = WMScreenRContext(dockapp->screen);
 		weather->icon = RLoadImage(context, DATADIR"/na.png", 0);
 		if (weather->icon) {
 			RColor color;
 
 			color = WMGetRColorFromColor(
-				WMCreateNamedColor(screen,
-						   prefs->background, True));
+				WMCreateNamedColor(dockapp->screen,
+						   dockapp->prefs->background,
+						   True));
 			RCombineImageWithColor(weather->icon, &color);
-			icon = WMCreatePixmapFromRImage(screen,
-							weather->icon, 0);
+			icon = WMCreatePixmapFromRImage(
+				dockapp->screen, weather->icon, 0);
 			WMSetLabelImage(dockapp->icon, icon);
 		}
 
@@ -558,7 +417,8 @@ static void updateDockapp(void *data)
 	} else {
 		WMSetLabelText(dockapp->text, wstrconcat(weather->temp, "°"));
 
-		icon = WMCreatePixmapFromRImage(screen, weather->icon, 0);
+		icon = WMCreatePixmapFromRImage(dockapp->screen,
+						weather->icon, 0);
 		WMSetLabelImage(dockapp->icon, icon);
 
 		WMSetBalloonTextForView(getBalloonText(weather),
@@ -571,6 +431,37 @@ static void updateDockapp(void *data)
 	freeWeather(weather);
 }
 
+static void updateDockapp(void *data)
+{
+	Dockapp *dockapp = (Dockapp *)data;
+	WMColor *background;
+	WMColor *text;
+	WMScreen *screen = dockapp->screen;
+	Preferences *prefs = dockapp->prefs;
+	Weather *weather;
+	WMPixmap *icon;
+	GWeatherLocation *world, *loc;
+	GWeatherInfo *info;
+
+	background = WMCreateNamedColor(screen, prefs->background, True);
+	text = WMCreateNamedColor(screen, prefs->text, True);
+
+	WMSetLabelText(dockapp->text, "loading");
+	WMSetWidgetBackgroundColor(dockapp->text, background);
+	WMSetLabelTextColor(dockapp->text, text);
+	WMRedisplayWidget(dockapp->text);
+
+	WMSetWidgetBackgroundColor(dockapp->frame, background);
+	WMSetWidgetBackgroundColor(dockapp->icon, background);
+
+	world = gweather_location_get_world();
+	loc = gweather_location_find_nearest_city(
+		world, prefs->latitude, prefs->longitude);
+	info = gweather_info_new(loc);
+	g_signal_connect(
+		G_OBJECT(info), "updated", G_CALLBACK(getWeather), dockapp);
+}
+
 void readPreferences(Preferences *prefs)
 {
 	if (prefs->defaults) {
@@ -578,15 +469,6 @@ void readPreferences(Preferences *prefs)
 		value = WMGetUDStringForKey(prefs->defaults, "units");
 		if (value)
 			prefs->units = value;
-		value = WMGetUDStringForKey(prefs->defaults, "woeid");
-		if (value)
-			prefs->woeid = value;
-		value = WMGetUDStringForKey(prefs->defaults, "zip");
-		if (value)
-			prefs->zip = value;
-		value = WMGetUDStringForKey(prefs->defaults, "woeid_or_zip");
-		if (value)
-			prefs->woeid_or_zip = value;
 		value = WMGetUDStringForKey(prefs->defaults, "interval");
 		if (value)
 			prefs->interval = strtol(value, NULL, 10);
@@ -596,6 +478,12 @@ void readPreferences(Preferences *prefs)
 		value = WMGetUDStringForKey(prefs->defaults, "text");
 		if (value)
 			prefs->text = value;
+		value = WMGetUDStringForKey(prefs->defaults, "latitude");
+		if (value)
+			prefs->latitude = atof(value);
+		value = WMGetUDStringForKey(prefs->defaults, "longitude");
+		if (value)
+			prefs->longitude = atof(value);
 	}
 }
 
@@ -606,9 +494,9 @@ Preferences *setPreferences(int argc, char **argv)
 
 	/* set defaults */
 	prefs->units = "f";
-	prefs->woeid = "2502265";
-	prefs->zip = NULL;
-	prefs->woeid_or_zip = NULL;
+	/* default location is nyc */
+	prefs->latitude = 40.7128;
+	prefs->longitude = -74.0060;
 	prefs->interval = 60;
 	prefs->background = DEFAULT_BG_COLOR;
 	prefs->text = DEFAULT_TEXT_COLOR;
@@ -620,17 +508,17 @@ Preferences *setPreferences(int argc, char **argv)
 		static struct option long_options[] = {
 			{"version", no_argument, 0, 'v'},
 			{"help", no_argument, 0, 'h'},
-			{"woeid", required_argument, 0, 'w'},
 			{"units", required_argument, 0, 'u'},
-			{"zip", required_argument, 0, 'z'},
 			{"interval", required_argument, 0, 'i'},
 			{"background", required_argument, 0, 'b'},
 			{"text", required_argument, 0, 't'},
+			{"latitude", required_argument, 0, 'p'},
+			{"longitude", required_argument, 0, 'l'},
 			{0, 0, 0, 0}
 		};
 		int option_index = 0;
 
-		c = getopt_long(argc, argv, "vhw:u:z:i:b:t:",
+		c = getopt_long(argc, argv, "vhu:i:b:t:p:l:",
 				 long_options, &option_index);
 
 		if (c == -1)
@@ -655,21 +543,12 @@ Preferences *setPreferences(int argc, char **argv)
 			       , PACKAGE_STRING);
 			exit(0);
 
-		case 'w':
-			prefs->woeid_or_zip = "w";
-			prefs->woeid = optarg;
-			break;
 		case 'u':
 			if ((strcmp(optarg, "f") != 0) && (strcmp(optarg, "c") != 0)) {
 				printf("units must be 'f' or 'c'\n");
 				exit(0);
 			}
 			prefs->units = optarg;
-			break;
-
-		case 'z':
-			prefs->woeid_or_zip = "z";
-			prefs->zip = optarg;
 			break;
 
 		case 'i':
@@ -684,6 +563,14 @@ Preferences *setPreferences(int argc, char **argv)
 			prefs->text = optarg;
 			break;
 
+		case 'p':
+			prefs->latitude = atof(optarg);
+			break;
+
+		case 'l':
+			prefs->longitude = atof(optarg);
+			break;
+
 		case '?':
 		case 'h':
 			printf("A weather dockapp for Window Maker using the Yahoo Weather API\n"
@@ -693,14 +580,10 @@ Preferences *setPreferences(int argc, char **argv)
 			       "    -h, --help               print this help screen\n"
 			       "    -i, --interval <min>     number of minutes between refreshes (default 60)\n"
 			       "    -u, --units <c|f>        whether to use Celsius or Fahrenheit (default f)\n"
-			       "    -w, --woeid <woeid>      Where on Earth ID (default is 2502265 for\n"
-			       "                             Sunnyvale, CA -- to find your WOEID, search\n"
-			       "                             for your city at http://weather.yahoo.com and\n"
-			       "                             look in the URL.)\n"
-			       "    -z, --zip <zip>          ZIP code or Location ID (Yahoo has deprecated this\n"
-			       "                             option and it is not guaranteed to work)\n"
 			       "    -b, --background <color> set background color\n"
 			       "    -t, --text <color>       set text color\n"
+			       "    -p, --latitude <coord>   set latitude\n"
+			       "    -l, --longitude <coord>  set longitude\n"
 			       "Report bugs to: %s\n"
 			       "wmforecast home page: %s\n",
 			       PACKAGE_BUGREPORT, PACKAGE_URL
@@ -712,9 +595,6 @@ Preferences *setPreferences(int argc, char **argv)
 			abort();
 		}
 	}
-
-	if (!prefs->woeid_or_zip)
-		prefs->woeid_or_zip = "w";
 
 	return prefs;
 }
@@ -734,16 +614,6 @@ static void savePreferences(WMWidget *widget, void *data)
 		WMSetUDStringForKey(d->prefs->defaults, "c", "units");
 	if (WMGetButtonSelected(d->prefsWindow->fahrenheit))
 		WMSetUDStringForKey(d->prefs->defaults, "f", "units");
-	if (WMGetButtonSelected(d->prefsWindow->woeid))
-		WMSetUDStringForKey(d->prefs->defaults, "w", "woeid_or_zip");
-	if (WMGetButtonSelected(d->prefsWindow->zip))
-		WMSetUDStringForKey(d->prefs->defaults, "z", "woeid_or_zip");
-	WMSetUDStringForKey(d->prefs->defaults,
-			    WMGetTextFieldText(d->prefsWindow->woeidField),
-			    "woeid");
-	WMSetUDStringForKey(d->prefs->defaults,
-			    WMGetTextFieldText(d->prefsWindow->zipField),
-			    "zip");
 	WMSetUDStringForKey(d->prefs->defaults,
 			    WMGetTextFieldText(d->prefsWindow->interval),
 			    "interval");
@@ -757,12 +627,57 @@ static void savePreferences(WMWidget *widget, void *data)
 				    WMGetColorWellColor(
 					    d->prefsWindow->text)),
 			    "text");
+	WMSetUDStringForKey(d->prefs->defaults,
+			    WMGetTextFieldText(d->prefsWindow->latitude),
+			    "latitude");
+	WMSetUDStringForKey(d->prefs->defaults,
+			    WMGetTextFieldText(d->prefsWindow->longitude),
+			    "longitude");
 
 	WMSaveUserDefaults(d->prefs->defaults);
 
 	readPreferences(d->prefs);
 	updateDockapp(d);
 
+}
+
+static void foundCoords(GObject *source_object, GAsyncResult *res,
+			gpointer user_data)
+{
+	Dockapp *d = (Dockapp *)user_data;
+	GClueSimple *simple;
+	GError *error;
+	GClueLocation *location;
+	char latitude[10], longitude[10];
+
+	error = NULL;
+	simple = gclue_simple_new_finish(res, &error);
+
+	if (simple)
+		location = gclue_simple_get_location(simple);
+
+	if (location) {
+		sprintf(latitude, "%.4f",
+			gclue_location_get_latitude(location));
+		sprintf(longitude, "%.4f",
+			gclue_location_get_longitude(location));
+		WMSetTextFieldText(d->prefsWindow->latitude, latitude);
+		WMSetTextFieldText(d->prefsWindow->longitude, longitude);
+		WMSetButtonText(d->prefsWindow->find_coords, "Find Coords");
+	} else {
+		WMSetButtonText(d->prefsWindow->find_coords,
+				"Error. Try again?");
+	}
+}
+
+static void findCoords(WMWidget *widget, void *data)
+{
+	Dockapp *d = (Dockapp *)data;
+
+	WMSetButtonText(d->prefsWindow->find_coords, "Finding...");
+
+	gclue_simple_new("wmforecast", GCLUE_ACCURACY_LEVEL_CITY, NULL,
+			 foundCoords, d);
 }
 
 static void editPreferences(void *data)
@@ -817,35 +732,48 @@ static void editPreferences(void *data)
 	WMRealizeWidget(d->prefsWindow->locationFrame);
 	WMMapWidget(d->prefsWindow->locationFrame);
 
-	d->prefsWindow->woeid = WMCreateButton(d->prefsWindow->locationFrame, WBTRadio);
-	WMSetButtonText(d->prefsWindow->woeid, "WOEID");
-	WMMoveWidget(d->prefsWindow->woeid, 10, 20);
-	if (strcmp(d->prefsWindow->prefs->woeid_or_zip, "w") == 0)
-		WMSetButtonSelected(d->prefsWindow->woeid, 1);
-	WMRealizeWidget(d->prefsWindow->woeid);
-	WMMapWidget(d->prefsWindow->woeid);
+	d->prefsWindow->latitudeLabel = WMCreateLabel(
+		d->prefsWindow->locationFrame);
+	WMSetLabelText(d->prefsWindow->latitudeLabel, "Latitude:");
+	WMMoveWidget(d->prefsWindow->latitudeLabel, 10, 18);
+	WMRealizeWidget(d->prefsWindow->latitudeLabel);
+	WMMapWidget(d->prefsWindow->latitudeLabel);
 
-	d->prefsWindow->woeidField = WMCreateTextField(d->prefsWindow->locationFrame);
-	WMSetTextFieldText(d->prefsWindow->woeidField, d->prefsWindow->prefs->woeid);
-	WMResizeWidget(d->prefsWindow->woeidField, 60, 20);
-	WMMoveWidget(d->prefsWindow->woeidField, 90, 20);
-	WMRealizeWidget(d->prefsWindow->woeidField);
-	WMMapWidget(d->prefsWindow->woeidField);
+	d->prefsWindow->latitude = WMCreateTextField(
+		d->prefsWindow->locationFrame);
+	sprintf(intervalPtr, "%.4f", d->prefsWindow->prefs->latitude);
+	WMSetTextFieldText(d->prefsWindow->latitude, intervalPtr);
+	WMResizeWidget(d->prefsWindow->latitude, 65, 18);
+	WMMoveWidget(d->prefsWindow->latitude, 80, 17);
+	WMRealizeWidget(d->prefsWindow->latitude);
+	WMMapWidget(d->prefsWindow->latitude);
 
-	d->prefsWindow->zip = WMCreateButton(d->prefsWindow->locationFrame, WBTRadio);
-	WMSetButtonText(d->prefsWindow->zip, "ZIP code");
-	WMMoveWidget(d->prefsWindow->zip, 10, 44);
-	if (strcmp(d->prefsWindow->prefs->woeid_or_zip, "z") == 0)
-		WMSetButtonSelected(d->prefsWindow->zip, 1);
-	WMRealizeWidget(d->prefsWindow->zip);
-	WMMapWidget(d->prefsWindow->zip);
+	d->prefsWindow->longitudeLabel = WMCreateLabel(
+		d->prefsWindow->locationFrame);
+	WMSetLabelText(d->prefsWindow->longitudeLabel, "Longitude:");
+	WMMoveWidget(d->prefsWindow->longitudeLabel, 10, 37);
+	WMResizeWidget(d->prefsWindow->longitudeLabel, 65, 14);
+	WMRealizeWidget(d->prefsWindow->longitudeLabel);
+	WMMapWidget(d->prefsWindow->longitudeLabel);
 
-	d->prefsWindow->zipField = WMCreateTextField(d->prefsWindow->locationFrame);
-	WMSetTextFieldText(d->prefsWindow->zipField, d->prefsWindow->prefs->zip);
-	WMResizeWidget(d->prefsWindow->zipField, 60, 20);
-	WMMoveWidget(d->prefsWindow->zipField, 90, 44);
-	WMRealizeWidget(d->prefsWindow->zipField);
-	WMMapWidget(d->prefsWindow->zipField);
+	d->prefsWindow->longitude = WMCreateTextField(
+		d->prefsWindow->locationFrame);
+	sprintf(intervalPtr, "%.4f", d->prefsWindow->prefs->longitude);
+	WMSetTextFieldText(d->prefsWindow->longitude, intervalPtr);
+	WMResizeWidget(d->prefsWindow->longitude, 65, 18);
+	WMMoveWidget(d->prefsWindow->longitude, 80, 36);
+	WMRealizeWidget(d->prefsWindow->longitude);
+	WMMapWidget(d->prefsWindow->longitude);
+
+	d->prefsWindow->find_coords = WMCreateButton(
+		d->prefsWindow->locationFrame, WBTMomentaryPush);
+	WMSetButtonText(d->prefsWindow->find_coords, "Find Coords");
+	WMSetButtonAction(d->prefsWindow->find_coords, findCoords, d);
+	WMResizeWidget(d->prefsWindow->find_coords, 120, 18);
+	WMMoveWidget(d->prefsWindow->find_coords, 20, 57);
+	WMRealizeWidget(d->prefsWindow->find_coords);
+	WMMapWidget(d->prefsWindow->find_coords);
+
 
 	d->prefsWindow->intervalFrame = WMCreateFrame(d->prefsWindow->window);
 	WMSetFrameTitle(d->prefsWindow->intervalFrame, "Refresh interval");
@@ -853,8 +781,6 @@ static void editPreferences(void *data)
 	WMMoveWidget(d->prefsWindow->intervalFrame, 302, 10);
 	WMRealizeWidget(d->prefsWindow->intervalFrame);
 	WMMapWidget(d->prefsWindow->intervalFrame);
-
-	WMGroupButtons(d->prefsWindow->woeid, d->prefsWindow->zip);
 
 	d->prefsWindow->interval = WMCreateTextField(d->prefsWindow->intervalFrame);
 	sprintf(intervalPtr, "%lu", d->prefsWindow->prefs->interval);
@@ -942,6 +868,12 @@ static void timerHandler(void *data)
 	}
 }
 
+void do_glib_loop(void *data)
+{
+	g_main_context_iteration(NULL, 0);
+}
+
+
 int main(int argc, char **argv)
 {
 	Display *display;
@@ -964,6 +896,8 @@ int main(int argc, char **argv)
 	updateDockapp(dockapp);
 	WMAddPersistentTimerHandler(60*1000, /* one minute */
 				    timerHandler, dockapp);
+
+	WMAddPersistentTimerHandler(100, do_glib_loop, NULL);
 
 	WMScreenMainLoop(screen);
 }
