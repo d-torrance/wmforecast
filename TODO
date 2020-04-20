@@ -1,0 +1,6 @@
+* can we get forecasts working again?
+* since we use the XDG icon naming convention now, allow the option to
+  use any icon theme, not just our icons
+* error handling:
+  - libgweather
+  - user enters bad latitude/longitude
