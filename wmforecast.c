@@ -37,9 +37,6 @@ enum {
 
 typedef struct {
 	char *units;
-	char *woeid;
-	char *zip;
-	char *woeid_or_zip;
 	double latitude;
 	double longitude;
 	long int interval;
@@ -54,8 +51,6 @@ typedef struct {
 	WMButton *close;
 	WMButton *fahrenheit;
 	WMButton *save;
-	WMButton *woeid;
-	WMButton *zip;
 	WMColorWell *background;
 	WMColorWell *text;
 	WMFrame *intervalFrame;
@@ -63,14 +58,14 @@ typedef struct {
 	WMFrame *units;
 	WMFrame *colors;
 	WMLabel *minutes;
-	WMLabel *woeid_zip;
 	WMLabel *backgroundLabel;
 	WMLabel *textLabel;
+	WMLabel *latitudeLabel;
+	WMLabel *longitudeLabel;
 	WMScreen *screen;
 	WMTextField *interval;
-	WMTextField *location;
-	WMTextField *woeidField;
-	WMTextField *zipField;
+	WMTextField *latitude;
+	WMTextField *longitude;
 	WMWindow *window;
 } PreferencesWindow;
 
@@ -472,15 +467,6 @@ void readPreferences(Preferences *prefs)
 		value = WMGetUDStringForKey(prefs->defaults, "units");
 		if (value)
 			prefs->units = value;
-		value = WMGetUDStringForKey(prefs->defaults, "woeid");
-		if (value)
-			prefs->woeid = value;
-		value = WMGetUDStringForKey(prefs->defaults, "zip");
-		if (value)
-			prefs->zip = value;
-		value = WMGetUDStringForKey(prefs->defaults, "woeid_or_zip");
-		if (value)
-			prefs->woeid_or_zip = value;
 		value = WMGetUDStringForKey(prefs->defaults, "interval");
 		if (value)
 			prefs->interval = strtol(value, NULL, 10);
@@ -490,6 +476,12 @@ void readPreferences(Preferences *prefs)
 		value = WMGetUDStringForKey(prefs->defaults, "text");
 		if (value)
 			prefs->text = value;
+		value = WMGetUDStringForKey(prefs->defaults, "latitude");
+		if (value)
+			prefs->latitude = atof(value);
+		value = WMGetUDStringForKey(prefs->defaults, "longitude");
+		if (value)
+			prefs->longitude = atof(value);
 	}
 }
 
@@ -500,8 +492,9 @@ Preferences *setPreferences(int argc, char **argv)
 
 	/* set defaults */
 	prefs->units = "f";
-	prefs->latitude = 33.64;
-	prefs->longitude = -84.43;
+	/* default location is nyc */
+	prefs->latitude = 40.7128;
+	prefs->longitude = -74.0060;
 	prefs->interval = 60;
 	prefs->background = DEFAULT_BG_COLOR;
 	prefs->text = DEFAULT_TEXT_COLOR;
@@ -513,17 +506,17 @@ Preferences *setPreferences(int argc, char **argv)
 		static struct option long_options[] = {
 			{"version", no_argument, 0, 'v'},
 			{"help", no_argument, 0, 'h'},
-			{"woeid", required_argument, 0, 'w'},
 			{"units", required_argument, 0, 'u'},
-			{"zip", required_argument, 0, 'z'},
 			{"interval", required_argument, 0, 'i'},
 			{"background", required_argument, 0, 'b'},
 			{"text", required_argument, 0, 't'},
+			{"latitude", required_argument, 0, 'p'},
+			{"longitude", required_argument, 0, 'l'},
 			{0, 0, 0, 0}
 		};
 		int option_index = 0;
 
-		c = getopt_long(argc, argv, "vhw:u:z:i:b:t:",
+		c = getopt_long(argc, argv, "vhu:i:b:t:p:l:",
 				 long_options, &option_index);
 
 		if (c == -1)
@@ -548,21 +541,12 @@ Preferences *setPreferences(int argc, char **argv)
 			       , PACKAGE_STRING);
 			exit(0);
 
-		case 'w':
-			prefs->woeid_or_zip = "w";
-			prefs->woeid = optarg;
-			break;
 		case 'u':
 			if ((strcmp(optarg, "f") != 0) && (strcmp(optarg, "c") != 0)) {
 				printf("units must be 'f' or 'c'\n");
 				exit(0);
 			}
 			prefs->units = optarg;
-			break;
-
-		case 'z':
-			prefs->woeid_or_zip = "z";
-			prefs->zip = optarg;
 			break;
 
 		case 'i':
@@ -577,6 +561,14 @@ Preferences *setPreferences(int argc, char **argv)
 			prefs->text = optarg;
 			break;
 
+		case 'p':
+			prefs->latitude = atof(optarg);
+			break;
+
+		case 'l':
+			prefs->longitude = atof(optarg);
+			break;
+
 		case '?':
 		case 'h':
 			printf("A weather dockapp for Window Maker using the Yahoo Weather API\n"
@@ -586,14 +578,10 @@ Preferences *setPreferences(int argc, char **argv)
 			       "    -h, --help               print this help screen\n"
 			       "    -i, --interval <min>     number of minutes between refreshes (default 60)\n"
 			       "    -u, --units <c|f>        whether to use Celsius or Fahrenheit (default f)\n"
-			       "    -w, --woeid <woeid>      Where on Earth ID (default is 2502265 for\n"
-			       "                             Sunnyvale, CA -- to find your WOEID, search\n"
-			       "                             for your city at http://weather.yahoo.com and\n"
-			       "                             look in the URL.)\n"
-			       "    -z, --zip <zip>          ZIP code or Location ID (Yahoo has deprecated this\n"
-			       "                             option and it is not guaranteed to work)\n"
 			       "    -b, --background <color> set background color\n"
 			       "    -t, --text <color>       set text color\n"
+			       "    -p, --latitude <coord>   set latitude\n"
+			       "    -l, --longitude <coord>  set longitude\n"
 			       "Report bugs to: %s\n"
 			       "wmforecast home page: %s\n",
 			       PACKAGE_BUGREPORT, PACKAGE_URL
@@ -605,9 +593,6 @@ Preferences *setPreferences(int argc, char **argv)
 			abort();
 		}
 	}
-
-	if (!prefs->woeid_or_zip)
-		prefs->woeid_or_zip = "w";
 
 	return prefs;
 }
@@ -627,16 +612,6 @@ static void savePreferences(WMWidget *widget, void *data)
 		WMSetUDStringForKey(d->prefs->defaults, "c", "units");
 	if (WMGetButtonSelected(d->prefsWindow->fahrenheit))
 		WMSetUDStringForKey(d->prefs->defaults, "f", "units");
-	if (WMGetButtonSelected(d->prefsWindow->woeid))
-		WMSetUDStringForKey(d->prefs->defaults, "w", "woeid_or_zip");
-	if (WMGetButtonSelected(d->prefsWindow->zip))
-		WMSetUDStringForKey(d->prefs->defaults, "z", "woeid_or_zip");
-	WMSetUDStringForKey(d->prefs->defaults,
-			    WMGetTextFieldText(d->prefsWindow->woeidField),
-			    "woeid");
-	WMSetUDStringForKey(d->prefs->defaults,
-			    WMGetTextFieldText(d->prefsWindow->zipField),
-			    "zip");
 	WMSetUDStringForKey(d->prefs->defaults,
 			    WMGetTextFieldText(d->prefsWindow->interval),
 			    "interval");
@@ -650,6 +625,12 @@ static void savePreferences(WMWidget *widget, void *data)
 				    WMGetColorWellColor(
 					    d->prefsWindow->text)),
 			    "text");
+	WMSetUDStringForKey(d->prefs->defaults,
+			    WMGetTextFieldText(d->prefsWindow->latitude),
+			    "latitude");
+	WMSetUDStringForKey(d->prefs->defaults,
+			    WMGetTextFieldText(d->prefsWindow->longitude),
+			    "longitude");
 
 	WMSaveUserDefaults(d->prefs->defaults);
 
@@ -710,35 +691,38 @@ static void editPreferences(void *data)
 	WMRealizeWidget(d->prefsWindow->locationFrame);
 	WMMapWidget(d->prefsWindow->locationFrame);
 
-	d->prefsWindow->woeid = WMCreateButton(d->prefsWindow->locationFrame, WBTRadio);
-	WMSetButtonText(d->prefsWindow->woeid, "WOEID");
-	WMMoveWidget(d->prefsWindow->woeid, 10, 20);
-	if (strcmp(d->prefsWindow->prefs->woeid_or_zip, "w") == 0)
-		WMSetButtonSelected(d->prefsWindow->woeid, 1);
-	WMRealizeWidget(d->prefsWindow->woeid);
-	WMMapWidget(d->prefsWindow->woeid);
+	d->prefsWindow->latitudeLabel = WMCreateLabel(
+		d->prefsWindow->locationFrame);
+	WMSetLabelText(d->prefsWindow->latitudeLabel, "Latitude:");
+	WMMoveWidget(d->prefsWindow->latitudeLabel, 10, 18);
+	WMRealizeWidget(d->prefsWindow->latitudeLabel);
+	WMMapWidget(d->prefsWindow->latitudeLabel);
 
-	d->prefsWindow->woeidField = WMCreateTextField(d->prefsWindow->locationFrame);
-	WMSetTextFieldText(d->prefsWindow->woeidField, d->prefsWindow->prefs->woeid);
-	WMResizeWidget(d->prefsWindow->woeidField, 60, 20);
-	WMMoveWidget(d->prefsWindow->woeidField, 90, 20);
-	WMRealizeWidget(d->prefsWindow->woeidField);
-	WMMapWidget(d->prefsWindow->woeidField);
+	d->prefsWindow->latitude = WMCreateTextField(
+		d->prefsWindow->locationFrame);
+	sprintf(intervalPtr, "%.4f", d->prefsWindow->prefs->latitude);
+	WMSetTextFieldText(d->prefsWindow->latitude, intervalPtr);
+	WMResizeWidget(d->prefsWindow->latitude, 65, 18);
+	WMMoveWidget(d->prefsWindow->latitude, 80, 17);
+	WMRealizeWidget(d->prefsWindow->latitude);
+	WMMapWidget(d->prefsWindow->latitude);
 
-	d->prefsWindow->zip = WMCreateButton(d->prefsWindow->locationFrame, WBTRadio);
-	WMSetButtonText(d->prefsWindow->zip, "ZIP code");
-	WMMoveWidget(d->prefsWindow->zip, 10, 44);
-	if (strcmp(d->prefsWindow->prefs->woeid_or_zip, "z") == 0)
-		WMSetButtonSelected(d->prefsWindow->zip, 1);
-	WMRealizeWidget(d->prefsWindow->zip);
-	WMMapWidget(d->prefsWindow->zip);
+	d->prefsWindow->longitudeLabel = WMCreateLabel(
+		d->prefsWindow->locationFrame);
+	WMSetLabelText(d->prefsWindow->longitudeLabel, "Longitude:");
+	WMMoveWidget(d->prefsWindow->longitudeLabel, 10, 37);
+	WMResizeWidget(d->prefsWindow->longitudeLabel, 65, 14);
+	WMRealizeWidget(d->prefsWindow->longitudeLabel);
+	WMMapWidget(d->prefsWindow->longitudeLabel);
 
-	d->prefsWindow->zipField = WMCreateTextField(d->prefsWindow->locationFrame);
-	WMSetTextFieldText(d->prefsWindow->zipField, d->prefsWindow->prefs->zip);
-	WMResizeWidget(d->prefsWindow->zipField, 60, 20);
-	WMMoveWidget(d->prefsWindow->zipField, 90, 44);
-	WMRealizeWidget(d->prefsWindow->zipField);
-	WMMapWidget(d->prefsWindow->zipField);
+	d->prefsWindow->longitude = WMCreateTextField(
+		d->prefsWindow->locationFrame);
+	sprintf(intervalPtr, "%.4f", d->prefsWindow->prefs->longitude);
+	WMSetTextFieldText(d->prefsWindow->longitude, intervalPtr);
+	WMResizeWidget(d->prefsWindow->longitude, 65, 18);
+	WMMoveWidget(d->prefsWindow->longitude, 80, 36);
+	WMRealizeWidget(d->prefsWindow->longitude);
+	WMMapWidget(d->prefsWindow->longitude);
 
 	d->prefsWindow->intervalFrame = WMCreateFrame(d->prefsWindow->window);
 	WMSetFrameTitle(d->prefsWindow->intervalFrame, "Refresh interval");
@@ -746,8 +730,6 @@ static void editPreferences(void *data)
 	WMMoveWidget(d->prefsWindow->intervalFrame, 302, 10);
 	WMRealizeWidget(d->prefsWindow->intervalFrame);
 	WMMapWidget(d->prefsWindow->intervalFrame);
-
-	WMGroupButtons(d->prefsWindow->woeid, d->prefsWindow->zip);
 
 	d->prefsWindow->interval = WMCreateTextField(d->prefsWindow->intervalFrame);
 	sprintf(intervalPtr, "%lu", d->prefsWindow->prefs->interval);
