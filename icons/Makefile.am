@@ -1,4 +1,4 @@
-dist_pkgdata_DATA = na.png \
+dist_pkgdata_DATA = dialog-error.png \
 	weather-clear-night.png \
 	weather-clear.png \
 	weather-few-clouds-night.png \

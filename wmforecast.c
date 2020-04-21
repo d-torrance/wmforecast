@@ -43,6 +43,7 @@ typedef struct {
 	long int interval;
 	char *background;
 	char *text;
+	const char *icondir;
 	WMUserDefaults *defaults;
 } Preferences;
 
@@ -180,11 +181,12 @@ void setConditions(Weather *weather,
 		   const char *temp,
 		   const char *text,
 		   const char *code,
-		   const char *background
+		   const char *background,
+		   const char *icondir
 	)
 {
 	RContext *context;
-	char *filename;
+	char filename[1024];
 	time_t currentTime;
 
 
@@ -192,7 +194,7 @@ void setConditions(Weather *weather,
 	weather->text = wstrdup(text);
 
 	context = WMScreenRContext(screen);
-	filename = wstrconcat(wstrconcat(DATADIR"/", code), ".png");
+	sprintf(filename, "%s/%s.png", icondir, code);
 
 	weather->icon = RLoadImage(context, filename, 0);
 	if (!weather->icon) {
@@ -387,7 +389,7 @@ void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 	code = gweather_info_get_icon_name(info);
 
 	setConditions(weather, dockapp->screen, temp, text, code,
-		      dockapp->prefs->background);
+		      dockapp->prefs->background, dockapp->prefs->icondir);
 
 	if (weather->errorFlag) {
 		RContext *context;
@@ -395,7 +397,9 @@ void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 		WMSetLabelText(dockapp->text, "ERROR");
 
 		context = WMScreenRContext(dockapp->screen);
-		weather->icon = RLoadImage(context, DATADIR"/na.png", 0);
+		weather->icon = RLoadImage(
+			context, wstrconcat(dockapp->prefs->icondir,
+					    "/dialog-error.png"), 0);
 		if (weather->icon) {
 			RColor color;
 
@@ -462,6 +466,44 @@ static void updateDockapp(void *data)
 		G_OBJECT(info), "updated", G_CALLBACK(getWeather), dockapp);
 }
 
+void check_icondir(Preferences *prefs, const char *icondir)
+{
+	int i, good;
+	const char icon_names[10][30] = {
+		"/dialog-error.png",
+		"/weather-clear-night.png",
+		"/weather-clear.png",
+		"/weather-few-clouds-night.png",
+		"/weather-few-clouds.png",
+		"/weather-fog.png",
+		"/weather-overcast.png",
+		"/weather-showers.png",
+		"/weather-snow.png",
+		"/weather-storm.png"
+	};
+
+	good = 1;
+
+	for (i = 0; i < 10; i++) {
+		char *filename;
+
+		filename = wstrconcat(icondir, icon_names[i]);
+		if (access(filename, F_OK) != 0) {
+			good = 0;
+			break;
+		}
+	}
+
+	if (!good) {
+		wwarning("%s does not contain the appropriate icons; "
+			 "using default icons", icondir);
+		prefs->icondir = DATADIR;
+	} else {
+		prefs->icondir = icondir;
+	}
+
+}
+
 void readPreferences(Preferences *prefs)
 {
 	if (prefs->defaults) {
@@ -484,6 +526,9 @@ void readPreferences(Preferences *prefs)
 		value = WMGetUDStringForKey(prefs->defaults, "longitude");
 		if (value)
 			prefs->longitude = atof(value);
+		value = WMGetUDStringForKey(prefs->defaults, "icondir");
+		if (value)
+			check_icondir(prefs, value);
 	}
 }
 
@@ -500,6 +545,7 @@ Preferences *setPreferences(int argc, char **argv)
 	prefs->interval = 60;
 	prefs->background = DEFAULT_BG_COLOR;
 	prefs->text = DEFAULT_TEXT_COLOR;
+	prefs->icondir = DATADIR;
 	prefs->defaults = WMGetStandardUserDefaults();
 	readPreferences(prefs);
 
@@ -514,11 +560,12 @@ Preferences *setPreferences(int argc, char **argv)
 			{"text", required_argument, 0, 't'},
 			{"latitude", required_argument, 0, 'p'},
 			{"longitude", required_argument, 0, 'l'},
+			{"icondir", required_argument, 0, 'I'},
 			{0, 0, 0, 0}
 		};
 		int option_index = 0;
 
-		c = getopt_long(argc, argv, "vhu:i:b:t:p:l:",
+		c = getopt_long(argc, argv, "vhu:i:b:t:p:l:I:",
 				 long_options, &option_index);
 
 		if (c == -1)
@@ -569,6 +616,10 @@ Preferences *setPreferences(int argc, char **argv)
 
 		case 'l':
 			prefs->longitude = atof(optarg);
+			break;
+
+		case 'I':
+			check_icondir(prefs, optarg);
 			break;
 
 		case '?':
