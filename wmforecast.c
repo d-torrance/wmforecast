@@ -30,6 +30,10 @@
 #define DEFAULT_TEXT_COLOR "light sea green"
 #define DEFAULT_BG_COLOR "black"
 
+#define icondir_warning(tried, current) \
+	wwarning("%s is not a valid icon directory; falling back to %s", \
+		 tried, current)
+
 enum {
 	TEMP_CURRENT,
 	TEMP_LOW,
@@ -43,6 +47,7 @@ typedef struct {
 	long int interval;
 	char *background;
 	char *text;
+	char *icondir;
 	WMUserDefaults *defaults;
 } Preferences;
 
@@ -53,6 +58,7 @@ typedef struct {
 	WMButton *fahrenheit;
 	WMButton *save;
 	WMButton *find_coords;
+	WMButton *open_icon_chooser;
 	WMColorWell *background;
 	WMColorWell *text;
 	WMFrame *intervalFrame;
@@ -68,6 +74,8 @@ typedef struct {
 	WMTextField *interval;
 	WMTextField *latitude;
 	WMTextField *longitude;
+	WMOpenPanel *icon_chooser;
+	char *icondir;
 	WMWindow *window;
 } PreferencesWindow;
 
@@ -180,11 +188,12 @@ void setConditions(Weather *weather,
 		   const char *temp,
 		   const char *text,
 		   const char *code,
-		   const char *background
+		   const char *background,
+		   const char *icondir
 	)
 {
 	RContext *context;
-	char *filename;
+	char filename[1024];
 	time_t currentTime;
 
 
@@ -192,7 +201,7 @@ void setConditions(Weather *weather,
 	weather->text = wstrdup(text);
 
 	context = WMScreenRContext(screen);
-	filename = wstrconcat(wstrconcat(DATADIR"/", code), ".png");
+	sprintf(filename, "%s/%s.png", icondir, code);
 
 	weather->icon = RLoadImage(context, filename, 0);
 	if (!weather->icon) {
@@ -387,7 +396,7 @@ void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 	code = gweather_info_get_icon_name(info);
 
 	setConditions(weather, dockapp->screen, temp, text, code,
-		      dockapp->prefs->background);
+		      dockapp->prefs->background, dockapp->prefs->icondir);
 
 	if (weather->errorFlag) {
 		RContext *context;
@@ -395,7 +404,9 @@ void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 		WMSetLabelText(dockapp->text, "ERROR");
 
 		context = WMScreenRContext(dockapp->screen);
-		weather->icon = RLoadImage(context, DATADIR"/na.png", 0);
+		weather->icon = RLoadImage(
+			context, wstrconcat(dockapp->prefs->icondir,
+					    "/dialog-error.png"), 0);
 		if (weather->icon) {
 			RColor color;
 
@@ -462,6 +473,37 @@ static void updateDockapp(void *data)
 		G_OBJECT(info), "updated", G_CALLBACK(getWeather), dockapp);
 }
 
+Bool check_icondir(char *icondir)
+{
+	int i, good;
+	const char icon_names[10][30] = {
+		"/dialog-error.png",
+		"/weather-clear-night.png",
+		"/weather-clear.png",
+		"/weather-few-clouds-night.png",
+		"/weather-few-clouds.png",
+		"/weather-fog.png",
+		"/weather-overcast.png",
+		"/weather-showers.png",
+		"/weather-snow.png",
+		"/weather-storm.png"
+	};
+
+	good = True;
+
+	for (i = 0; i < 10; i++) {
+		char *filename;
+
+		filename = wstrconcat(icondir, icon_names[i]);
+		if (access(filename, F_OK) != 0) {
+			good = False;
+			break;
+		}
+	}
+
+	return good;
+}
+
 void readPreferences(Preferences *prefs)
 {
 	if (prefs->defaults) {
@@ -484,6 +526,13 @@ void readPreferences(Preferences *prefs)
 		value = WMGetUDStringForKey(prefs->defaults, "longitude");
 		if (value)
 			prefs->longitude = atof(value);
+		value = WMGetUDStringForKey(prefs->defaults, "icondir");
+		if (value) {
+			if (check_icondir(value))
+				prefs->icondir = value;
+			else
+				icondir_warning(value, prefs->icondir);
+		}
 	}
 }
 
@@ -500,6 +549,7 @@ Preferences *setPreferences(int argc, char **argv)
 	prefs->interval = 60;
 	prefs->background = DEFAULT_BG_COLOR;
 	prefs->text = DEFAULT_TEXT_COLOR;
+	prefs->icondir = DATADIR;
 	prefs->defaults = WMGetStandardUserDefaults();
 	readPreferences(prefs);
 
@@ -514,11 +564,12 @@ Preferences *setPreferences(int argc, char **argv)
 			{"text", required_argument, 0, 't'},
 			{"latitude", required_argument, 0, 'p'},
 			{"longitude", required_argument, 0, 'l'},
+			{"icondir", required_argument, 0, 'I'},
 			{0, 0, 0, 0}
 		};
 		int option_index = 0;
 
-		c = getopt_long(argc, argv, "vhu:i:b:t:p:l:",
+		c = getopt_long(argc, argv, "vhu:i:b:t:p:l:I:",
 				 long_options, &option_index);
 
 		if (c == -1)
@@ -569,6 +620,13 @@ Preferences *setPreferences(int argc, char **argv)
 
 		case 'l':
 			prefs->longitude = atof(optarg);
+			break;
+
+		case 'I':
+			if (check_icondir(optarg))
+				prefs->icondir = optarg;
+			else
+				icondir_warning(optarg, prefs->icondir);
 			break;
 
 		case '?':
@@ -633,6 +691,11 @@ static void savePreferences(WMWidget *widget, void *data)
 	WMSetUDStringForKey(d->prefs->defaults,
 			    WMGetTextFieldText(d->prefsWindow->longitude),
 			    "longitude");
+	if (check_icondir(d->prefsWindow->icondir))
+		WMSetUDStringForKey(d->prefs->defaults, d->prefsWindow->icondir,
+				"icondir");
+	else /* it shouldn't be possible to get here, but just in case */
+		icondir_warning(d->prefsWindow->icondir, d->prefs->icondir);
 
 	WMSaveUserDefaults(d->prefs->defaults);
 
@@ -680,10 +743,34 @@ static void findCoords(WMWidget *widget, void *data)
 			 foundCoords, d);
 }
 
+static void icon_chooser(WMWidget *widget, void *data)
+{
+
+	Dockapp *d = (Dockapp *)data;
+	char *icondir;
+
+	if (!WMRunModalFilePanelForDirectory(
+		    d->prefsWindow->icon_chooser, NULL, d->prefsWindow->icondir,
+		    "Icon directory", NULL))
+		return;
+
+	icondir = WMGetFilePanelFileName(d->prefsWindow->icon_chooser);
+	if (check_icondir(icondir))
+		d->prefsWindow->icondir = icondir;
+	else
+		WMRunAlertPanel(
+			d->screen, d->prefsWindow->window,
+			"Invalid icon directory",
+			"You must select a directory containing "
+			"dialog-error.png and weather-*.png.",
+			NULL, "Close", NULL);
+}
+
 static void editPreferences(void *data)
 {
 	char intervalPtr[50];
 	Dockapp *d = (Dockapp *)data;
+	char *icondir;
 
 	d->prefsWindowPresent = 1;
 
@@ -831,17 +918,37 @@ static void editPreferences(void *data)
 	WMRealizeWidget(d->prefsWindow->text);
 	WMMapWidget(d->prefsWindow->text);
 
+	d->prefsWindow->open_icon_chooser = WMCreateButton(
+		d->prefsWindow->window, WBTMomentaryPush);
+	WMSetButtonText(d->prefsWindow->open_icon_chooser, "Icon directory");
+	WMSetButtonAction(d->prefsWindow->open_icon_chooser, icon_chooser, d);
+	WMResizeWidget(d->prefsWindow->open_icon_chooser, 128, 20);
+	WMMoveWidget(d->prefsWindow->open_icon_chooser, 285, 100);
+	WMRealizeWidget(d->prefsWindow->open_icon_chooser);
+	WMMapWidget(d->prefsWindow->open_icon_chooser);
+	WMSetBalloonTextForView(
+		"Select a directory containing dialog-error.png and "
+		"weather-*.png, ideally 48x48 pixels.",
+		WMWidgetView(d->prefsWindow->open_icon_chooser));
+
+	d->prefsWindow->icon_chooser = WMGetOpenPanel(d->screen);
+	WMSetFilePanelCanChooseDirectories(d->prefsWindow->icon_chooser, True);
+	WMSetFilePanelCanChooseFiles(d->prefsWindow->icon_chooser, False);
+	d->prefsWindow->icondir = d->prefs->icondir;
+
 	d->prefsWindow->save = WMCreateButton(d->prefsWindow->window, WBTMomentaryPush);
 	WMSetButtonText(d->prefsWindow->save, "Save");
 	WMSetButtonAction(d->prefsWindow->save, savePreferences, d);
-	WMMoveWidget(d->prefsWindow->save, 285, 110);
+	WMResizeWidget(d->prefsWindow->save, 63, 20);
+	WMMoveWidget(d->prefsWindow->save, 285, 122);
 	WMRealizeWidget(d->prefsWindow->save);
 	WMMapWidget(d->prefsWindow->save);
 
 	d->prefsWindow->close = WMCreateButton(d->prefsWindow->window, WBTMomentaryPush);
 	WMSetButtonText(d->prefsWindow->close, "Close");
 	WMSetButtonAction(d->prefsWindow->close, closePreferences, d);
-	WMMoveWidget(d->prefsWindow->close, 353, 110);
+	WMResizeWidget(d->prefsWindow->close, 63, 20);
+	WMMoveWidget(d->prefsWindow->close, 350, 122);
 	WMRealizeWidget(d->prefsWindow->close);
 	WMMapWidget(d->prefsWindow->close);
 }
