@@ -44,6 +44,7 @@ enum {
 };
 
 typedef struct {
+	Bool geoclue;
 	char *units;
 	double latitude;
 	double longitude;
@@ -557,6 +558,7 @@ Preferences *setPreferences(int argc, char **argv)
 	prefs->background = DEFAULT_BG_COLOR;
 	prefs->text = DEFAULT_TEXT_COLOR;
 	prefs->icondir = DATADIR;
+	prefs->geoclue = True;
 	prefs->defaults = WMGetStandardUserDefaults();
 	readPreferences(prefs);
 
@@ -572,11 +574,12 @@ Preferences *setPreferences(int argc, char **argv)
 			{"latitude", required_argument, 0, 'p'},
 			{"longitude", required_argument, 0, 'l'},
 			{"icondir", required_argument, 0, 'I'},
+			{"no-geoclue", no_argument, 0, 'n'},
 			{0, 0, 0, 0}
 		};
 		int option_index = 0;
 
-		c = getopt_long(argc, argv, "vhu:i:b:t:p:l:I:",
+		c = getopt_long(argc, argv, "vhu:i:b:t:p:l:I:n",
 				 long_options, &option_index);
 
 		if (c == -1)
@@ -636,6 +639,10 @@ Preferences *setPreferences(int argc, char **argv)
 				icondir_warning(optarg, prefs->icondir);
 			break;
 
+		case 'n':
+			prefs->geoclue = False;
+			break;
+
 		case '?':
 		case 'h':
 			printf("A weather dockapp for Window Maker using the Yahoo Weather API\n"
@@ -649,6 +656,7 @@ Preferences *setPreferences(int argc, char **argv)
 			       "    -t, --text <color>       set text color\n"
 			       "    -p, --latitude <coord>   set latitude\n"
 			       "    -l, --longitude <coord>  set longitude\n"
+			       "    -n, --no-geoclue         disable geoclue\n"
 			       "Report bugs to: %s\n"
 			       "wmforecast home page: %s\n",
 			       PACKAGE_BUGREPORT, PACKAGE_URL
@@ -869,6 +877,8 @@ static void editPreferences(void *data)
 #else
 	WMSetButtonEnabled(d->prefsWindow->find_coords, False);
 #endif
+	WMSetButtonEnabled(d->prefsWindow->find_coords,
+			   d->prefs->geoclue);
 	WMResizeWidget(d->prefsWindow->find_coords, 120, 18);
 	WMMoveWidget(d->prefsWindow->find_coords, 20, 57);
 	WMRealizeWidget(d->prefsWindow->find_coords);
