@@ -391,6 +391,10 @@ void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 
 	weather = newWeather();
 
+	if (!gweather_info_is_valid(info))
+		setError(weather, dockapp->screen,
+			 gweather_info_get_weather_summary(info));
+
 	temp = getTemp(info, dockapp->prefs->units, TEMP_CURRENT);
 	text = gweather_info_get_weather_summary(info);
 	code = gweather_info_get_icon_name(info);

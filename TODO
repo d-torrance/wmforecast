@@ -1,6 +1,5 @@
 * can we get forecasts working again?
 * error handling:
-  - libgweather
   - user enters bad latitude/longitude
 * make geoclue optional (e.g., libgeoclue not in trusty)
   - disable button in prefs window if so
