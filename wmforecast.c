@@ -17,7 +17,10 @@
 #include <config.h>
 #endif
 
+#ifdef HAVE_GEOCLUE
 #include <geoclue.h>
+#endif
+
 #include <getopt.h>
 #define GWEATHER_I_KNOW_THIS_IS_UNSTABLE
 #include <libgweather/gweather.h>
@@ -41,6 +44,7 @@ enum {
 };
 
 typedef struct {
+	Bool geoclue;
 	char *units;
 	double latitude;
 	double longitude;
@@ -391,6 +395,10 @@ void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 
 	weather = newWeather();
 
+	if (!gweather_info_is_valid(info))
+		setError(weather, dockapp->screen,
+			 gweather_info_get_weather_summary(info));
+
 	temp = getTemp(info, dockapp->prefs->units, TEMP_CURRENT);
 	text = gweather_info_get_weather_summary(info);
 	code = gweather_info_get_icon_name(info);
@@ -550,6 +558,7 @@ Preferences *setPreferences(int argc, char **argv)
 	prefs->background = DEFAULT_BG_COLOR;
 	prefs->text = DEFAULT_TEXT_COLOR;
 	prefs->icondir = DATADIR;
+	prefs->geoclue = True;
 	prefs->defaults = WMGetStandardUserDefaults();
 	readPreferences(prefs);
 
@@ -565,11 +574,12 @@ Preferences *setPreferences(int argc, char **argv)
 			{"latitude", required_argument, 0, 'p'},
 			{"longitude", required_argument, 0, 'l'},
 			{"icondir", required_argument, 0, 'I'},
+			{"no-geoclue", no_argument, 0, 'n'},
 			{0, 0, 0, 0}
 		};
 		int option_index = 0;
 
-		c = getopt_long(argc, argv, "vhu:i:b:t:p:l:I:",
+		c = getopt_long(argc, argv, "vhu:i:b:t:p:l:I:n",
 				 long_options, &option_index);
 
 		if (c == -1)
@@ -629,6 +639,10 @@ Preferences *setPreferences(int argc, char **argv)
 				icondir_warning(optarg, prefs->icondir);
 			break;
 
+		case 'n':
+			prefs->geoclue = False;
+			break;
+
 		case '?':
 		case 'h':
 			printf("A weather dockapp for Window Maker using the Yahoo Weather API\n"
@@ -642,6 +656,7 @@ Preferences *setPreferences(int argc, char **argv)
 			       "    -t, --text <color>       set text color\n"
 			       "    -p, --latitude <coord>   set latitude\n"
 			       "    -l, --longitude <coord>  set longitude\n"
+			       "    -n, --no-geoclue         disable geoclue\n"
 			       "Report bugs to: %s\n"
 			       "wmforecast home page: %s\n",
 			       PACKAGE_BUGREPORT, PACKAGE_URL
@@ -704,6 +719,7 @@ static void savePreferences(WMWidget *widget, void *data)
 
 }
 
+#ifdef HAVE_GEOCLUE
 static void foundCoords(GObject *source_object, GAsyncResult *res,
 			gpointer user_data)
 {
@@ -742,6 +758,7 @@ static void findCoords(WMWidget *widget, void *data)
 	gclue_simple_new("wmforecast", GCLUE_ACCURACY_LEVEL_CITY, NULL,
 			 foundCoords, d);
 }
+#endif
 
 static void icon_chooser(WMWidget *widget, void *data)
 {
@@ -855,7 +872,13 @@ static void editPreferences(void *data)
 	d->prefsWindow->find_coords = WMCreateButton(
 		d->prefsWindow->locationFrame, WBTMomentaryPush);
 	WMSetButtonText(d->prefsWindow->find_coords, "Find Coords");
+#ifdef HAVE_GEOCLUE
 	WMSetButtonAction(d->prefsWindow->find_coords, findCoords, d);
+#else
+	WMSetButtonEnabled(d->prefsWindow->find_coords, False);
+#endif
+	WMSetButtonEnabled(d->prefsWindow->find_coords,
+			   d->prefs->geoclue);
 	WMResizeWidget(d->prefsWindow->find_coords, 120, 18);
 	WMMoveWidget(d->prefsWindow->find_coords, 20, 57);
 	WMRealizeWidget(d->prefsWindow->find_coords);
