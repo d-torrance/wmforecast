@@ -17,7 +17,10 @@
 #include <config.h>
 #endif
 
+#ifdef HAVE_GEOCLUE
 #include <geoclue.h>
+#endif
+
 #include <getopt.h>
 #define GWEATHER_I_KNOW_THIS_IS_UNSTABLE
 #include <libgweather/gweather.h>
@@ -708,6 +711,7 @@ static void savePreferences(WMWidget *widget, void *data)
 
 }
 
+#ifdef HAVE_GEOCLUE
 static void foundCoords(GObject *source_object, GAsyncResult *res,
 			gpointer user_data)
 {
@@ -746,6 +750,7 @@ static void findCoords(WMWidget *widget, void *data)
 	gclue_simple_new("wmforecast", GCLUE_ACCURACY_LEVEL_CITY, NULL,
 			 foundCoords, d);
 }
+#endif
 
 static void icon_chooser(WMWidget *widget, void *data)
 {
@@ -859,7 +864,11 @@ static void editPreferences(void *data)
 	d->prefsWindow->find_coords = WMCreateButton(
 		d->prefsWindow->locationFrame, WBTMomentaryPush);
 	WMSetButtonText(d->prefsWindow->find_coords, "Find Coords");
+#ifdef HAVE_GEOCLUE
 	WMSetButtonAction(d->prefsWindow->find_coords, findCoords, d);
+#else
+	WMSetButtonEnabled(d->prefsWindow->find_coords, False);
+#endif
 	WMResizeWidget(d->prefsWindow->find_coords, 120, 18);
 	WMMoveWidget(d->prefsWindow->find_coords, 20, 57);
 	WMRealizeWidget(d->prefsWindow->find_coords);
