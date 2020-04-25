@@ -37,6 +37,8 @@
 	wwarning("%s is not a valid icon directory; falling back to %s", \
 		 tried, current)
 
+#define round(x) (int)(x + 0.5)
+
 enum {
 	TEMP_CURRENT,
 	TEMP_LOW,
@@ -114,6 +116,8 @@ typedef struct {
 	int errorFlag;
 	char *errorText;
 	char retrieved[20];
+	const char *attribution;
+	GWeatherTemperatureUnit units;
 } Weather;
 
 Forecast *newForecast()
@@ -338,19 +342,20 @@ char *getBalloonText(Weather *weather)
 	text = wstrappend(text, ", ");
 	text = wstrappend(text, weather->temp);
 
-	/* skipping for now - metar only has current conditions
-	 * text = wstrappend(text, "°\n\nForecast:\n");
-	 * for (i = 0; i < weather->forecasts->length && i < 7; i++) {
-	 * 	text = wstrappend(text, weather->forecasts->forecasts[i].day);
-	 * 	text = wstrappend(text, " - ");
-	 * 	text = wstrappend(text, weather->forecasts->forecasts[i].text);
-	 * 	text = wstrappend(text, ". High: ");
-	 * 	text = wstrappend(text, weather->forecasts->forecasts[i].high);
-	 * 	text = wstrappend(text, "° Low: ");
-	 * 	text = wstrappend(text, weather->forecasts->forecasts[i].low);
-	 * 	text = wstrappend(text, "°\n");
-	 * } */
+	text = wstrappend(text, "°\n\nForecast:\n");
+	for (i = 0; i < weather->forecasts->length && i < 7; i++) {
+		text = wstrappend(text, weather->forecasts->forecasts[i].day);
+		text = wstrappend(text, " - ");
+		text = wstrappend(text, weather->forecasts->forecasts[i].text);
+		text = wstrappend(text, ". High: ");
+		text = wstrappend(text, weather->forecasts->forecasts[i].high);
+		text = wstrappend(text, "° Low: ");
+		text = wstrappend(text, weather->forecasts->forecasts[i].low);
+		text = wstrappend(text, "°\n");
+	}
 
+	text = wstrappend(text, "\n");
+	text = wstrappend(text, weather->attribution);
 	text = wstrappend(text, "\n\n");
 	return text;
 }
@@ -374,9 +379,66 @@ char *getTemp(GWeatherInfo *info, GWeatherTemperatureUnit unit, int which_temp)
 		gweather_info_get_value_temp(info, unit, &temp_double);
 	}
 
-	sprintf(temp, "%d", (int)(temp_double + 0.5));
+	sprintf(temp, "%d", round(temp_double));
 
 	return wstrdup(temp);
+}
+
+ForecastArray *gather_forecasts(Weather *weather, GSList *gforecasts)
+{
+	GDateTime *d;
+	int current_weekday, high, low;
+
+	d = g_date_time_new_now_local();
+	current_weekday = g_date_time_get_day_of_week(d);
+	high = INT_MIN;
+	low = INT_MAX;
+
+	while (gforecasts = gforecasts->next) {
+		time_t time;
+		double temp;
+		int weekday;
+		char *conditions;
+
+		gweather_info_get_value_update(gforecasts->data, &time);
+		d = g_date_time_new_from_unix_utc(time);
+		weekday = g_date_time_get_day_of_week(d);
+
+		/* follow gnome weather's convention of using 2 pm for
+		 * conditions */
+		if (g_date_time_get_hour(d) == 14)
+			conditions = gweather_info_get_sky(gforecasts->data);
+
+		if (weekday != current_weekday) {
+			Forecast *forecast;
+			char high_text[5], low_text[5];
+			char *day_name;
+
+			forecast = newForecast();
+
+			/* subtract one since we've already advanced to
+			 * the next day */
+			day_name = g_date_time_format(
+				g_date_time_add_days(d, -1), "%a");
+
+			snprintf(high_text, 5, "%d", high);
+			snprintf(low_text, 5, "%d", low);
+
+			setForecast(forecast, day_name, low_text,
+				    high_text, conditions);
+			appendForecast(weather->forecasts, forecast);
+
+			current_weekday = weekday;
+			high = INT_MIN;
+			low = INT_MAX;
+		}
+		gweather_info_get_value_temp(gforecasts->data,
+					     weather->units, &temp);
+		if (temp > high)
+			high = round(temp);
+		if (temp < low)
+			low = round(temp);
+	}
 }
 
 void getWeather(GWeatherInfo *info, Dockapp *dockapp)
@@ -387,7 +449,10 @@ void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 	Weather *weather;
 	Forecast *forecast;
 
+	GSList *gforecasts;
+
 	weather = newWeather();
+	weather->units = dockapp->prefs->units;
 
 	if (!gweather_info_is_valid(info))
 		setError(weather, dockapp->screen,
@@ -396,6 +461,11 @@ void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 	temp = getTemp(info, dockapp->prefs->units, TEMP_CURRENT);
 	text = gweather_info_get_weather_summary(info);
 	code = gweather_info_get_icon_name(info);
+	weather->attribution = gweather_info_get_attribution(info);
+
+	gforecasts = gweather_info_get_forecast_list(info);
+	if (gforecasts)
+		gather_forecasts(weather, gforecasts);
 
 	setConditions(weather, dockapp->screen, temp, text, code,
 		      dockapp->prefs->background, dockapp->prefs->icondir);
@@ -470,9 +540,12 @@ static void updateDockapp(void *data)
 	world = gweather_location_get_world();
 	loc = gweather_location_find_nearest_city(
 		world, prefs->latitude, prefs->longitude);
-	info = gweather_info_new(loc);
+	info = gweather_info_new(NULL);
+	gweather_info_set_enabled_providers(info, GWEATHER_PROVIDER_ALL);
+	gweather_info_set_location(info, loc);
 	g_signal_connect(
 		G_OBJECT(info), "updated", G_CALLBACK(getWeather), dockapp);
+	gweather_info_update(info);
 }
 
 Bool check_icondir(char *icondir)
