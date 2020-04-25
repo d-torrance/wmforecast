@@ -45,7 +45,7 @@ enum {
 
 typedef struct {
 	Bool geoclue;
-	char *units;
+	GWeatherTemperatureUnit units;
 	double latitude;
 	double longitude;
 	long int interval;
@@ -355,16 +355,10 @@ char *getBalloonText(Weather *weather)
 	return text;
 }
 
-char *getTemp(GWeatherInfo *info, char *units, int which_temp)
+char *getTemp(GWeatherInfo *info, GWeatherTemperatureUnit unit, int which_temp)
 {
-	GWeatherTemperatureUnit unit;
 	double temp_double;
 	char temp[4];
-
-	if (strcmp(units, "c") == 0)
-		unit = GWEATHER_TEMP_UNIT_CENTIGRADE;
-	else
-		unit = GWEATHER_TEMP_UNIT_FAHRENHEIT;
 
 	switch(which_temp) {
 	case TEMP_LOW:
@@ -512,13 +506,22 @@ Bool check_icondir(char *icondir)
 	return good;
 }
 
+GWeatherTemperatureUnit string_to_unit(char *unit_string)
+{
+	if (strcmp(unit_string, "c") == 0)
+		return GWEATHER_TEMP_UNIT_CENTIGRADE;
+
+	else /* default to fahrenheit */
+		return GWEATHER_TEMP_UNIT_FAHRENHEIT;
+}
+
 void readPreferences(Preferences *prefs)
 {
 	if (prefs->defaults) {
 		char *value;
 		value = WMGetUDStringForKey(prefs->defaults, "units");
 		if (value)
-			prefs->units = value;
+			prefs->units = string_to_unit(value);
 		value = WMGetUDStringForKey(prefs->defaults, "interval");
 		if (value)
 			prefs->interval = strtol(value, NULL, 10);
@@ -550,7 +553,7 @@ Preferences *setPreferences(int argc, char **argv)
 	Preferences *prefs = wmalloc(sizeof(Preferences));
 
 	/* set defaults */
-	prefs->units = "f";
+	prefs->units = GWEATHER_TEMP_UNIT_FAHRENHEIT;
 	/* default location is nyc */
 	prefs->latitude = 40.7128;
 	prefs->longitude = -74.0060;
@@ -609,7 +612,7 @@ Preferences *setPreferences(int argc, char **argv)
 				printf("units must be 'f' or 'c'\n");
 				exit(0);
 			}
-			prefs->units = optarg;
+			prefs->units = string_to_unit(optarg);
 			break;
 
 		case 'i':
@@ -814,7 +817,7 @@ static void editPreferences(void *data)
 	d->prefsWindow->celsius = WMCreateButton(d->prefsWindow->units, WBTRadio);
 	WMSetButtonText(d->prefsWindow->celsius, "Celsius");
 	WMMoveWidget(d->prefsWindow->celsius, 10, 20);
-	if (strcmp(d->prefsWindow->prefs->units, "c") == 0)
+	if (d->prefsWindow->prefs->units == GWEATHER_TEMP_UNIT_CENTIGRADE)
 		WMSetButtonSelected(d->prefsWindow->celsius, 1);
 	WMRealizeWidget(d->prefsWindow->celsius);
 	WMMapWidget(d->prefsWindow->celsius);
@@ -822,7 +825,7 @@ static void editPreferences(void *data)
 	d->prefsWindow->fahrenheit = WMCreateButton(d->prefsWindow->units, WBTRadio);
 	WMSetButtonText(d->prefsWindow->fahrenheit, "Fahrenheit");
 	WMMoveWidget(d->prefsWindow->fahrenheit, 10, 44);
-	if (strcmp(d->prefsWindow->prefs->units, "f") == 0)
+	if (d->prefsWindow->prefs->units == GWEATHER_TEMP_UNIT_FAHRENHEIT)
 		WMSetButtonSelected(d->prefsWindow->fahrenheit, 1);
 	WMRealizeWidget(d->prefsWindow->fahrenheit);
 	WMMapWidget(d->prefsWindow->fahrenheit);
