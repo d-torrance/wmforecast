@@ -5,7 +5,7 @@ Maintainer: Debian Window Maker Team <pkg-wmaker-devel@lists.alioth.debian.org>
 Uploaders: Doug Torrance <dtorrance@piedmont.edu>
 Build-Depends: debhelper (>= 9),
                dh-autoreconf,
-               libgeoclue-2-dev,
+               libgeoclue-2-dev | build-essential,
                libgweather-3-dev,
                libwings-dev
 Standards-Version: 4.1.3
