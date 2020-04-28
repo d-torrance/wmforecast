@@ -1,2 +1,6 @@
-* try to deal w/ earlier versions of libgweather
-  - e.g., gweather_info_new took 2 arguments until 3.27.4 (3.18.2 in xenial)
+* fix bug:
+  - change units & save in prefs window => warning about icon directory??
+  - strip html tags from attribution string
+* add features:
+  - max. number of days in forecast configurable (github issue #2)
+  - windowed mode (github issue #4)
