@@ -408,8 +408,13 @@ ForecastArray *gather_forecasts(Weather *weather, GSList *gforecasts)
 		/* follow gnome weather's convention of using 2 pm for
 		 * conditions */
 		if (g_date_time_get_hour(d) >= 14 &&
-		    strcmp(conditions, "") == 0)
-			conditions = gweather_info_get_sky(gforecasts->data);
+		    strcmp(conditions, "") == 0) {
+			conditions = gweather_info_get_conditions(
+				gforecasts->data);
+			if (strcmp(conditions, "-") == 0)
+				conditions = gweather_info_get_sky(
+					gforecasts->data);
+		}
 
 		if (weekday != current_weekday) {
 			Forecast *forecast;
