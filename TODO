@@ -1,3 +1,2 @@
-* can we get forecasts working again?
 * try to deal w/ earlier versions of libgweather
   - e.g., gweather_info_new took 2 arguments until 3.27.4 (3.18.2 in xenial)
