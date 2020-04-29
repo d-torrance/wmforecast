@@ -49,6 +49,7 @@ typedef struct {
 	char *text;
 	char *icondir;
 	Bool windowed;
+	int days;
 	WMUserDefaults *defaults;
 } Preferences;
 
@@ -338,7 +339,7 @@ Dockapp *newDockapp(WMScreen *screen, Preferences *prefs, int argc, char **argv)
 	return dockapp;
 }
 
-char *getBalloonText(Weather *weather)
+char *getBalloonText(Weather *weather, int days)
 {
 	char *text;
 	int i;
@@ -351,7 +352,7 @@ char *getBalloonText(Weather *weather)
 	text = wstrappend(text, weather->temp);
 
 	text = wstrappend(text, "°\n\nForecast:\n");
-	for (i = 0; i < weather->forecasts->length && i < 7; i++) {
+	for (i = 0; i < weather->forecasts->length && i < days; i++) {
 		text = wstrappend(text, weather->forecasts->forecasts[i].day);
 		text = wstrappend(text, " - ");
 		text = wstrappend(text, weather->forecasts->forecasts[i].text);
@@ -506,8 +507,9 @@ void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 						weather->icon, 0);
 		WMSetLabelImage(dockapp->icon, icon);
 
-		WMSetBalloonTextForView(getBalloonText(weather),
-					WMWidgetView(dockapp->icon));
+		WMSetBalloonTextForView(
+			getBalloonText(weather, dockapp->prefs->days),
+			WMWidgetView(dockapp->icon));
 	}
 
 	WMRedisplayWidget(dockapp->icon);
@@ -638,6 +640,7 @@ Preferences *setPreferences(int argc, char **argv)
 	prefs->icondir = DATADIR;
 	prefs->geoclue = True;
 	prefs->windowed = False;
+	prefs->days = 7;
 	prefs->defaults = WMGetStandardUserDefaults();
 	readPreferences(prefs);
 
@@ -655,11 +658,12 @@ Preferences *setPreferences(int argc, char **argv)
 			{"icondir", required_argument, 0, 'I'},
 			{"no-geoclue", no_argument, 0, 'n'},
 			{"windowed", no_argument, 0, 'w'},
+			{"days", required_argument, 0, 'd'},
 			{0, 0, 0, 0}
 		};
 		int option_index = 0;
 
-		c = getopt_long(argc, argv, "vhu:i:b:t:p:l:I:nw",
+		c = getopt_long(argc, argv, "vhu:i:b:t:p:l:I:nwd:",
 				 long_options, &option_index);
 
 		if (c == -1)
@@ -727,6 +731,10 @@ Preferences *setPreferences(int argc, char **argv)
 			prefs->windowed = True;
 			break;
 
+		case 'd':
+			prefs->days = atoi(optarg);
+			break;
+
 		case '?':
 		case 'h':
 			printf("A weather dockapp for Window Maker using the Yahoo Weather API\n"
@@ -742,6 +750,7 @@ Preferences *setPreferences(int argc, char **argv)
 			       "    -l, --longitude <coord>  set longitude\n"
 			       "    -n, --no-geoclue         disable geoclue\n"
 			       "    -w, --windowed           run in windowed mode\n"
+			       "    -d, --days               number of days to show in forecast (default 7)\n"
 			       "Report bugs to: %s\n"
 			       "wmforecast home page: %s\n",
 			       PACKAGE_BUGREPORT, PACKAGE_URL
