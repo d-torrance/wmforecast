@@ -238,6 +238,12 @@ void setForecast(Forecast *forecast,
 	strcpy(forecast->text, text);
 }
 
+void close_window(WMWidget *self, void *data)
+{
+	WMDestroyWidget(self);
+	exit(0);
+}
+
 WMWindow *WMCreateDockapp(WMScreen *screen, const char *name, int argc,
 			  char **argv, Bool windowed)
 {
@@ -264,6 +270,8 @@ WMWindow *WMCreateDockapp(WMScreen *screen, const char *name, int argc,
 
 	XSetWMHints(display, window, hints);
 	XFree(hints);
+
+	WMSetWindowCloseAction(dockapp, close_window, NULL);
 
 	XSetCommand(display, window, argv, argc);
 
