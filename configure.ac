@@ -5,7 +5,7 @@ AC_CONFIG_SRCDIR([configure.ac])
 AC_CONFIG_HEADER([config.h])
 AC_PROG_CC
 PKG_CHECK_MODULES([X11],[x11])
-PKG_CHECK_MODULES([libgweather], [gweather-3.0])
+PKG_CHECK_MODULES([libgweather], [gweather-3.0 >= 3.27.4])
 AC_ARG_WITH([geoclue],
 	    [AS_HELP_STRING([--with-geoclue],
 		   [build with geoclue (provides location information)])],
