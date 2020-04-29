@@ -1,5 +1,4 @@
 * fix bug:
-  - change units & save in prefs window => warning about icon directory??
   - strip html tags from attribution string
 * add features:
   - max. number of days in forecast configurable (github issue #2)

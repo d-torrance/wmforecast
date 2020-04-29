@@ -1041,7 +1041,7 @@ static void editPreferences(void *data)
 	d->prefsWindow->icon_chooser = WMGetOpenPanel(d->screen);
 	WMSetFilePanelCanChooseDirectories(d->prefsWindow->icon_chooser, True);
 	WMSetFilePanelCanChooseFiles(d->prefsWindow->icon_chooser, False);
-	d->prefsWindow->icondir = d->prefs->icondir;
+	d->prefsWindow->icondir = wstrdup(d->prefs->icondir);
 
 	d->prefsWindow->save = WMCreateButton(d->prefsWindow->window, WBTMomentaryPush);
 	WMSetButtonText(d->prefsWindow->save, "Save");
