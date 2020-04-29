@@ -3,3 +3,5 @@
 * add features:
   - max. number of days in forecast configurable (github issue #2)
   - windowed mode (github issue #4)
+* update docs
+  - s/yahoo/libgweather/g
