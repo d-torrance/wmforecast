@@ -48,6 +48,7 @@ typedef struct {
 	char *background;
 	char *text;
 	char *icondir;
+	Bool windowed;
 	WMUserDefaults *defaults;
 } Preferences;
 
@@ -237,7 +238,8 @@ void setForecast(Forecast *forecast,
 	strcpy(forecast->text, text);
 }
 
-WMWindow *WMCreateDockapp(WMScreen *screen, const char *name, int argc, char **argv)
+WMWindow *WMCreateDockapp(WMScreen *screen, const char *name, int argc,
+			  char **argv, Bool windowed)
 {
 	WMWindow *dockapp;
 	XWMHints *hints;
@@ -251,10 +253,14 @@ WMWindow *WMCreateDockapp(WMScreen *screen, const char *name, int argc, char **a
 	window = WMWidgetXID(dockapp);
 
 	hints = XGetWMHints(display, window);
-	hints->flags |= WindowGroupHint | IconWindowHint | StateHint;
+	hints->flags |= WindowGroupHint;
 	hints->window_group = window;
-	hints->icon_window = window;
-	hints->initial_state = WithdrawnState;
+
+	if (!windowed) {
+		hints->flags |= IconWindowHint | StateHint;
+		hints->icon_window = window;
+		hints->initial_state = WithdrawnState;
+	}
 
 	XSetWMHints(display, window, hints);
 	XFree(hints);
@@ -277,7 +283,7 @@ Dockapp *newDockapp(WMScreen *screen, Preferences *prefs, int argc, char **argv)
 	dockapp->minutesLeft = prefs->interval;
 	dockapp->prefsWindowPresent = 0;
 
-	window = WMCreateDockapp(screen, "", argc, argv);
+	window = WMCreateDockapp(screen, "", argc, argv, prefs->windowed);
 	WMSetWindowTitle(window, "wmforecast");
 
 	background = WMCreateNamedColor(screen, prefs->background, True);
@@ -623,6 +629,7 @@ Preferences *setPreferences(int argc, char **argv)
 	prefs->text = DEFAULT_TEXT_COLOR;
 	prefs->icondir = DATADIR;
 	prefs->geoclue = True;
+	prefs->windowed = False;
 	prefs->defaults = WMGetStandardUserDefaults();
 	readPreferences(prefs);
 
@@ -639,11 +646,12 @@ Preferences *setPreferences(int argc, char **argv)
 			{"longitude", required_argument, 0, 'l'},
 			{"icondir", required_argument, 0, 'I'},
 			{"no-geoclue", no_argument, 0, 'n'},
+			{"windowed", no_argument, 0, 'w'},
 			{0, 0, 0, 0}
 		};
 		int option_index = 0;
 
-		c = getopt_long(argc, argv, "vhu:i:b:t:p:l:I:n",
+		c = getopt_long(argc, argv, "vhu:i:b:t:p:l:I:nw",
 				 long_options, &option_index);
 
 		if (c == -1)
@@ -707,6 +715,10 @@ Preferences *setPreferences(int argc, char **argv)
 			prefs->geoclue = False;
 			break;
 
+		case 'w':
+			prefs->windowed = True;
+			break;
+
 		case '?':
 		case 'h':
 			printf("A weather dockapp for Window Maker using the Yahoo Weather API\n"
@@ -721,6 +733,7 @@ Preferences *setPreferences(int argc, char **argv)
 			       "    -p, --latitude <coord>   set latitude\n"
 			       "    -l, --longitude <coord>  set longitude\n"
 			       "    -n, --no-geoclue         disable geoclue\n"
+			       "    -w, --windowed           run in windowed mode\n"
 			       "Report bugs to: %s\n"
 			       "wmforecast home page: %s\n",
 			       PACKAGE_BUGREPORT, PACKAGE_URL
