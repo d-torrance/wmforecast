@@ -388,17 +388,18 @@ ForecastArray *gather_forecasts(Weather *weather, GSList *gforecasts)
 {
 	GDateTime *d;
 	int current_weekday, high, low;
+	char *conditions;
 
 	d = g_date_time_new_now_local();
 	current_weekday = g_date_time_get_day_of_week(d);
 	high = INT_MIN;
 	low = INT_MAX;
+	conditions = "";
 
 	while (gforecasts = gforecasts->next) {
 		time_t time;
 		double temp;
 		int weekday;
-		char *conditions;
 
 		gweather_info_get_value_update(gforecasts->data, &time);
 		d = g_date_time_new_from_unix_utc(time);
@@ -406,8 +407,14 @@ ForecastArray *gather_forecasts(Weather *weather, GSList *gforecasts)
 
 		/* follow gnome weather's convention of using 2 pm for
 		 * conditions */
-		if (g_date_time_get_hour(d) == 14)
-			conditions = gweather_info_get_sky(gforecasts->data);
+		if (g_date_time_get_hour(d) >= 14 &&
+		    strcmp(conditions, "") == 0) {
+			conditions = gweather_info_get_conditions(
+				gforecasts->data);
+			if (strcmp(conditions, "-") == 0)
+				conditions = gweather_info_get_sky(
+					gforecasts->data);
+		}
 
 		if (weekday != current_weekday) {
 			Forecast *forecast;
@@ -431,6 +438,7 @@ ForecastArray *gather_forecasts(Weather *weather, GSList *gforecasts)
 			current_weekday = weekday;
 			high = INT_MIN;
 			low = INT_MAX;
+			conditions = "";
 		}
 		gweather_info_get_value_temp(gforecasts->data,
 					     weather->units, &temp);
@@ -1033,7 +1041,7 @@ static void editPreferences(void *data)
 	d->prefsWindow->icon_chooser = WMGetOpenPanel(d->screen);
 	WMSetFilePanelCanChooseDirectories(d->prefsWindow->icon_chooser, True);
 	WMSetFilePanelCanChooseFiles(d->prefsWindow->icon_chooser, False);
-	d->prefsWindow->icondir = d->prefs->icondir;
+	d->prefsWindow->icondir = wstrdup(d->prefs->icondir);
 
 	d->prefsWindow->save = WMCreateButton(d->prefsWindow->window, WBTMomentaryPush);
 	WMSetButtonText(d->prefsWindow->save, "Save");
