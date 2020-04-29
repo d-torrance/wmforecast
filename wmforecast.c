@@ -39,12 +39,6 @@
 
 #define round(x) (int)(x + 0.5)
 
-enum {
-	TEMP_CURRENT,
-	TEMP_LOW,
-	TEMP_HIGH
-};
-
 typedef struct {
 	Bool geoclue;
 	GWeatherTemperatureUnit units;
@@ -360,27 +354,13 @@ char *getBalloonText(Weather *weather)
 	return text;
 }
 
-char *getTemp(GWeatherInfo *info, GWeatherTemperatureUnit unit, int which_temp)
+char *getTemp(GWeatherInfo *info, GWeatherTemperatureUnit unit)
 {
 	double temp_double;
 	char temp[4];
 
-	switch(which_temp) {
-	case TEMP_LOW:
-		gweather_info_get_value_temp_min(info, unit, &temp_double);
-		break;
-
-	case TEMP_HIGH:
-		gweather_info_get_value_temp_min(info, unit, &temp_double);
-		break;
-
-	case TEMP_CURRENT:
-	default:
-		gweather_info_get_value_temp(info, unit, &temp_double);
-	}
-
+	gweather_info_get_value_temp(info, unit, &temp_double);
 	sprintf(temp, "%d", round(temp_double));
-
 	return wstrdup(temp);
 }
 
@@ -466,7 +446,7 @@ void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 		setError(weather, dockapp->screen,
 			 gweather_info_get_weather_summary(info));
 
-	temp = getTemp(info, dockapp->prefs->units, TEMP_CURRENT);
+	temp = getTemp(info, dockapp->prefs->units);
 	text = gweather_info_get_weather_summary(info);
 	code = gweather_info_get_icon_name(info);
 	weather->attribution = gweather_info_get_attribution(info);
