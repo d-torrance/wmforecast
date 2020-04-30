@@ -10,7 +10,7 @@ LIBS += $(GEOCLUE_LIBS) $(GWEATHER_LIBS) $(X11_LIBS) $(WINGS_LIBS)
 desktopdir = $(datadir)/applications
 dist_desktop_DATA = wmforecast.desktop
 
-EXTRA_DIST = autogen.sh README.md wmforecast.1.in ChangeLog
+EXTRA_DIST = autogen.sh README.md wmforecast.1.in ChangeLog NEWS.md
 
 CLEANFILES = wmforecast.1
 MAINTAINERCLEANFILES = ChangeLog

@@ -1,4 +1,4 @@
-AC_INIT([wmforecast], [0.11], [https://github.com/d-torrance/wmforecast/issues],
+AC_INIT([wmforecast], [1.0], [https://github.com/d-torrance/wmforecast/issues],
 	[wmforecast], [http://wmforecast.friedcheese.org])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_CONFIG_SRCDIR([configure.ac])
