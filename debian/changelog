@@ -1,3 +1,9 @@
+wmforecast (1.0-0) eoan; urgency=medium
+
+  * New changelog entry so the PPA gets the correct version number.
+
+ -- Doug Torrance <dtorrance@piedmont.edu>  Wed, 29 Apr 2020 23:18:37 -0400
+
 wmforecast (0.11-2) UNRELEASED; urgency=medium
 
   * Update Vcs-* after migration to Salsa.
