@@ -379,7 +379,7 @@ char *getTemp(GWeatherInfo *info, GWeatherTemperatureUnit unit)
 	return wstrdup(temp);
 }
 
-ForecastArray *gather_forecasts(Weather *weather, GSList *gforecasts)
+void *gather_forecasts(Weather *weather, GSList *gforecasts)
 {
 	GDateTime *d;
 	int current_weekday, high, low;
@@ -391,7 +391,7 @@ ForecastArray *gather_forecasts(Weather *weather, GSList *gforecasts)
 	low = INT_MAX;
 	conditions = "";
 
-	while (gforecasts = gforecasts->next) {
+	while ((gforecasts = gforecasts->next)) {
 		time_t time;
 		double temp;
 		int weekday;
