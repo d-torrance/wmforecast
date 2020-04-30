@@ -1,3 +1,25 @@
+version 1.0
+-----------
+* Due to changes in the Yahoo! weather API, we have switched to using
+  [libgweather](https://wiki.gnome.org/Projects/LibGWeather).
+  This brings with it several interface changes:
+  - Instead of using WOEID or ZIP Code to determine your location, we
+    now use latitude and longitude.  You may (optionally) use
+    [GeoClue](https://gitlab.freedesktop.org/geoclue/geoclue/-/wikis/home)
+    to find this information in the preferences GUI by clicking the
+    "Find Coords" button.
+  - Since libgweather uses icons that follow the
+    [XDG Icon Naming Specification](
+     https://specifications.freedesktop.org/icon-naming-spec),
+    we have renamed our icons accordingly (and deleted several which
+	would never appear as they did not correspond with any of the names
+	in the specification).  You may also use any other icon themes which
+	follow this specification using the `--icondir` command-line
+	option, the `icondir` option in the configuration file, or by
+	clicking the "Icon directory" button in the preferences GUI.
+* You may now run wmforecast in windowed mode (i.e., not as a dockapp)
+  using the `--windowed` command-line option.
+
 version 0.11
 ------------
 * New Yahoo! API gives us bad xml pretty frequently, which was causing
@@ -62,7 +84,7 @@ version 0.3
 * Lots of bug fixes and under-the-hood changes
 
 version 0.2
-___________
+-----------
 * Added manpage
 * Bug fixes
 

@@ -4,8 +4,8 @@ wmforecast
 
 <http://wmforecast.friedcheese.org>
 
-wmforecast is a weather dockapp for Window Maker using the
-[Yahoo Weather API](https://developer.yahoo.com/weather/)
+wmforecast is a weather dockapp for Window Maker using
+[libgweather](https://wiki.gnome.org/Projects/LibGWeather)
 
 The icons were designed by MerlinTheRed and are available at
 <http://merlinthered.deviantart.com/art/plain-weather-icons-157162192>
@@ -24,18 +24,18 @@ wmforecast binary packages are also available in the Debian and Ubuntu archives,
 but possibly older versions.  To obtain the latest version in Ubuntu, you may
 use the PPA:
 
-    sudo add-apt-repository ppa:profzoom/wmaker
+    sudo add-apt-repository ppa:profzoom/dockapps
     sudo apt-get update
-	sudo apt-get install wmforecast
+    sudo apt-get install wmforecast
 
 Installation
 ------------
 
 To compile wmforecast from source, you will need
 
-* [libcurl](https://curl.haxx.se/libcurl/)
-* [libxml2](http://www.xmlsoft.org/)
+* [libgweather](https://wiki.gnome.org/Projects/LibGWeather)
 * [WINGs](http://windowmaker.org/)
+* (optional) [GeoClue](https://gitlab.freedesktop.org/geoclue/geoclue/-/wikis/home)
 
 If building from git (not necessary if using a tarball):
 
@@ -56,14 +56,15 @@ Usage
     -h, --help               print this help screen
     -i, --interval <min>     number of minutes between refreshes (default 60)
     -u, --units <c|f>        whether to use Celsius or Fahrenheit (default f)
-    -w, --woeid <woeid>      Where on Earth ID (default is 2502265 for
-                             Sunnyvale, CA -- to find your WOEID, search
-                             for your city at <http://weather.yahoo.com> and
-                             look in the URL.)
-    -z, --zip <zip>          ZIP code or Location ID (Yahoo has deprecated this
-                             option and it is not guaranteed to work)
     -b, --background <color> set background color
     -t, --text <color>       set text color
+    -p, --latitude <coord>   set latitude
+    -l, --longitude <coord>  set longitude
+    -I, --icondir <dir>      set icon directory
+                             (default /usr/local/share/wmforecast)
+    -n, --no-geoclue         disable geoclue
+    -w, --windowed           run in windowed mode
+    -d, --days               number of days to show in forecast (default 7)
 
 Bugs
 ----
@@ -75,7 +76,7 @@ Copyright
 ---------
 
 ### wmforecast
-2014-2016 Doug Torrance  
+2014-2020 Doug Torrance  
 <dtorrance@piedmont.edu>  
 GNU General Public License v3+
 

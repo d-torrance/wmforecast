@@ -1,5 +1,5 @@
-AC_INIT([wmforecast], [0.11], [dtorrance@piedmont.edu], [wmforecast],
-	[http://wmforecast.friedcheese.org])
+AC_INIT([wmforecast], [1.0], [https://github.com/d-torrance/wmforecast/issues],
+	[wmforecast], [http://wmforecast.friedcheese.org])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_CONFIG_SRCDIR([configure.ac])
 AC_CONFIG_HEADER([config.h])
@@ -17,6 +17,5 @@ AS_IF([test "x$with_geoclue" == "xcheck"],
 			 [AC_DEFINE([HAVE_GEOCLUE], [1],
 			 [Define if pkg-config finds geoclue.])], [:])])
 PKG_CHECK_MODULES([WINGS], [WINGs])
-AC_SUBST(DATE, "esyscmd(head -n 1 ChangeLog | cut -d' ' -f1 | tr -d '\n')")
-AC_CONFIG_FILES([Makefile icons/Makefile wmforecast.1])
+AC_CONFIG_FILES([Makefile icons/Makefile])
 AC_OUTPUT

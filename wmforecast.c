@@ -1,4 +1,4 @@
-/* Copyright (C) 2014-2016 Doug Torrance <dtorrance@piedmont.edu>
+/* Copyright (C) 2014-2020 Doug Torrance <dtorrance@piedmont.edu>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,12 +39,6 @@
 
 #define round(x) (int)(x + 0.5)
 
-enum {
-	TEMP_CURRENT,
-	TEMP_LOW,
-	TEMP_HIGH
-};
-
 typedef struct {
 	Bool geoclue;
 	GWeatherTemperatureUnit units;
@@ -54,6 +48,8 @@ typedef struct {
 	char *background;
 	char *text;
 	char *icondir;
+	Bool windowed;
+	int days;
 	WMUserDefaults *defaults;
 } Preferences;
 
@@ -243,7 +239,14 @@ void setForecast(Forecast *forecast,
 	strcpy(forecast->text, text);
 }
 
-WMWindow *WMCreateDockapp(WMScreen *screen, const char *name, int argc, char **argv)
+void close_window(WMWidget *self, void *data)
+{
+	WMDestroyWidget(self);
+	exit(0);
+}
+
+WMWindow *WMCreateDockapp(WMScreen *screen, const char *name, int argc,
+			  char **argv, Bool windowed)
 {
 	WMWindow *dockapp;
 	XWMHints *hints;
@@ -257,13 +260,19 @@ WMWindow *WMCreateDockapp(WMScreen *screen, const char *name, int argc, char **a
 	window = WMWidgetXID(dockapp);
 
 	hints = XGetWMHints(display, window);
-	hints->flags |= WindowGroupHint | IconWindowHint | StateHint;
+	hints->flags |= WindowGroupHint;
 	hints->window_group = window;
-	hints->icon_window = window;
-	hints->initial_state = WithdrawnState;
+
+	if (!windowed) {
+		hints->flags |= IconWindowHint | StateHint;
+		hints->icon_window = window;
+		hints->initial_state = WithdrawnState;
+	}
 
 	XSetWMHints(display, window, hints);
 	XFree(hints);
+
+	WMSetWindowCloseAction(dockapp, close_window, NULL);
 
 	XSetCommand(display, window, argv, argc);
 
@@ -283,7 +292,7 @@ Dockapp *newDockapp(WMScreen *screen, Preferences *prefs, int argc, char **argv)
 	dockapp->minutesLeft = prefs->interval;
 	dockapp->prefsWindowPresent = 0;
 
-	window = WMCreateDockapp(screen, "", argc, argv);
+	window = WMCreateDockapp(screen, "", argc, argv, prefs->windowed);
 	WMSetWindowTitle(window, "wmforecast");
 
 	background = WMCreateNamedColor(screen, prefs->background, True);
@@ -330,7 +339,7 @@ Dockapp *newDockapp(WMScreen *screen, Preferences *prefs, int argc, char **argv)
 	return dockapp;
 }
 
-char *getBalloonText(Weather *weather)
+char *getBalloonText(Weather *weather, int days)
 {
 	char *text;
 	int i;
@@ -343,7 +352,7 @@ char *getBalloonText(Weather *weather)
 	text = wstrappend(text, weather->temp);
 
 	text = wstrappend(text, "°\n\nForecast:\n");
-	for (i = 0; i < weather->forecasts->length && i < 7; i++) {
+	for (i = 0; i < weather->forecasts->length && i < days; i++) {
 		text = wstrappend(text, weather->forecasts->forecasts[i].day);
 		text = wstrappend(text, " - ");
 		text = wstrappend(text, weather->forecasts->forecasts[i].text);
@@ -360,27 +369,13 @@ char *getBalloonText(Weather *weather)
 	return text;
 }
 
-char *getTemp(GWeatherInfo *info, GWeatherTemperatureUnit unit, int which_temp)
+char *getTemp(GWeatherInfo *info, GWeatherTemperatureUnit unit)
 {
 	double temp_double;
 	char temp[4];
 
-	switch(which_temp) {
-	case TEMP_LOW:
-		gweather_info_get_value_temp_min(info, unit, &temp_double);
-		break;
-
-	case TEMP_HIGH:
-		gweather_info_get_value_temp_min(info, unit, &temp_double);
-		break;
-
-	case TEMP_CURRENT:
-	default:
-		gweather_info_get_value_temp(info, unit, &temp_double);
-	}
-
+	gweather_info_get_value_temp(info, unit, &temp_double);
 	sprintf(temp, "%d", round(temp_double));
-
 	return wstrdup(temp);
 }
 
@@ -449,6 +444,24 @@ ForecastArray *gather_forecasts(Weather *weather, GSList *gforecasts)
 	}
 }
 
+/* strip html from attribution string */
+char *strip_tags(const char *to_strip)
+{
+	char *stripped, *beginning, *end;
+
+	stripped = wstrdup(to_strip);
+	while ((beginning = strchr(stripped, '<')) &&
+	       (end = strchr(stripped, '>'))) {
+		int length;
+
+		length = end - beginning + 1;
+		memmove(stripped + length, stripped, beginning - stripped);
+		stripped += length;
+	}
+
+	return stripped;
+}
+
 void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 {
 	char *temp, *text;
@@ -466,10 +479,10 @@ void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 		setError(weather, dockapp->screen,
 			 gweather_info_get_weather_summary(info));
 
-	temp = getTemp(info, dockapp->prefs->units, TEMP_CURRENT);
+	temp = getTemp(info, dockapp->prefs->units);
 	text = gweather_info_get_weather_summary(info);
 	code = gweather_info_get_icon_name(info);
-	weather->attribution = gweather_info_get_attribution(info);
+	weather->attribution = strip_tags(gweather_info_get_attribution(info));
 
 	gforecasts = gweather_info_get_forecast_list(info);
 	if (gforecasts)
@@ -512,8 +525,9 @@ void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 						weather->icon, 0);
 		WMSetLabelImage(dockapp->icon, icon);
 
-		WMSetBalloonTextForView(getBalloonText(weather),
-					WMWidgetView(dockapp->icon));
+		WMSetBalloonTextForView(
+			getBalloonText(weather, dockapp->prefs->days),
+			WMWidgetView(dockapp->icon));
 	}
 
 	WMRedisplayWidget(dockapp->icon);
@@ -643,6 +657,8 @@ Preferences *setPreferences(int argc, char **argv)
 	prefs->text = DEFAULT_TEXT_COLOR;
 	prefs->icondir = DATADIR;
 	prefs->geoclue = True;
+	prefs->windowed = False;
+	prefs->days = 7;
 	prefs->defaults = WMGetStandardUserDefaults();
 	readPreferences(prefs);
 
@@ -659,11 +675,13 @@ Preferences *setPreferences(int argc, char **argv)
 			{"longitude", required_argument, 0, 'l'},
 			{"icondir", required_argument, 0, 'I'},
 			{"no-geoclue", no_argument, 0, 'n'},
+			{"windowed", no_argument, 0, 'w'},
+			{"days", required_argument, 0, 'd'},
 			{0, 0, 0, 0}
 		};
 		int option_index = 0;
 
-		c = getopt_long(argc, argv, "vhu:i:b:t:p:l:I:n",
+		c = getopt_long(argc, argv, "vhu:i:b:t:p:l:I:nwd:",
 				 long_options, &option_index);
 
 		if (c == -1)
@@ -681,7 +699,7 @@ Preferences *setPreferences(int argc, char **argv)
 
 		case 'v':
 			printf("%s\n"
-			       "Copyright © 2014-2016 Doug Torrance\n"
+			       "Copyright © 2014-2020 Doug Torrance\n"
 			       "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
 			       "This is free software: you are free to change and redistribute it.\n"
 			       "There is NO WARRANTY, to the extent permitted by law.\n"
@@ -727,9 +745,17 @@ Preferences *setPreferences(int argc, char **argv)
 			prefs->geoclue = False;
 			break;
 
+		case 'w':
+			prefs->windowed = True;
+			break;
+
+		case 'd':
+			prefs->days = atoi(optarg);
+			break;
+
 		case '?':
 		case 'h':
-			printf("A weather dockapp for Window Maker using the Yahoo Weather API\n"
+			printf("A weather dockapp for Window Maker using libgweather\n"
 			       "Usage: wmforecast [OPTIONS]\n"
 			       "Options:\n"
 			       "    -v, --version            print the version number\n"
@@ -740,7 +766,11 @@ Preferences *setPreferences(int argc, char **argv)
 			       "    -t, --text <color>       set text color\n"
 			       "    -p, --latitude <coord>   set latitude\n"
 			       "    -l, --longitude <coord>  set longitude\n"
+			       "    -I, --icondir <dir>      set icon directory\n"
+			       "                             (default "DATADIR")\n"
 			       "    -n, --no-geoclue         disable geoclue\n"
+			       "    -w, --windowed           run in windowed mode\n"
+			       "    -d, --days               number of days to show in forecast (default 7)\n"
 			       "Report bugs to: %s\n"
 			       "wmforecast home page: %s\n",
 			       PACKAGE_BUGREPORT, PACKAGE_URL
