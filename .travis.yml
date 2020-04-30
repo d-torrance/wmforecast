@@ -9,4 +9,5 @@ addons:
     - libwings-dev
     - libgweather-3-dev
     - libgeoclue-2-dev
+    - git2cl
 dist: bionic
