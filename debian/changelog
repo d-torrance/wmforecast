@@ -1,3 +1,9 @@
+wmforecast (1.0-0+1) eoan; urgency=medium
+
+  * Bumping version number for PPA build.
+
+ -- Doug Torrance <dtorrance@piedmont.edu>  Thu, 30 Apr 2020 09:41:38 -0400
+
 wmforecast (1.0-0) eoan; urgency=medium
 
   * New changelog entry so the PPA gets the correct version number.
