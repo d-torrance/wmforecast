@@ -379,7 +379,7 @@ char *getTemp(GWeatherInfo *info, GWeatherTemperatureUnit unit)
 	return wstrdup(temp);
 }
 
-void *gather_forecasts(Weather *weather, GSList *gforecasts)
+void gather_forecasts(Weather *weather, GSList *gforecasts)
 {
 	GDateTime *d;
 	int current_weekday, high, low;
