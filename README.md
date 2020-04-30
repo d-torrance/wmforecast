@@ -1,51 +1,65 @@
 wmforecast
 ==========
-[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0) [![Build Status](https://travis-ci.org/d-torrance/wmforecast.svg?branch=master)](https://travis-ci.org/d-torrance/wmforecast)
+[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](
+  http://www.gnu.org/licenses/gpl-3.0)
+[![Build Status](https://travis-ci.org/d-torrance/wmforecast.svg?branch=master)
+  ](https://travis-ci.org/d-torrance/wmforecast)
 
 <http://wmforecast.friedcheese.org>
 
 wmforecast is a weather dockapp for Window Maker using
-[libgweather](https://wiki.gnome.org/Projects/LibGWeather)
+[libgweather](https://wiki.gnome.org/Projects/LibGWeather).
 
 The icons were designed by MerlinTheRed and are available at
-<http://merlinthered.deviantart.com/art/plain-weather-icons-157162192>
+<http://merlinthered.deviantart.com/art/plain-weather-icons-157162192>.
 
 Download
 --------
 
-To download, either clone the git repository:
+There are several options for obtaining wmforecast:
 
-    git clone https://github.com/d-torrance/wmforecast
+* Download a tarball from the [releases page](
+  https://github.com/d-torrance/wmforecast/releases).
 
-or download a tarball from the
-[releases page](https://github.com/d-torrance/wmforecast/releases).
+* Clone the git repository.
 
-wmforecast binary packages are also available in the Debian and Ubuntu archives,
-but possibly older versions.  To obtain the latest version in Ubuntu, you may
-use the PPA:
+        git clone https://github.com/d-torrance/wmforecast
 
-    sudo add-apt-repository ppa:profzoom/dockapps
-    sudo apt-get update
-    sudo apt-get install wmforecast
+* Packages are available for Debian-based distributions.
+
+        sudo apt-get install wmforecast
+
+  This may give you an older version.  To obtain the latest version in
+  Ubuntu, you may use the PPA.
+
+        sudo add-apt-repository ppa:profzoom/dockapps
+        sudo apt-get update
+        sudo apt-get install wmforecast
 
 Installation
 ------------
 
-To compile wmforecast from source, you will need
+* To compile wmforecast from source, you will need the following.
 
-* [libgweather](https://wiki.gnome.org/Projects/LibGWeather)
-* [WINGs](http://windowmaker.org/)
-* (optional) [GeoClue](https://gitlab.freedesktop.org/geoclue/geoclue/-/wikis/home)
+  - [libgweather](https://wiki.gnome.org/Projects/LibGWeather)
+  - [WINGs](http://windowmaker.org/)
+  - *(optional)* [GeoClue](
+    https://gitlab.freedesktop.org/geoclue/geoclue/-/wikis/home)
+  - *(only necessary if building from git)* [git2cl](
+    https://savannah.nongnu.org/projects/git2cl)
 
-If building from git (not necessary if using a tarball):
+* If building from a tarball, do the following after extracting the source.
 
-    ./autogen.sh
+        ./configure
+        make
+        sudo make install
 
-Then the usual
+* If building from git, you will first need to generate the `configure`
+  script.
 
-    ./configure
-    make
-    sudo make install
+        ./autogen.sh
+
+  Then proceed as above.
 
 Usage
 -----
