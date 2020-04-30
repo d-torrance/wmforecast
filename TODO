@@ -1,0 +1,4 @@
+* bug:
+  - at the end of the day, we may not have found any forecasts, and so
+    our high/low may still be INT_MIN and INT_MAX.  skip that day when this
+    happens
