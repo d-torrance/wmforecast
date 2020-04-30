@@ -755,7 +755,7 @@ Preferences *setPreferences(int argc, char **argv)
 
 		case '?':
 		case 'h':
-			printf("A weather dockapp for Window Maker using the Yahoo Weather API\n"
+			printf("A weather dockapp for Window Maker using libgweather\n"
 			       "Usage: wmforecast [OPTIONS]\n"
 			       "Options:\n"
 			       "    -v, --version            print the version number\n"
