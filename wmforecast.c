@@ -766,6 +766,8 @@ Preferences *setPreferences(int argc, char **argv)
 			       "    -t, --text <color>       set text color\n"
 			       "    -p, --latitude <coord>   set latitude\n"
 			       "    -l, --longitude <coord>  set longitude\n"
+			       "    -I, --icondir <dir>      set icon directory\n"
+			       "                             (default "DATADIR")\n"
 			       "    -n, --no-geoclue         disable geoclue\n"
 			       "    -w, --windowed           run in windowed mode\n"
 			       "    -d, --days               number of days to show in forecast (default 7)\n"
