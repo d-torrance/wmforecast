@@ -1,4 +1,2 @@
-* fix bug:
-  - strip html tags from attribution string
 * update docs
   - s/yahoo/libgweather/g

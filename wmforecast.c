@@ -444,6 +444,24 @@ ForecastArray *gather_forecasts(Weather *weather, GSList *gforecasts)
 	}
 }
 
+/* strip html from attribution string */
+char *strip_tags(const char *to_strip)
+{
+	char *stripped, *beginning, *end;
+
+	stripped = wstrdup(to_strip);
+	while ((beginning = strchr(stripped, '<')) &&
+	       (end = strchr(stripped, '>'))) {
+		int length;
+
+		length = end - beginning + 1;
+		memmove(stripped + length, stripped, beginning - stripped);
+		stripped += length;
+	}
+
+	return stripped;
+}
+
 void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 {
 	char *temp, *text;
@@ -464,7 +482,7 @@ void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 	temp = getTemp(info, dockapp->prefs->units);
 	text = gweather_info_get_weather_summary(info);
 	code = gweather_info_get_icon_name(info);
-	weather->attribution = gweather_info_get_attribution(info);
+	weather->attribution = strip_tags(gweather_info_get_attribution(info));
 
 	gforecasts = gweather_info_get_forecast_list(info);
 	if (gforecasts)
