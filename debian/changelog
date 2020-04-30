@@ -1,4 +1,11 @@
-wmforecast (1.0-0+1) eoan; urgency=medium
+wmforecast (1.0-0.2) eoan; urgency=medium
+
+  * debian/docs
+    - NEWS has been renamed to NEWS.md.
+
+ -- Doug Torrance <profzoom@gloria>  Thu, 30 Apr 2020 10:11:48 -0400
+
+wmforecast (1.0-0.1) eoan; urgency=medium
 
   * Bumping version number for PPA build.
 
