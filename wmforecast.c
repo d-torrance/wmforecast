@@ -379,7 +379,7 @@ char *getTemp(GWeatherInfo *info, GWeatherTemperatureUnit unit)
 	return wstrdup(temp);
 }
 
-ForecastArray *gather_forecasts(Weather *weather, GSList *gforecasts)
+void gather_forecasts(Weather *weather, GSList *gforecasts)
 {
 	GDateTime *d;
 	int current_weekday, high, low;
@@ -391,7 +391,7 @@ ForecastArray *gather_forecasts(Weather *weather, GSList *gforecasts)
 	low = INT_MAX;
 	conditions = "";
 
-	while (gforecasts = gforecasts->next) {
+	while ((gforecasts = gforecasts->next)) {
 		time_t time;
 		double temp;
 		int weekday;
@@ -412,23 +412,27 @@ ForecastArray *gather_forecasts(Weather *weather, GSList *gforecasts)
 		}
 
 		if (weekday != current_weekday) {
-			Forecast *forecast;
-			char high_text[5], low_text[5];
-			char *day_name;
+			/* don't create forecast if we don't have any info
+			 * (e.g., for today if it's almost midnight) */
+			if (high != INT_MIN && low != INT_MAX) {
+				Forecast *forecast;
+				char high_text[12], low_text[12];
+				char *day_name;
 
-			forecast = newForecast();
+				forecast = newForecast();
 
-			/* subtract one since we've already advanced to
-			 * the next day */
-			day_name = g_date_time_format(
-				g_date_time_add_days(d, -1), "%a");
+				/* subtract one since we've already advanced to
+				 * the next day */
+				day_name = g_date_time_format(
+					g_date_time_add_days(d, -1), "%a");
 
-			snprintf(high_text, 5, "%d", high);
-			snprintf(low_text, 5, "%d", low);
+				snprintf(high_text, 12, "%d", high);
+				snprintf(low_text, 12, "%d", low);
 
-			setForecast(forecast, day_name, low_text,
-				    high_text, conditions);
-			appendForecast(weather->forecasts, forecast);
+				setForecast(forecast, day_name, low_text,
+					    high_text, conditions);
+				appendForecast(weather->forecasts, forecast);
+			}
 
 			current_weekday = weekday;
 			high = INT_MIN;

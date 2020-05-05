@@ -1,3 +1,7 @@
+version 1.1
+-----------
+* Bug fix.
+
 version 1.0
 -----------
 * Due to changes in the Yahoo! weather API, we have switched to using

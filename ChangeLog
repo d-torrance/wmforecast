@@ -1,7 +1,55 @@
+2020-05-04  Doug Torrance <dtorrance@piedmont.edu>
+
+	* NEWS.md, configure.ac: Bump to version 1.1
+
+2020-04-30  Doug Torrance <dtorrance@piedmont.edu>
+
+	* TODO: Remove TODO; only entry has been fixed.
+
+2020-04-30  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Increase size of string buffer for high/low
+	temperatures in forecasts This is just to quiet compiler warnings.  I hope we never need that
+	many digits for a temperature!!
+
+2020-04-30  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Only add forecast to balloon text if we actually
+	have high/low information Otherwise, we were writing (truncated) values of INT_MIN and
+	INT_MAX! This happens late in the evening when there's no more
+	forecast data for the day.
+
+2020-04-30  Doug Torrance <dtorrance@piedmont.edu>
+
+	* README.md: README updates
+
 2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
 
-	* ChangeLog, Makefile.am, configure.ac: Generate ChangeLog during
-	"make dist" using git2cl
+	* TODO: Already found a bug just a few minutes after releasing
+	1.0... begin documenting in TODO again.
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Let's really fix that one warning -- we have a void
+	function, not one returning a pointer.
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Fix a couple issues causing compiler warnings in
+	clang.
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* .travis.yml: Add git2cl as a dependency for Travis build
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* Makefile.am, NEWS => NEWS.md, configure.ac: Bump to version 1.0
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* .gitignore, ChangeLog, Makefile.am, configure.ac: Generate
+	ChangeLog during "make dist" using git2cl
 
 2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
 
