@@ -11,6 +11,7 @@ Standards-Version: 4.5.0
 Homepage: https://wmforecast.friedcheese.org
 Vcs-Browser: https://salsa.debian.org/wmaker-team/wmforecast
 Vcs-Git: https://salsa.debian.org/wmaker-team/wmforecast.git
+Rules-Requires-Root: no
 
 Package: wmforecast
 Architecture: any
