@@ -10,6 +10,7 @@ stamp-h1
 wmforecast
 wmforecast.o
 wmforecast-*.tar.gz
+wmforecast-*.tar.gz.asc
 missing
 compile
 icons/Makefile.in
@@ -21,3 +22,4 @@ INSTALL
 config.h.in
 depcomp
 install-sh
+ChangeLog
