@@ -3,7 +3,7 @@
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 %:
-	dh $@ --with autoreconf
+	dh $@
 
 get-orig-source:
 	uscan --verbose --force-download --rename
