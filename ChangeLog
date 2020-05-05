@@ -1,0 +1,677 @@
+2020-05-04  Doug Torrance <dtorrance@piedmont.edu>
+
+	* NEWS.md, configure.ac: Bump to version 1.1
+
+2020-04-30  Doug Torrance <dtorrance@piedmont.edu>
+
+	* TODO: Remove TODO; only entry has been fixed.
+
+2020-04-30  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Increase size of string buffer for high/low
+	temperatures in forecasts This is just to quiet compiler warnings.  I hope we never need that
+	many digits for a temperature!!
+
+2020-04-30  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Only add forecast to balloon text if we actually
+	have high/low information Otherwise, we were writing (truncated) values of INT_MIN and
+	INT_MAX! This happens late in the evening when there's no more
+	forecast data for the day.
+
+2020-04-30  Doug Torrance <dtorrance@piedmont.edu>
+
+	* README.md: README updates
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* TODO: Already found a bug just a few minutes after releasing
+	1.0... begin documenting in TODO again.
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Let's really fix that one warning -- we have a void
+	function, not one returning a pointer.
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Fix a couple issues causing compiler warnings in
+	clang.
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* .travis.yml: Add git2cl as a dependency for Travis build
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* Makefile.am, NEWS => NEWS.md, configure.ac: Bump to version 1.0
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* .gitignore, ChangeLog, Makefile.am, configure.ac: Generate
+	ChangeLog during "make dist" using git2cl
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* README.md, wmforecast.c: Update copyright years
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* README.md, TODO: Update README
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c, wmforecast.desktop: Replace references to Yahoo with
+	libgweather
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* Makefile.am, configure.ac, wmforecast.1.in: Update manpage.  In addition to the various obvious changes we need to make with the
+	switch to libgweather, we also change how the manpage is generated.
+	In particular, because we want to substitue in $pkgdatadir variable
+	(for documenting icondir), we manually call sed in the Makefile
+	instead of using AC_CONFIG_FILES, as outlined in section 9.2.3 of
+	the autotools manual.
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Add --icondir to help text
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* TODO, wmforecast.c: Strip html from attribution strings.  No
+	hyperlinks in WINGs balloons!
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* TODO, wmforecast.c: Configure the number of days shown in forecast Like windowed mode, this is just a command line option for now.
+	Closes #2
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Now that we can run in a windowed mode, set up a
+	proper close action
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* TODO, wmforecast.c: Add windowed mode.  This is just going to be a command line thing; not going to add it
+	to the prefs window or config file as of yet.  Closes #4.
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Strip out unused min and max temp code.
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* configure.ac: Use GitHub issues page instead of my email for bug
+	reports
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* TODO: add documentation updates to TODO
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* TODO, wmforecast.c: Copy the icon directory for the preferences
+	window from the preferences We used to use the same pointer for both, which caused some weird
+	issues when saving the user defaults.  I'm guessing the preferences
+	got moved around in memory, but the preferences window didn't know
+	that and so it was looking in the wrong place.
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* Makefile.am: Drop -Wl,--as-needed from Makefile.  Doesn't appear to be doing anything.  I think the problem lies
+	upstream with libgweather.
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* Makefile.am, configure.ac: Use all-caps macro prefixes in
+	PKG_CHECK_MODULES.  This is standard, since they get prepended to _CFLAGS and _LIBS
+	later.  Ugly during ./configure for now, but this supposedly has
+	been fixed in pkg-config 0.29.2.
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* configure.ac: Ensure that we have gweather >= 3.27.4, when API
+	changed
+
+2020-04-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* Makefile.am, configure.ac: use pkg-config for WINGs
+
+2020-04-28  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: For forecast text, try to get conditions from
+	libgweather before sky This is the behavior of gweather_info_get_weather_summary.  It
+	appears that currently, with yr.no, we always end up getting the sky
+	anyway, but this may change in the future, and apparently conditions
+	is more desirable.
+
+2020-04-28  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Fix segfault when no 2:00 pm forecast data.  Instead, we start with an empty string for conditions and update it
+	for the first data we do find starting at 2 pm.
+
+2020-04-28  Doug Torrance <dtorrance@piedmont.edu>
+
+	* TODO: TODO updates A few things before version 1.0.  Giving up on supporting earlier
+	libgweather.  Tried compiling the version in xenial from source and
+	the tests segfaulted, so not confident it still works.
+
+2020-04-25  Doug Torrance <dtorrance@piedmont.edu>
+
+	* TODO, wmforecast.c: Forecasts are working again!
+
+2020-04-25  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Store unit preference as GWeatherTemperatureUnit
+	instead of a string.
+
+2020-04-24  Doug Torrance <dtorrance@piedmont.edu>
+
+	* TODO: Not going to worry about latitude/longitude error handling.  atof's current behavior (bad input -> 0) is good enough.
+
+2020-04-24  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: GeoClue is now also a runtime option.  Some users may want to disable the feature after build.  It's just a command line option.  I don't see a huge reason to put
+	it in the config file.  And certainly not in the preferences window
+	-- just don't click the button.  :)
+
+2020-04-24  Doug Torrance <dtorrance@piedmont.edu>
+
+	* TODO, configure.ac, wmforecast.c: GeoClue is now a buildtime
+	option.  A couple reasons:   * It's relatively new (e.g., not available in trusty), and we can     certainly still use wmforecast without it.    * Privacy concers.  Users may be wary of any information about
+	    their physical location being shared.
+
+2020-04-24  Doug Torrance <dtorrance@piedmont.edu>
+
+	* TODO, wmforecast.c: Restore familiar error handling.  When libgweather can't get the weather, it uses the "clear" icon,
+	and because of how our getTemp() function works, it was displaying
+	"0" as the temperature.  Instead, we set the error flag and restore
+	the old behavior (special icon + "ERROR").
+
+2020-04-20  Doug Torrance <dtorrance@piedmont.edu>
+
+	* TODO: add a couple tasks to TODO
+
+2020-04-20  Doug Torrance <dtorrance@piedmont.edu>
+
+	* TODO, wmforecast.c: Configure icon directory in the preferences
+	window We ended up changing some of the non-GUI icon directory code to make
+	it all work.  In particular, the check_icondir function now returns
+	a Bool and lets the caller deal with whether or not to actually
+	change the preferences.
+
+2020-04-20  Doug Torrance <dtorrance@piedmont.edu>
+
+	* icons/Makefile.am, wmforecast.c: Now that we use XDG icon names
+	for libgweather, we might as well make icon theme configurable.
+	User can specify another directory containing all of the appropriate
+	icons.  Fall back to our usual ones if they're not all present.
+
+2020-04-19  Doug Torrance <dtorrance@piedmont.edu>
+
+	* TODO: Add TODO
+
+2020-04-19  Doug Torrance <dtorrance@piedmont.edu>
+
+	* .travis.yml: Try using bionic for Travis; xenial's libgweather has
+	an older api
+
+2020-04-19  Doug Torrance <dtorrance@piedmont.edu>
+
+	* .travis.yml: Add libgweather and geoclue to Travis config
+
+2020-04-19  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Use 4 decimal places for coordinates from geoclue
+	for consistency
+
+2020-04-19  Doug Torrance <dtorrance@piedmont.edu>
+
+	* Makefile.am, configure.ac, wmforecast.c: Use geoclue to find
+	coordinates.  Also decrease the time between glib loops to speed both geoclue and
+	libgweather up considerably.
+
+2020-04-19  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Strip out old woeid/zip code and make
+	latitude/longitude configurable
+
+2020-04-19  Doug Torrance <dtorrance@piedmont.edu>
+
+	* Makefile.am, configure.ac, icons/Makefile.am, wmforecast.c: begin
+	transition from Yahoo to libgweather -- mostly functional!
+
+2018-06-19  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Give window a title.  This benefits users not running wmforecast as a dockapp.  Closes #5.
+
+2017-02-02  Doug Torrance <dtorrance@piedmont.edu>
+
+	* README.md: Add license badge
+
+2017-01-30  Doug Torrance <dtorrance@piedmont.edu>
+
+	* README.md: Add Travis badge.
+
+2017-01-30  Doug Torrance <dtorrance@piedmont.edu>
+
+	* .travis.yml: Eh, on second thought, let's just build on the
+	default (precise).
+
+2017-01-30  Doug Torrance <dtorrance@piedmont.edu>
+
+	* .travis.yml: Let's try both trusty and precise again...
+
+2017-01-30  Doug Torrance <dtorrance@piedmont.edu>
+
+	* .travis.yml: Compile on both precise and trusty in Travis.
+
+2017-01-30  Doug Torrance <dtorrance@piedmont.edu>
+
+	* configure.ac: Add comment about pkg-config and WINGs.
+
+2017-01-30  Doug Torrance <dtorrance@piedmont.edu>
+
+	* Makefile.am, configure.ac: Don't use pkg-config for WINGs -- only
+	available in recent Window Maker.
+
+2017-01-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* .travis.yml: Use Trusty for Travis builds
+
+2017-01-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* .travis.yml: Install WINGs for Travis
+
+2017-01-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* .travis.yml: More specific Travis config.
+
+2017-01-29  Doug Torrance <dtorrance@piedmont.edu>
+
+	* .travis.yml: Add travis config file
+
+2016-04-04  Doug Torrance <dtorrance@piedmont.edu>
+
+	* README.md: Move info about binary packages to Download section of
+	README.
+
+2016-04-04  Doug Torrance <dtorrance@piedmont.edu>
+
+	* README.md: Use 'clone' instead of 'fork' in README.
+
+2016-04-03  Doug Torrance <dtorrance@piedmont.edu>
+
+	* Makefile.am, README.md, autogen.sh: Add autogen.sh script.
+
+2016-04-03  Doug Torrance <dtorrance@piedmont.edu>
+
+	* Makefile.am: Add README.md to tarball.
+
+2016-04-03  Doug Torrance <dtorrance@piedmont.edu>
+
+	* configure.ac: Add foreign to AM_INIT_AUTOMAKE; needed since we
+	renamed README.
+
+2016-04-03  Doug Torrance <dtorrance@piedmont.edu>
+
+	* README.md: Add 'Bugs' section to README.
+
+2016-04-03  Doug Torrance <dtorrance@piedmont.edu>
+
+	* README.md: Add 'Download' section to README.
+
+2016-04-03  Doug Torrance <dtorrance@piedmont.edu>
+
+	* README.md: Add info about libraries and Debian/Ubuntu/PPA packages
+	to README.
+
+2016-04-03  Doug Torrance <dtorrance@piedmont.edu>
+
+	* README, README.md: Rewrite README using Markdown.
+
+2016-04-01  Doug Torrance <dtorrance@piedmont.edu>
+
+	* .gitignore: Add electronic signature files to .gitignore.
+
+2016-04-01  Doug Torrance <dtorrance@piedmont.edu>
+
+	* ChangeLog: Consolidate some ChangeLog entries.
+
+2016-04-01  Doug Torrance <dtorrance@piedmont.edu>
+
+	* ChangeLog, NEWS, configure.ac: Release version 0.11.
+
+2016-04-01  Doug Torrance <dtorrance@piedmont.edu>
+
+	* README: Add options to README rather than referring user
+	elsewhere.
+
+2016-04-01  Doug Torrance <dtorrance@piedmont.edu>
+
+	* README, configure.ac, wmforecast.c: Update URL.
+
+2016-04-01  Doug Torrance <dtorrance@piedmont.edu>
+
+	* TODO: Remove TODO; we'll use GitHub issues instead.
+
+2016-04-01  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Reset timer countdown upon refresh.
+
+2016-04-01  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: If we have an error, refresh in one minute.  (Fixes:
+	#1)
+
+2016-04-01  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Change comment style for copyright header.
+
+2016-04-01  Doug Torrance <dtorrance@piedmont.edu>
+
+	* README, wmforecast.c: Update copyright years.
+
+2016-04-01  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Improve error handling.  Sometimes (still need to investigate when and how this happens), the
+	xml file we get doesn't have the expected format.  Then we could end
+	up with a NULL xmlNodePtr, which causes a segfault when trying to
+	access its children.
+
+2016-03-26  Doug Torrance <dtorrance@piedmont.edu>
+
+	* ChangeLog, NEWS, configure.ac: Release version 0.10.
+
+2016-03-26  Doug Torrance <dtorrance@piedmont.edu>
+
+	* TODO, wmforecast.c: Limit of number days in forecast to 7 to avoid
+	confusion.  "Which Saturday is it talking about?" Add note in TODO about possibly making this number a configuration
+	option in the future.
+
+2016-03-26  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Update to work with new Yahoo Weather API.
+
+2016-02-23  Doug Torrance <dtorrance@piedmont.edu>
+
+	* Makefile.am, configure.ac: Use pkg-config for WINGs.
+
+2016-02-07  Doug Torrance <dtorrance@piedmont.edu>
+
+	* README: Update homepage and email address in README.
+
+2016-01-17  Doug Torrance <dtorrance@piedmont.edu>
+
+	* ChangeLog, NEWS, configure.ac: Release version 0.9.
+
+2015-10-28  Doug Torrance <dtorrance@piedmont.edu>
+
+	* configure.ac, wmforecast.1.in: Remove newline at end of DATE which
+	caused a messed-up manpage.  Also switch PACKAGE_STRING to PACKAGE_VERSION in manpage.
+
+2015-09-20  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Update copyright header.
+
+2015-09-20  Doug Torrance <dtorrance@piedmont.edu>
+
+	* configure.ac: Use date from ChangeLog for manpage instead of
+	system date.  Allows reproducible builds.
+
+2015-09-20  Doug Torrance <dtorrance@piedmont.edu>
+
+	* AUTHORS, configure.ac, wmforecast.1.in: Update email address.
+
+2015-09-20  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* TODO: Update TODO.
+
+2014-11-16  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* README: Simplify README.
+
+2014-11-16  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* configure.ac, wmforecast.1.in: Manpage now manually updated. Date
+	and version inserted by autoconf.
+
+2014-11-16  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* Makefile.am, configure.ac: Remove dependency on help2man.
+
+2014-11-16  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* wmforecast.c: wmforecast.c: Keep track of last time weather was
+	retrieved; display in balloon.
+
+2014-11-02  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* wmforecast.c: wmforecast.c: Use consistent code formatting.  In particular, minimize warnings from checkpatch.pl in the Window
+	Maker source tree.
+
+2014-11-01  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* wmforecast.c: wmforecast.c: Combine background color with icon to
+	remove black border.
+
+2014-10-31  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* wmforecast.c: wmforecast.c: Switch preferences to use
+	WMUserDefaults instead of manually writing my own PropList stuff.
+	Moves location of preferences file to ~/GNUstep/Defaults/wmforecast.
+
+2015-09-20  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: wmforecast.c: Add new colors to preferences GUI
+	(revised).
+
+2014-10-30  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* wmforecast.c: wmforecast.c: Add new colors to preferences GUI.
+
+2014-10-30  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* wmforecast.c: wmforecast.c: Add command line options to set
+	colors.  In particular, -b or --background can be used to set the background
+	color and -t or --text can be used to set the text color.  These can
+	also be set in ~/.config/wmforecast/wmforecastrc by setting
+	"background" and "text", respectively.
+
+2014-10-29  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* wmforecast.c: wmforecast.c: Simplify --help output, add homepage.
+
+2014-10-29  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* wmforecast.c: wmforecast.c: Print -help text when invalid command
+	line option given.
+
+2014-10-29  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* wmforecast.c: wmforecast.c: Use PACKAGE_STRING for --version;
+	update to reflect GNU coding standards
+
+	(http://www.gnu.org/prep/standards/html_node/_002d_002dversion.html).
+
+2014-10-29  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* configure.ac: configure.ac: Remove AC_SUBST(VERSION); unnecessary.
+
+2014-10-29  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* .gitignore: .gitignore: Add auto-generated files previously under
+	version control.
+
+2014-10-29  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* INSTALL, config.h.in, depcomp, install-sh: Remove
+	autotools-generated files.
+
+2014-10-29  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* wmforecast.c: wmforecast.c: Move default colors to #defines.
+
+2014-10-29  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* TODO: TODO: New file.
+
+2014-10-21  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* ChangeLog: ChangeLog: update for version 0.8
+
+2014-10-21  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* NEWS, configure.ac: NEWS, configure.ac: Bump to version 0.8.
+
+2014-10-21  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* README: README: Update homepage.
+
+2014-10-21  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* icons/wmforecast.svg: icons/wmforecast.svg: Update license
+	information.
+
+2014-07-17  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* ChangeLog, NEWS, README, configure.ac: update icon copyright
+	information; bump to verson 0.7
+
+2014-06-03  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* ChangeLog, NEWS, configure.ac: version 0.6
+
+2014-05-31  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* ChangeLog, wmforecast.c: function annotation to remove Coverity
+	false positive
+
+2014-05-30  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* ChangeLog, wmforecast.c: check return value of mkdir (Coverity
+	65085)
+
+2014-05-30  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* ChangeLog, wmforecast.c: fixed missing return statements (coverity
+	65086)
+
+2014-05-11  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* ChangeLog, wmforecast.desktop: updates to wmforecast.destkop -
+	trailing semicolon in categories, add keywords
+
+2014-05-11  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* ChangeLog, NEWS, configure.ac: version 0.5
+
+2014-05-11  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* ChangeLog, Makefile.am, icons/Makefile.am, icons/wmforecast.svg,
+	wmforecast.desktop: desktop integration: desktop entry and icons
+
+2014-05-08  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* ChangeLog, wmforecast.c: fixed bug where wmforecastrc was not
+	created when its directory didn't exist yet
+
+2014-05-07  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* ChangeLog, INSTALL, Makefile.am, NEWS, README, configure.ac,
+	wmforecast.c: version 0.4
+
+2014-05-07  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* .gitignore, Makefile.in, aclocal.m4, configure,
+	icons/Makefile.in, missing, wmforecast.1: add autotools-generated
+	files to .gitignore
+
+2014-05-07  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* ChangeLog, wmforecast.c: new GUI for editing preferences (still
+	non-functional)
+
+2014-04-21  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* ChangeLog, wmforecast.c: read user prefs from
+	XDG_CONFIG_DIR/wmforecast/wmforecastrc
+
+2014-04-21  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* ChangeLog, wmforecast.c: bug fix: icon now correctly displayed for
+	one-digit codes
+
+2014-04-21  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* ChangeLog, Makefile.am, Makefile.in, wmforecast.1: make now
+	rebuilds manpage when version changes
+
+2014-04-21  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* : set HEAD at v0.3
+
+2014-04-21  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* .gitignore, ChangeLog, wmforecast.c: image error handling; added
+	auto-generated files to .gitignore
+
+2014-04-21  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* ChangeLog, wmforecast.c: removed check to see if result of wmalloc
+	was NULL
+
+2014-04-21  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* ChangeLog, wmforecast.c: free -> wfree
+
+2014-04-19  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* ChangeLog, wmforecast.1, wmforecast.c: documented --interval
+	option
+
+2014-04-19  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* ChangeLog, config.h.in, wmforecast.c: fixed
+	WMAddPersistentTimerHandler error -- large number of milliseconds
+	(e.g., one hour) failed
+
+2014-04-19  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* ChangeLog, configure, configure.ac, wmforecast.c: malloc and
+	realloc changed to wmalloc and wrealloc; timer handler is now
+	WMAddPersistentTimerHandler instead of pthread
+
+2014-04-19  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* ChangeLog, wmforecast.c: refresh on double click
+
+2014-04-18  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* wmforecast.c: added --interval option (still need to document)
+
+2014-04-18  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* .gitignore: added .gitignore
+
+2014-04-18  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* wmforecast.1: wmforecast.1 displays email address properly
+
+2014-04-18  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* ChangeLog, configure, wmforecast.1, wmforecast.c: Improved error
+	handling, display bug report email in --help for help2man, and
+	better freeing of Weather struct
+
+2014-04-17  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* ChangeLog, README, configure.ac, wmforecast.c: finished fixing
+	memory bugs, added email address to PACKAGE_BUGREPORT
+
+2014-04-17  Doug Torrance <dtorrance@monmouthcollege.edu>
+
+	* Initial commit
+
