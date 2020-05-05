@@ -1,11 +1,37 @@
-wmforecast (0.11-2) UNRELEASED; urgency=medium
+wmforecast (1.1-1) unstable; urgency=medium
 
-  * Update Vcs-* after migration to Salsa.
-  * Update Format in d/copyright to https.
-  * Switch Priority from extra to optional.
-  * Bump Standards-Version to 4.1.3.
+  * New upstream release.
+  * debian/compat
+    - Removing; not necessary now that we use debhelper-compat in
+      Build-Depends.
+  * debian/control:
+    - Switch Priority from extra to optional.
+    - Switch from debhelper to debhelper-compat in Build-Depends;
+      use compatibility level 13.
+    - Drop dh-autoreconf from Build-Depends; default since debhelper 10.
+    - Drop Build-Depends on libcurl4-gnutls-dev and libxml2-dev in
+      favor of libgweather-3-dev and libwings-dev.
+    - Bump Standards-Version to 4.5.0.
+    - Use https for Homepage.
+    - Update Vcs-* after migration to Salsa.
+    - Add Rules-Requires-Root field.
+    - Update Description.  In particular, the weather information is
+      now obtained via libgweather instead of directly from Yahoo.
+  * debian/copyright:
+    - Update Format in d/copyright to https.
+  * debian/docs
+    - Docs are now .md files.
+  * debian/rules
+    - Drop explicit call to dh_autoreconf; default since debhelper 10.
+    - Remove get-orig-source target.
+  * debian/salsa-ci.yml
+    - Add Salsa pipelines config file.
+  * debian/watch
+    - Bump to uscan v4 and use special strings.
+  * debian/upstream/metadata
+    - Add upstream metadata file.
 
- -- Doug Torrance <dtorrance@piedmont.edu>  Wed, 10 Jan 2018 14:46:10 -0500
+ -- Doug Torrance <dtorrance@piedmont.edu>  Mon, 04 May 2020 21:17:43 -0400
 
 wmforecast (0.11-1) unstable; urgency=medium
 
