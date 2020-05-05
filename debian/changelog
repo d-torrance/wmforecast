@@ -10,7 +10,7 @@ wmforecast (1.1-1) unstable; urgency=medium
       use compatibility level 13.
     - Drop dh-autoreconf from Build-Depends; default since debhelper 10.
     - Drop Build-Depends on libcurl4-gnutls-dev and libxml2-dev in
-      favor of libgweather-3-dev and libwings-dev.
+      favor of libgweather-3-dev and libgweather-3-dev.
     - Bump Standards-Version to 4.5.0.
     - Use https for Homepage.
     - Update Vcs-* after migration to Salsa.
@@ -21,6 +21,9 @@ wmforecast (1.1-1) unstable; urgency=medium
     - Update Format in d/copyright to https.
   * debian/docs
     - Docs are now .md files.
+  * debian/patches/find-changelog.patch
+    - New patch; find ChangeLog if we're using another build directory
+      so we don't end up calling git2cl.
   * debian/rules
     - Drop explicit call to dh_autoreconf; default since debhelper 10.
     - Remove get-orig-source target.
@@ -38,7 +41,7 @@ wmforecast (1.1-1) unstable; urgency=medium
   * debian/upstream/metadata
     - Add upstream metadata file.
 
- -- Doug Torrance <dtorrance@piedmont.edu>  Mon, 04 May 2020 22:30:00 -0400
+ -- Doug Torrance <dtorrance@piedmont.edu>  Tue, 05 May 2020 01:33:48 -0400
 
 wmforecast (0.11-1) unstable; urgency=medium
 
