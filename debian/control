@@ -16,8 +16,7 @@ Vcs-Git: https://salsa.debian.org/wmaker-team/wmforecast.git
 Package: wmforecast
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Description: weather dockapp for Window Maker using the Yahoo Weather API
+Description: weather dockapp for Window Maker using libgweather
  wmforecast is a weather dockapp for Window Maker. It displays the current
  temperature and an icon representing the current conditions.  A balloon
- tooltip displays forecast information.  The weather information comes from
- the Yahoo Weather API.
+ tooltip displays forecast information.
