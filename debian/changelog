@@ -26,13 +26,6 @@ wmforecast (1.2-1) unstable; urgency=medium
     - Remove get-orig-source target.
   * debian/salsa-ci.yml
     - Add Salsa pipelines config file.
-  * debian/source/options
-    - Ignore changes in ChangeLog. It's generated upstream using
-      git2cl during "make dist", but we want to keep git2cl out of
-      Build-Depends and use the copy from the upstream tarball.
-      So we need a copy of ChangeLog in git to prevent make from
-      trying to generate one, but this may or may not agree with the
-      one that dpkg-source is expecting.
   * debian/watch
     - Bump to uscan v4 and use special strings.
   * debian/upstream/metadata
