@@ -1,4 +1,422 @@
 ---
+# Copyright salsa-ci-team and others
+# SPDX-License-Identifier: FSFAP
+# Copying and distribution of this file, with or without modification, are
+# permitted in any medium without royalty provided the copyright notice and
+# this notice are preserved. This file is offered as-is, without any warranty.
+
+variables:
+  GIT_DEPTH: 1
+  DEBFULLNAME: "Salsa Pipeline"
+  DEBEMAIL: "salsa-pipeline@debian.org"
+  DEBIAN_FRONTEND: noninteractive
+  WORKING_DIR: $CI_PROJECT_DIR/debian/output
+  VENDOR: 'debian'
+  RELEASE: 'unstable'
+  SALSA_CI_MIRROR: 'http://deb.debian.org/debian'
+  SALSA_CI_COMPONENTS: 'main'
+  SALSA_CI_IMAGES: 'registry.salsa.debian.org/salsa-ci-team/pipeline'
+  SALSA_CI_IMAGES_APTLY: ${SALSA_CI_IMAGES}/aptly
+  SALSA_CI_IMAGES_AUTOPKGTEST: ${SALSA_CI_IMAGES}/autopkgtest
+  SALSA_CI_IMAGES_BASE: ${SALSA_CI_IMAGES}/base:${RELEASE}
+  SALSA_CI_IMAGES_GENERIC_TESTS: ${SALSA_CI_IMAGES}/generic_tests:${RELEASE}
+  SALSA_CI_IMAGES_BLHC: ${SALSA_CI_IMAGES}/blhc:latest
+  SALSA_CI_IMAGES_DOCKERBUILDER: $SALSA_CI_IMAGES/dockerbuilder:${RELEASE}
+  SALSA_CI_IMAGES_GBP: ${SALSA_CI_IMAGES}/gbp:latest
+  SALSA_CI_IMAGES_LINTIAN: ${SALSA_CI_IMAGES}/lintian:${RELEASE}
+  SALSA_CI_IMAGES_PIUPARTS: ${SALSA_CI_IMAGES}/piuparts:latest
+  SALSA_CI_IMAGES_REPROTEST: ${SALSA_CI_IMAGES}/reprotest:latest
+  SALSA_CI_AUTOPKGTEST_LXC: https://salsa.debian.org/salsa-ci-team/autopkgtest-lxc
+  SALSA_CI_BLHC_ARGS: ''
+  SALSA_CI_LINTIAN_SUPPRESS_TAGS: ""
+  SALSA_CI_PIUPARTS_ARGS: ''
+  SALSA_CI_DPKG_BUILDPACKAGE_ARGS: ''
+  DOCKER_TLS_CERTDIR: ""
+  SALSA_CI_DISABLE_APTLY: 1
+  SALSA_CI_DISABLE_MISSING_BREAKS: 1
+  SALSA_CI_DISABLE_RC_BUGS: 1
+
+stages:
+  - build
+  - publish
+  - test
+
+.artifacts: &artifacts
+  name: "$CI_JOB_NAME:$CI_COMMIT_REF_NAME"
+  when: always
+  paths:
+    - ${WORKING_DIR}/
+
+.artifacts-default-expire: &artifacts-default-expire
+  artifacts:
+    <<: *artifacts
+
+.build-before-script: &build-before-script |
+   # Reported in https://salsa.debian.org/salsa-ci-team/pipeline/issues/104,
+   # GitLab can only expand variables once. So at the beginning CCACHE_WORK_DIR
+   # was assigned to `${WORKING_DIR}/.ccache`, and it will be expanded as
+   # `$CI_PROJECT_DIR/debian/output/.ccache`, so it creates a folder named
+   # "\$CI_PROJECT_DIR", which is then saved as build cache. To allow smooth
+   # transition, that wrongly named folder has to be removed:
+   rm -rf '$CI_PROJECT_DIR'
+
+   # salsa-ci-team/pipeline#107
+   rm -rf ${CI_PROJECT_DIR}/debian/output/.ccache
+
+   mkdir -p ${WORKING_DIR} ${CCACHE_WORK_DIR}
+   mv ${CCACHE_WORK_DIR} ${CCACHE_TMP_DIR}
+   add_extra_repository.sh -v -e "${EXTRA_REPOSITORY}" -k "${EXTRA_REPOSITORY_KEY}"
+   gbp pull --ignore-branch --pristine-tar --track-missing
+
+.build-script: &build-script |
+   # Check if we can obtain the orig from the git branches
+   if ! gbp export-orig --pristine-tar --tarball-dir=${WORKING_DIR}; then
+     # Fallback using origtargz in the corresponding $RELEASE
+     docker-origtargz.sh "${SALSA_CI_IMAGES_DOCKERBUILDER}"
+     gbp_args="--git-overlay"
+   fi
+
+   if ! echo "$SALSA_CI_DISABLE_VERSION_BUMP" | grep -qE '^(1|yes|true)$'; then
+     sed -i -e '1 s/)/+salsaci)/' debian/changelog
+     git config user.email "$DEBEMAIL"
+     git config user.name "$DEBFULLNAME"
+     git commit debian/changelog -m "Salsa CI Version bump"
+   fi
+
+   gbp buildpackage \
+        --git-ignore-branch \
+        --git-ignore-new \
+        --git-no-create-orig $gbp_args \
+        --git-export-dir=${WORKING_DIR} \
+        --git-builder="docker-build.sh ${SALSA_CI_IMAGES_DOCKERBUILDER} ${DB_BUILD_PARAM}" |& filter-output
+
+.build-definition: &build-definition
+  stage: build
+  image: $SALSA_CI_IMAGES_GBP
+  dependencies: []
+  services:
+    - docker:19.03.5-dind
+  cache:
+    paths:
+      - .ccache
+  variables:
+    CCACHE_TMP_DIR: ${CI_PROJECT_DIR}/../.ccache
+    CCACHE_WORK_DIR: ${CI_PROJECT_DIR}/.ccache
+    DB_BUILD_PARAM: ${SALSA_CI_DPKG_BUILDPACKAGE_ARGS}
+  script:
+    - *build-before-script
+    - *build-script
+    - mv ${CCACHE_TMP_DIR} ${CCACHE_WORK_DIR}
+
+.build-package: &build-package
+  <<: *build-definition
+  <<: *artifacts-default-expire
+  except:
+    variables:
+      - $CI_COMMIT_TAG != null && $SALSA_CI_ENABLE_PIPELINE_ON_TAGS !~ /^(1|yes|true)$/
+
+.build-source-only: &build-source-only
+  extends:
+    - .build-definition
+    - .artifacts-default-expire
+  variables:
+    DB_BUILD_PARAM: "${SALSA_CI_DPKG_BUILDPACKAGE_ARGS} -S"
+    SALSA_CI_DISABLE_VERSION_BUMP: 1
+  except:
+    variables:
+      - $CI_COMMIT_TAG != null && $SALSA_CI_ENABLE_PIPELINE_ON_TAGS !~ /^(1|yes|true)$/
+
+.test-build-package-any: &test-build-package-any
+  extends:
+    - .build-definition
+  stage: test
+  script:
+    - *build-before-script
+    - LOCAL_ARCH=`dpkg --print-architecture`
+    - |
+        if egrep -q "^Architecture:.*(any|[^\!]${LOCAL_ARCH})" debian/control; then
+            DB_BUILD_PARAM="${SALSA_CI_DPKG_BUILDPACKAGE_ARGS} --build=any"
+        else
+            echo "###########################################"
+            echo "### No binary package of type any or ${LOCAL_ARCH} found"
+            echo "### Stopping test-build-any test."
+            echo "###########################################"
+            echo "You should disable this job via:"
+            echo "variables:"
+            echo "  SALSA_CI_DISABLE_BUILD_PACKAGE_ANY: '1'"
+            mv ${CCACHE_TMP_DIR} ${CCACHE_WORK_DIR}
+            exit 0
+        fi
+    - *build-script
+    - mv ${CCACHE_TMP_DIR} ${CCACHE_WORK_DIR}
+  except:
+    variables:
+      - $CI_COMMIT_TAG != null && $SALSA_CI_ENABLE_PIPELINE_ON_TAGS !~ /^(1|yes|true)$/
+      - $SALSA_CI_DISABLE_BUILD_PACKAGE_ANY =~ /^(1|yes|true)$/
+      # dpkg-buildpackage in jessie doesn't have --build=all/any
+      - $RELEASE =~ /^jessie/ || $RELEASE =~ /^oldoldstable/
+
+
+.test-build-package-all: &test-build-package-all
+  extends:
+    - .build-definition
+  stage: test
+  script:
+    - *build-before-script
+    - LOCAL_ARCH=`dpkg --print-architecture`
+    - |
+        if grep -q "^Architecture: all" debian/control; then
+            DB_BUILD_PARAM="${SALSA_CI_DPKG_BUILDPACKAGE_ARGS} --build=all"
+        else
+            echo "###########################################"
+            echo "### No binary package of type all found"
+            echo "### Stopping test-build-all test."
+            echo "###########################################"
+            echo "You should disable this job via:"
+            echo "variables:"
+            echo "  SALSA_CI_DISABLE_BUILD_PACKAGE_ALL: '1'"
+            mv ${CCACHE_TMP_DIR} ${CCACHE_WORK_DIR}
+            exit 0;
+        fi
+    - *build-script
+    - mv ${CCACHE_TMP_DIR} ${CCACHE_WORK_DIR}
+  except:
+    variables:
+      - $CI_COMMIT_TAG != null && $SALSA_CI_ENABLE_PIPELINE_ON_TAGS !~ /^(1|yes|true)$/
+      - $SALSA_CI_DISABLE_BUILD_PACKAGE_ALL =~ /^(1|yes|true)$/
+      # dpkg-buildpackage in jessie doesn't have --build=all/any
+      - $RELEASE =~ /^jessie/ || $RELEASE =~ /^oldoldstable/
+
+.test-autopkgtest: &test-autopkgtest
+  stage: test
+  image: $SALSA_CI_IMAGES_AUTOPKGTEST
+  except:
+    variables:
+      - $CI_COMMIT_TAG != null && $SALSA_CI_ENABLE_PIPELINE_ON_TAGS !~ /^(1|yes|true)$/
+      - $SALSA_CI_DISABLE_AUTOPKGTEST =~ /^(1|yes|true)$/
+  script:
+    - wget --progress=dot:giga ${SALSA_CI_AUTOPKGTEST_LXC}/-/jobs/artifacts/master/raw/artifacts/lxc.tar?job=${RELEASE} -O lxc.tar
+    - mkdir ${SCI_LXC_PATH} && tar xf lxc.tar -C ${SCI_LXC_PATH}
+    - sed -i "/lxc.rootfs.path/ s@dir:.*/lxc/@dir:${SCI_LXC_PATH}/@" ${SCI_LXC_PATH}/autopkgtest-${RELEASE}-amd64/config
+    - |
+        cat >/etc/lxc/lxc.conf <<EOT
+        lxc.lxcpath=${SCI_LXC_PATH}
+        EOT
+    - add_extra_repository.sh -v -e "${EXTRA_REPOSITORY}" -k "${EXTRA_REPOSITORY_KEY}"
+        -t "${SCI_LXC_PATH}/autopkgtest-${RELEASE}-amd64/rootfs/etc"
+    - umount -R /sys/fs/cgroup && mount -a
+    - /etc/init.d/lxc-net start
+    - /etc/init.d/lxc start
+    - debci localtest $CI_PROJECT_DIR/debian/output/*.changes --suite ${RELEASE} --logs-dir ${DEBCI_LOG_PATH} || ( ret=$?; [ $ret -eq 8 ] || [ $ret -eq 2 ] )
+    - rm -r ${WORKING_DIR}/debci/binaries
+  variables:
+    GIT_STRATEGY: none
+    SCI_LXC_PATH: ${CI_PROJECT_DIR}/lxc
+    DEBCI_LOG_PATH: ${WORKING_DIR}/debci
+  artifacts:
+    when: always
+    paths:
+      - ${WORKING_DIR}/debci
+  dependencies:
+    - build
+
+.test-blhc: &test-blhc
+  stage: test
+  image: $SALSA_CI_IMAGES_BLHC
+  except:
+    variables:
+      - $CI_COMMIT_TAG != null && $SALSA_CI_ENABLE_PIPELINE_ON_TAGS !~ /^(1|yes|true)$/
+      - $SALSA_CI_DISABLE_BLHC =~ /^(1|yes|true)$/
+  script:
+    - blhc --debian --line-numbers --color ${SALSA_CI_BLHC_ARGS} ${WORKING_DIR}/*.build || [ $? -eq 1 ]
+  variables:
+    GIT_STRATEGY: none
+  dependencies:
+    - build
+
+.test-lintian: &test-lintian
+  stage: test
+  image: $SALSA_CI_IMAGES_LINTIAN
+  except:
+    variables:
+      - $CI_COMMIT_TAG != null && $SALSA_CI_ENABLE_PIPELINE_ON_TAGS !~ /^(1|yes|true)$/
+      - $SALSA_CI_DISABLE_LINTIAN =~ /^(1|yes|true)$/
+  script:
+    - lintian --version
+    - lintian --suppress-tags "${SALSA_CI_LINTIAN_SUPPRESS_TAGS}" --display-info --pedantic ${WORKING_DIR}/*.changes | tee lintian.output || ECODE=$?
+    - lintian2junit.py --lintian-file lintian.output > ${WORKING_DIR}/lintian.xml
+    - exit ${ECODE-0}
+  variables:
+    GIT_STRATEGY: none
+  artifacts:
+    reports:
+      junit: ${WORKING_DIR}/lintian.xml
+  dependencies:
+    - build
+
+.test-reprotest: &test-reprotest
+  stage: test
+  image: $SALSA_CI_IMAGES_REPROTEST
+  except:
+    variables:
+      - $CI_COMMIT_TAG != null && $SALSA_CI_ENABLE_PIPELINE_ON_TAGS !~ /^(1|yes|true)$/
+      - $SALSA_CI_DISABLE_REPROTEST =~ /^(1|yes|true)$/
+  artifacts:
+    name: "$CI_JOB_NAME:$CI_COMMIT_REF_NAME"
+    paths:
+      - $WORKING_DIR/reprotest
+      - $WORKING_DIR/reprotest.log
+    when: always
+  script:
+    - add_extra_repository.sh -v -e "${EXTRA_REPOSITORY}" -k "${EXTRA_REPOSITORY_KEY}"
+    - apt-get update
+    - eatmydata apt-get build-dep -y ${WORKING_DIR}/*.dsc
+    - |
+        if ! echo "${SALSA_CI_REPROTEST_ENABLE_DIFFOSCOPE}" | grep -q -E '^(1|yes|true)$'; then
+          SALSA_CI_REPROTEST_ARGS="${SALSA_CI_REPROTEST_ARGS} --no-diffoscope"
+        fi
+    - |
+        eatmydata reprotest \
+          --min-cpus $(nproc --all) \
+          --store-dir ${WORKING_DIR}/reprotest \
+          --verbosity=2  \
+          ${SALSA_CI_REPROTEST_ARGS} \
+          ${WORKING_DIR}/*.dsc -- null |& OUTPUT_FILENAME=reprotest.log filter-output
+  variables:
+    GIT_STRATEGY: none
+  dependencies:
+    - build
+
+# Only for compat with the old way of enabling diffoscope
+.test-reprotest-diffoscope: &test-reprotest-diffoscope
+  extends:
+    - .test-reprotest
+  variables:
+    SALSA_CI_REPROTEST_ENABLE_DIFFOSCOPE: '1'
+
+.test-piuparts: &test-piuparts
+  stage: test
+  image: $SALSA_CI_IMAGES_PIUPARTS
+  except:
+    variables:
+      - $CI_COMMIT_TAG != null && $SALSA_CI_ENABLE_PIPELINE_ON_TAGS !~ /^(1|yes|true)$/
+      - $SALSA_CI_DISABLE_PIUPARTS =~ /^(1|yes|true)$/
+  services:
+    - docker:19.03.5-dind
+  script:
+    - CHROOT_PATH="/tmp/debian-chroot"
+    - CONTAINER_ID=$(docker run --rm -d "${SALSA_CI_IMAGES_BASE}" sleep infinity)
+    - docker exec ${CONTAINER_ID} bash -c "apt-get update && apt-get install eatmydata -y"
+    - mkdir -p ${CHROOT_PATH}
+    - docker export ${CONTAINER_ID} | tar -C ${CHROOT_PATH} -xf -
+    - mknod -m 666 ${CHROOT_PATH}/dev/urandom c 1 9
+    - mkdir -p /srv/local-apt-repository/ && cp -a ${WORKING_DIR}/*.deb /srv/local-apt-repository/ && /usr/lib/local-apt-repository/rebuild
+    - mkdir -p ${CHROOT_PATH}/etc-target/apt/sources.list.d ${CHROOT_PATH}/etc-target/apt/preferences.d
+    - cp -aTLv /etc/apt/sources.list.d  ${CHROOT_PATH}/etc-target/apt/sources.list.d
+    - cp -aTLv /etc/apt/preferences.d  ${CHROOT_PATH}/etc-target/apt/preferences.d
+    - cp -aTLv /srv/local-apt-repository ${CHROOT_PATH}/srv/local-apt-repository
+    - cp -aTLv /var/lib/local-apt-repository/ ${CHROOT_PATH}/var/lib/local-apt-repository/
+    - add_extra_repository.sh -v -e "${EXTRA_REPOSITORY}"
+      -k "${EXTRA_REPOSITORY_KEY}" -t "${CHROOT_PATH}/etc-target"
+    - sed  '/127.0.0.1/s/localhost/pipeline.salsa.debian.org localhost/' /etc/hosts > ${CHROOT_PATH}/etc/hosts
+    - PIUPARTS_DISTRIBUTION_ARG="--distribution $RELEASE"
+    - |
+        if [ "$VENDOR" = "debian" ]; then \
+            CODENAME=$(wget -O - ${SALSA_CI_MIRROR}/dists/${RELEASE}/Release | awk "/^Codename:/ { print \$2 }" | cut -d- -f1); \
+            PIUPARTS_DISTRIBUTION_ARG="--distribution ${CODENAME}"; \
+        fi
+    - |
+        (for PACKAGE in $(ls ${WORKING_DIR}/*.deb); do
+            piuparts --mirror "${SALSA_CI_MIRROR} ${SALSA_CI_COMPONENTS}" ${SALSA_CI_PIUPARTS_ARGS} --scriptsdir /etc/piuparts/scripts --allow-database --warn-on-leftovers-after-purge --hard-link -e ${CHROOT_PATH} ${PIUPARTS_DISTRIBUTION_ARG} ${PACKAGE}
+        done) | filter-output
+  variables:
+    GIT_STRATEGY: none
+  dependencies:
+    - build
+
+.test-rc-bugs: &test-rc-bugs
+  stage: test
+  image: $SALSA_CI_IMAGES_GENERIC_TESTS
+  except:
+    variables:
+      - $CI_COMMIT_TAG != null && $SALSA_CI_ENABLE_PIPELINE_ON_TAGS !~ /^(1|yes|true)$/
+      - $SALSA_CI_DISABLE_RC_BUGS =~ /^(1|yes|true)$/
+  script:
+    - check_rc_bugs.py -v -o ${WORKING_DIR}/rc_bugs.xml --changes-file ${WORKING_DIR}/*.changes
+  artifacts:
+    reports:
+      junit: ${WORKING_DIR}/rc_bugs.xml
+  variables:
+    GIT_STRATEGY: none
+  dependencies:
+    - build
+
+.test-missing-breaks: &test-missing-breaks
+  stage: test
+  image: $SALSA_CI_IMAGES_GENERIC_TESTS
+  except:
+    variables:
+      - $CI_COMMIT_TAG != null && $SALSA_CI_ENABLE_PIPELINE_ON_TAGS !~ /^(1|yes|true)$/
+      - $SALSA_CI_DISABLE_MISSING_BREAKS =~ /^(1|yes|true)$/
+  script:
+    - apt-get update
+    - check_for_missing_breaks_replaces.py -o ${WORKING_DIR}/missing_breaks.xml --changes-file ${WORKING_DIR}/*.changes
+  artifacts:
+    reports:
+      junit: ${WORKING_DIR}/missing_breaks.xml
+  variables:
+    GIT_STRATEGY: none
+  dependencies:
+    - build
+
+.publish-aptly: &publish-aptly
+  stage: publish
+  image: $SALSA_CI_IMAGES_APTLY
+  variables:
+    GIT_STRATEGY: none
+    REPO_PATH: 'aptly'
+    PUBKEY_FILENAME: 'public-key.asc'
+  except:
+    variables:
+      - $CI_COMMIT_TAG != null && $SALSA_CI_ENABLE_PIPELINE_ON_TAGS !~ /^(1|yes|true)$/
+      - $SALSA_CI_DISABLE_APTLY =~ /^(1|yes|true)$/
+  script:
+    - export REPO_URL="${CI_PROJECT_URL}/-/jobs/${CI_JOB_ID}/artifacts/raw/${REPO_PATH}"
+    - export REPO_PUBKEY_URL="${REPO_URL}/${PUBKEY_FILENAME}"
+    - aptly repo create -distribution ${RELEASE} -component main ${CI_PROJECT_NAME}
+    - aptly repo add ${CI_PROJECT_NAME} "${WORKING_DIR}"
+    - aptly repo show -with-packages ${CI_PROJECT_NAME}
+    # accept miss-spelled var for backwards-compatibility (see https://salsa.debian.org/salsa-ci-team/pipeline/issues/114)
+    - export SALSA_CI_APTLY_GPG_PASSPHRASE=${SALSA_CI_APTLY_GPG_PASSPHRASE="${SALSA_CI_APTLY_GPG_PASSPHASE}"}
+    - |
+        if [ -n "${SALSA_CI_APTLY_GPG_KEY}" ]; then \
+            echo "${SALSA_CI_APTLY_GPG_KEY}" \
+                | gpg1 --import ${SALSA_CI_APTLY_GPG_PASSPHRASE:+ --passphrase ${SALSA_CI_APTLY_GPG_PASSPHRASE}}; \
+        else \
+            rngd -r /dev/urandom; \
+            printf "Key-Type: RSA\nKey-Length: 2048\nName-Real: ${DEBFULLNAME}\nName-Email: ${DEBEMAIL}\nExpire-Date: 0\n${SALSA_CI_APTLY_GPG_PASSPHRASE:+Passphrase: ${SALSA_CI_APTLY_GPG_PASSPHRASE}\n}%commit" | \
+                gpg1 --batch --gen-key; \
+        fi
+        gpg1 --export --armor > "${PUBKEY_FILENAME}"
+    - |
+        ARCHITECTURES=$(aptly repo show -with-packages ${CI_PROJECT_NAME} | \
+            awk 'BEGIN {FS="_"} /^Packages:/ {x=NR} (x && NR>x) {print $3}' | \
+            sort -u | tr '\n' ','); \
+        ARCHITECTURES=${ARCHITECTURES%,}; \
+        aptly publish repo -batch \
+            ${ARCHITECTURES:+ -architectures=${ARCHITECTURES}} \
+            ${SALSA_CI_APTLY_GPG_PASSPHRASE:+ -passphrase=${SALSA_CI_APTLY_GPG_PASSPHRASE}} \
+            ${CI_PROJECT_NAME}
+    - |
+        mkdir -p "${CI_PROJECT_DIR}/${REPO_PATH}"
+        cp -a ~/.aptly/public/. "${CI_PROJECT_DIR}/${REPO_PATH}"
+        mv "${PUBKEY_FILENAME}" "${CI_PROJECT_DIR}/${REPO_PATH}/${PUBKEY_FILENAME}"
+        envsubst < /etc/aptly/index.html.template > "${CI_PROJECT_DIR}/${REPO_PATH}/index.html"
+  artifacts:
+    paths:
+      - ${CI_PROJECT_DIR}/${REPO_PATH}
+  dependencies:
+    - build
+
 include:
-  - https://salsa.debian.org/salsa-ci-team/pipeline/raw/master/salsa-ci.yml
   - https://salsa.debian.org/salsa-ci-team/pipeline/raw/master/pipeline-jobs.yml
