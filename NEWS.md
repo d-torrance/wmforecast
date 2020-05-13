@@ -1,3 +1,9 @@
+version 1.2
+-----------
+* Bug fix.
+  - You can now build wmforecast from a directory other than the source
+    directory without needing git2cl to regenerate ChangeLog.
+
 version 1.1
 -----------
 * Bug fix.

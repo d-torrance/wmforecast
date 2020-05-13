@@ -1,3 +1,14 @@
+2020-05-12  Doug Torrance <dtorrance@piedmont.edu>
+
+	* NEWS.md, configure.ac: Bump to version 1.2
+
+2020-05-05  Doug Torrance <dtorrance@piedmont.edu>
+
+	* Makefile.am, configure.ac: Find ChangeLog if we're using another
+	build directory so we don't end up calling git2cl if we don't need
+	to.  We need to pass -W-no-portability to automake; apparently too much
+	fancy GNU make stuff is being used now.
+
 2020-05-04  Doug Torrance <dtorrance@piedmont.edu>
 
 	* NEWS.md, configure.ac: Bump to version 1.1
