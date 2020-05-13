@@ -1,6 +1,6 @@
-AC_INIT([wmforecast], [1.1], [https://github.com/d-torrance/wmforecast/issues],
+AC_INIT([wmforecast], [1.2], [https://github.com/d-torrance/wmforecast/issues],
 	[wmforecast], [http://wmforecast.friedcheese.org])
-AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign -Wno-portability])
 AC_CONFIG_SRCDIR([configure.ac])
 AC_CONFIG_HEADER([config.h])
 AC_PROG_CC
