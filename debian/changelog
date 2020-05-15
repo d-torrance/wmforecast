@@ -26,6 +26,8 @@ wmforecast (1.3-1) unstable; urgency=medium
     - Remove get-orig-source target.
   * debian/salsa-ci.yml
     - Add configuration file for Salsa CI pipelines.
+  * debian/tests/control
+    - Add simple smoke test for autopkgtest.
   * debian/watch
     - Bump to uscan v4 and use special strings.
   * debian/upstream/metadata
