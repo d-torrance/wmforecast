@@ -1,3 +1,7 @@
+version 1.3
+-----------
+* git2cl is no longer a dependency if building from git
+
 version 1.2
 -----------
 * Bug fix.
