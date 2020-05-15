@@ -10,10 +10,9 @@ LIBS += $(GEOCLUE_LIBS) $(GWEATHER_LIBS) $(X11_LIBS) $(WINGS_LIBS)
 desktopdir = $(datadir)/applications
 dist_desktop_DATA = wmforecast.desktop
 
-EXTRA_DIST = autogen.sh README.md wmforecast.1.in ChangeLog NEWS.md
+EXTRA_DIST = autogen.sh README.md wmforecast.1.in NEWS.md
 
 CLEANFILES = wmforecast.1
-MAINTAINERCLEANFILES = $(srcdir)/ChangeLog
 
 wmforecast.1: wmforecast.1.in $(srcdir)/ChangeLog
 	$(eval DATE = $(shell head -n 1 $(word 2,$^) | cut -d' ' -f1 | \
@@ -23,3 +22,14 @@ wmforecast.1: wmforecast.1.in $(srcdir)/ChangeLog
 
 $(srcdir)/ChangeLog:
 	git2cl > $@
+
+rmChangeLog:
+	rm -f $(srcdir)/ChangeLog
+
+updateChangeLog: rmChangeLog $(srcdir)/ChangeLog
+
+dist-hook:
+	@echo " +-------------------------------------+"
+	@echo " | new release?                        | "
+	@echo " | did you run 'make updateChangeLog'? | "
+	@echo " +-------------------------------------+"

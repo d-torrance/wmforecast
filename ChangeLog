@@ -1,3 +1,16 @@
+2020-05-14  Doug Torrance <dtorrance@piedmont.edu>
+
+	* ChangeLog, NEWS.md, configure.ac: Bump to version 1.3
+
+2020-05-14  Doug Torrance <dtorrance@piedmont.edu>
+
+	* .gitignore, .travis.yml, ChangeLog, Makefile.am, README.md: 
+	Include ChangeLog in git again Leaving it out of git and requiring git2cl to generate it was just
+	causing too many issues, especially with the Salsa CI pipelines for
+	the Debian package.  Now git2cl should only be called when we explicitly use the new
+	updateChangeLog target.  Also add a message to remind me to do this
+	during `make dist`.  Closes: #7
+
 2020-05-12  Doug Torrance <dtorrance@piedmont.edu>
 
 	* NEWS.md, configure.ac: Bump to version 1.2
