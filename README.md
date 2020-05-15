@@ -45,8 +45,6 @@ Installation
   - [WINGs](http://windowmaker.org/)
   - *(optional)* [GeoClue](
     https://gitlab.freedesktop.org/geoclue/geoclue/-/wikis/home)
-  - *(only necessary if building from git)* [git2cl](
-    https://savannah.nongnu.org/projects/git2cl)
 
 * If building from a tarball, do the following after extracting the source.
 
