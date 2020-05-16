@@ -648,7 +648,6 @@ void readPreferences(Preferences *prefs)
 
 Preferences *setPreferences(int argc, char **argv)
 {
-	int c;
 	Preferences *prefs = wmalloc(sizeof(Preferences));
 
 	/* set defaults */
@@ -668,6 +667,8 @@ Preferences *setPreferences(int argc, char **argv)
 
 	/* command line */
 	while (1) {
+		int c;
+
 		static struct option long_options[] = {
 			{"version", no_argument, 0, 'v'},
 			{"help", no_argument, 0, 'h'},
@@ -845,7 +846,6 @@ static void foundCoords(GObject *source_object, GAsyncResult *res,
 	GClueSimple *simple;
 	GError *error;
 	GClueLocation *location;
-	char latitude[10], longitude[10];
 
 	error = NULL;
 	simple = gclue_simple_new_finish(res, &error);
@@ -855,6 +855,8 @@ static void foundCoords(GObject *source_object, GAsyncResult *res,
 		location = gclue_simple_get_location(simple);
 
 	if (location) {
+		char latitude[10], longitude[10];
+
 		sprintf(latitude, "%.4f",
 			gclue_location_get_latitude(location));
 		sprintf(longitude, "%.4f",
