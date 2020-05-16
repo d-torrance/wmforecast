@@ -4,7 +4,7 @@ Upstream-Contact: Doug Torrance <dtorrance@piedmont.edu>
 Source: https://github.com/d-torrance/wmforecast
 
 Files: *
-Copyright: 2014-2016 Doug Torrance <dtorrance@piedmont.edu>
+Copyright: 2014-2020 Doug Torrance <dtorrance@piedmont.edu>
 License: GPL-3+
 
 Files: icons/*
