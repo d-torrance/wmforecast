@@ -472,8 +472,6 @@ void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 	const char *code;
 	WMPixmap *icon;
 	Weather *weather;
-	Forecast *forecast;
-
 	GSList *gforecasts;
 
 	weather = newWeather();
@@ -547,8 +545,6 @@ static void updateDockapp(void *data)
 	WMColor *text;
 	WMScreen *screen = dockapp->screen;
 	Preferences *prefs = dockapp->prefs;
-	Weather *weather;
-	WMPixmap *icon;
 	GWeatherLocation *world, *loc;
 	GWeatherInfo *info;
 
@@ -908,7 +904,6 @@ static void editPreferences(void *data)
 {
 	char intervalPtr[50];
 	Dockapp *d = (Dockapp *)data;
-	char *icondir;
 
 	d->prefsWindowPresent = 1;
 
