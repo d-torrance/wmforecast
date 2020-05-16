@@ -849,6 +849,7 @@ static void foundCoords(GObject *source_object, GAsyncResult *res,
 
 	error = NULL;
 	simple = gclue_simple_new_finish(res, &error);
+	location = NULL;
 
 	if (simple)
 		location = gclue_simple_get_location(simple);
