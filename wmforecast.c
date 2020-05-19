@@ -374,7 +374,8 @@ char *getBalloonText(Weather *weather, int days)
 	char *text;
 	int i;
 
-	text = wstrdup("\nRetrieved: ");
+	text = wstrdup("\n"PACKAGE_STRING);
+	text = wstrappend(text, "\n\nRetrieved: ");
 	text = wstrappend(text, weather->retrieved);
 	text = wstrappend(text, "\n\nCurrent Conditions:\n");
 	text = wstrappend(text, weather->text);
