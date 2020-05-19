@@ -116,7 +116,7 @@ typedef struct {
 	GWeatherTemperatureUnit units;
 } Weather;
 
-Forecast *newForecast()
+Forecast *newForecast(void)
 {
 	Forecast *forecast = wmalloc(sizeof(Forecast));
 	forecast->day = NULL;
@@ -126,7 +126,7 @@ Forecast *newForecast()
 	return forecast;
 }
 
-ForecastArray *newForecastArray()
+ForecastArray *newForecastArray(void)
 {
 	ForecastArray *array = wmalloc(sizeof(ForecastArray));
 	array->length = 0;
@@ -141,7 +141,7 @@ void appendForecast(ForecastArray *array, Forecast *forecast)
 	array->forecasts[(array->length)-1] = *forecast;
 }
 
-Weather *newWeather()
+Weather *newWeather(void)
 {
 	Weather *weather = wmalloc(sizeof(Weather));
 	weather->temp = NULL;
