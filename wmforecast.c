@@ -45,9 +45,9 @@ typedef struct {
 	double latitude;
 	double longitude;
 	long int interval;
-	char *background;
-	char *text;
-	char *icondir;
+	const char *background;
+	const char *text;
+	const char *icondir;
 	Bool windowed;
 	int days;
 	WMUserDefaults *defaults;
@@ -413,7 +413,7 @@ void gather_forecasts(Weather *weather, GSList *gforecasts)
 {
 	GDateTime *d;
 	int current_weekday, high, low;
-	char *conditions;
+	const char *conditions;
 
 	d = g_date_time_new_now_local();
 	current_weekday = g_date_time_get_day_of_week(d);
