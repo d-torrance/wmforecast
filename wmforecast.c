@@ -116,6 +116,35 @@ typedef struct {
 	GWeatherTemperatureUnit units;
 } Weather;
 
+Forecast *newForecast(void);
+ForecastArray *newForecastArray(void);
+void appendForecast(ForecastArray *array, Forecast *forecast);
+Weather *newWeather(void);
+void freeForecast(Forecast *forecast);
+void freeForecastArray(ForecastArray *array);
+void freeWeather(Weather *weather);
+void setError(Weather *weather, const char *errorText);
+void setConditions(
+	Weather *weather, WMScreen *screen, const char *temp, const char *text,
+	const char *code, const char *background, const char *icondir);
+void setForecast(Forecast *forecast, const char *day, const char *low,
+		 const char *high, const char *text);
+void close_window(WMWidget *self, void *data);
+WMWindow *WMCreateDockapp(WMScreen *screen, const char *name, int argc,
+			  char **argv, Bool windowed);
+Dockapp *newDockapp(WMScreen *screen, Preferences *prefs,
+		    int argc, char **argv);
+char *getBalloonText(Weather *weather, int days);
+char *getTemp(GWeatherInfo *info, GWeatherTemperatureUnit unit);
+void gather_forecasts(Weather *weather, GSList *gforecasts);
+char *strip_tags(const char *to_strip);
+void getWeather(GWeatherInfo *info, Dockapp *dockapp);
+Bool check_icondir(char *icondir);
+GWeatherTemperatureUnit string_to_unit(char *unit_string);
+void readPreferences(Preferences *prefs);
+Preferences *setPreferences(int argc, char **argv);
+void do_glib_loop(void *data);
+
 Forecast *newForecast(void)
 {
 	Forecast *forecast = wmalloc(sizeof(Forecast));
