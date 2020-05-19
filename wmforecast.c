@@ -180,7 +180,7 @@ void freeWeather(Weather *weather)
 	wfree(weather);
 }
 
-void setError(Weather *weather, WMScreen *screen, const char *errorText)
+void setError(Weather *weather, const char *errorText)
 {
 	weather->errorFlag = 1;
 	weather->errorText = wrealloc(weather->errorText, strlen(errorText) + 1);
@@ -209,7 +209,7 @@ void setConditions(Weather *weather,
 
 	weather->icon = RLoadImage(context, filename, 0);
 	if (!weather->icon) {
-		setError(weather, screen, wstrconcat(filename, " not found"));
+		setError(weather, wstrconcat(filename, " not found"));
 	} else {
 		RColor color;
 		color = WMGetRColorFromColor(
@@ -241,6 +241,7 @@ void setForecast(Forecast *forecast,
 
 void close_window(WMWidget *self, void *data)
 {
+	(void)data;
 	WMDestroyWidget(self);
 	exit(0);
 }
@@ -478,7 +479,7 @@ void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 	weather->units = dockapp->prefs->units;
 
 	if (!gweather_info_is_valid(info))
-		setError(weather, dockapp->screen,
+		setError(weather,
 			 gweather_info_get_weather_summary(info));
 
 	temp = getTemp(info, dockapp->prefs->units);
@@ -790,6 +791,7 @@ Preferences *setPreferences(int argc, char **argv)
 static void closePreferences(WMWidget *widget, void *data)
 {
 	Dockapp *d = (Dockapp *)data;
+	(void)widget;
 	WMDestroyWidget(d->prefsWindow->window);
 	d->prefsWindowPresent = 0;
 }
@@ -797,7 +799,7 @@ static void closePreferences(WMWidget *widget, void *data)
 static void savePreferences(WMWidget *widget, void *data)
 {
 	Dockapp *d = (Dockapp *)data;
-
+	(void)widget;
 	if (WMGetButtonSelected(d->prefsWindow->celsius))
 		WMSetUDStringForKey(d->prefs->defaults, "c", "units");
 	if (WMGetButtonSelected(d->prefsWindow->fahrenheit))
@@ -843,6 +845,7 @@ static void foundCoords(GObject *source_object, GAsyncResult *res,
 	GError *error;
 	GClueLocation *location;
 
+	(void)source_object;
 	error = NULL;
 	simple = gclue_simple_new_finish(res, &error);
 	location = NULL;
@@ -869,7 +872,7 @@ static void foundCoords(GObject *source_object, GAsyncResult *res,
 static void findCoords(WMWidget *widget, void *data)
 {
 	Dockapp *d = (Dockapp *)data;
-
+	(void)widget;
 	WMSetButtonText(d->prefsWindow->find_coords, "Finding...");
 
 	gclue_simple_new("wmforecast", GCLUE_ACCURACY_LEVEL_CITY, NULL,
@@ -883,6 +886,7 @@ static void icon_chooser(WMWidget *widget, void *data)
 	Dockapp *d = (Dockapp *)data;
 	char *icondir;
 
+	(void)widget;
 	if (!WMRunModalFilePanelForDirectory(
 		    d->prefsWindow->icon_chooser, NULL, d->prefsWindow->icondir,
 		    "Icon directory", NULL))
@@ -1116,6 +1120,7 @@ static void timerHandler(void *data)
 
 void do_glib_loop(void *data)
 {
+	(void)data;
 	g_main_context_iteration(NULL, 0);
 }
 
