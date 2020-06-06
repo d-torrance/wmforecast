@@ -212,8 +212,12 @@ void freeWeather(Weather *weather)
 void setError(Weather *weather, const char *errorText)
 {
 	weather->errorFlag = 1;
-	weather->errorText = wrealloc(weather->errorText, strlen(errorText) + 1);
-	strcpy(weather->errorText, errorText);
+	if (errorText) {
+		weather->errorText = wrealloc(
+			weather->errorText, strlen(errorText) + 1);
+		strcpy(weather->errorText, errorText);
+	} else
+		weather->errorText = wstrdup("An error occurred");
 }
 
 void setConditions(Weather *weather,
