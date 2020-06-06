@@ -45,9 +45,9 @@ typedef struct {
 	double latitude;
 	double longitude;
 	long int interval;
-	char *background;
-	char *text;
-	char *icondir;
+	const char *background;
+	const char *text;
+	const char *icondir;
 	Bool windowed;
 	int days;
 	WMUserDefaults *defaults;
@@ -61,6 +61,7 @@ typedef struct {
 	WMButton *save;
 	WMButton *find_coords;
 	WMButton *open_icon_chooser;
+	WMButton *restore_defaults;
 	WMColorWell *background;
 	WMColorWell *text;
 	WMFrame *intervalFrame;
@@ -116,7 +117,37 @@ typedef struct {
 	GWeatherTemperatureUnit units;
 } Weather;
 
-Forecast *newForecast()
+Forecast *newForecast(void);
+ForecastArray *newForecastArray(void);
+void appendForecast(ForecastArray *array, Forecast *forecast);
+Weather *newWeather(void);
+void freeForecast(Forecast *forecast);
+void freeForecastArray(ForecastArray *array);
+void freeWeather(Weather *weather);
+void setError(Weather *weather, const char *errorText);
+void setConditions(
+	Weather *weather, WMScreen *screen, const char *temp, const char *text,
+	const char *code, const char *background, const char *icondir);
+void setForecast(Forecast *forecast, const char *day, const char *low,
+		 const char *high, const char *text);
+void close_window(WMWidget *self, void *data);
+WMWindow *WMCreateDockapp(WMScreen *screen, const char *name, int argc,
+			  char **argv, Bool windowed);
+Dockapp *newDockapp(WMScreen *screen, Preferences *prefs,
+		    int argc, char **argv);
+char *getBalloonText(Weather *weather, int days);
+char *getTemp(GWeatherInfo *info, GWeatherTemperatureUnit unit);
+void gather_forecasts(Weather *weather, GSList *gforecasts);
+char *strip_tags(const char *to_strip);
+void getWeather(GWeatherInfo *info, Dockapp *dockapp);
+Bool check_icondir(char *icondir);
+GWeatherTemperatureUnit string_to_unit(char *unit_string);
+void readPreferences(Preferences *prefs);
+Preferences *setPreferences(int argc, char **argv);
+void do_glib_loop(void *data);
+void restore_default_colors(WMWidget *widget, void *data);
+
+Forecast *newForecast(void)
 {
 	Forecast *forecast = wmalloc(sizeof(Forecast));
 	forecast->day = NULL;
@@ -126,7 +157,7 @@ Forecast *newForecast()
 	return forecast;
 }
 
-ForecastArray *newForecastArray()
+ForecastArray *newForecastArray(void)
 {
 	ForecastArray *array = wmalloc(sizeof(ForecastArray));
 	array->length = 0;
@@ -141,7 +172,7 @@ void appendForecast(ForecastArray *array, Forecast *forecast)
 	array->forecasts[(array->length)-1] = *forecast;
 }
 
-Weather *newWeather()
+Weather *newWeather(void)
 {
 	Weather *weather = wmalloc(sizeof(Weather));
 	weather->temp = NULL;
@@ -180,11 +211,15 @@ void freeWeather(Weather *weather)
 	wfree(weather);
 }
 
-void setError(Weather *weather, WMScreen *screen, const char *errorText)
+void setError(Weather *weather, const char *errorText)
 {
 	weather->errorFlag = 1;
-	weather->errorText = wrealloc(weather->errorText, strlen(errorText) + 1);
-	strcpy(weather->errorText, errorText);
+	if (errorText) {
+		weather->errorText = wrealloc(
+			weather->errorText, strlen(errorText) + 1);
+		strcpy(weather->errorText, errorText);
+	} else
+		weather->errorText = wstrdup("An error occurred");
 }
 
 void setConditions(Weather *weather,
@@ -209,7 +244,7 @@ void setConditions(Weather *weather,
 
 	weather->icon = RLoadImage(context, filename, 0);
 	if (!weather->icon) {
-		setError(weather, screen, wstrconcat(filename, " not found"));
+		setError(weather, wstrconcat(filename, " not found"));
 	} else {
 		RColor color;
 		color = WMGetRColorFromColor(
@@ -218,7 +253,7 @@ void setConditions(Weather *weather,
 	}
 
 	currentTime = time(NULL);
-	strftime(weather->retrieved, sizeof weather->retrieved, "%l:%M %P %Z",
+	strftime(weather->retrieved, sizeof weather->retrieved, "%I:%M %p %Z",
 		 localtime(&currentTime));
 }
 
@@ -241,6 +276,7 @@ void setForecast(Forecast *forecast,
 
 void close_window(WMWidget *self, void *data)
 {
+	(void)data;
 	WMDestroyWidget(self);
 	exit(0);
 }
@@ -344,7 +380,8 @@ char *getBalloonText(Weather *weather, int days)
 	char *text;
 	int i;
 
-	text = wstrappend(text, "\nRetrieved: ");
+	text = wstrdup("\n"PACKAGE_STRING);
+	text = wstrappend(text, "\n\nRetrieved: ");
 	text = wstrappend(text, weather->retrieved);
 	text = wstrappend(text, "\n\nCurrent Conditions:\n");
 	text = wstrappend(text, weather->text);
@@ -383,7 +420,7 @@ void gather_forecasts(Weather *weather, GSList *gforecasts)
 {
 	GDateTime *d;
 	int current_weekday, high, low;
-	char *conditions;
+	const char *conditions;
 
 	d = g_date_time_new_now_local();
 	current_weekday = g_date_time_get_day_of_week(d);
@@ -391,7 +428,7 @@ void gather_forecasts(Weather *weather, GSList *gforecasts)
 	low = INT_MAX;
 	conditions = "";
 
-	while ((gforecasts = gforecasts->next)) {
+	while (gforecasts) {
 		time_t time;
 		double temp;
 		int weekday;
@@ -445,6 +482,7 @@ void gather_forecasts(Weather *weather, GSList *gforecasts)
 			high = round(temp);
 		if (temp < low)
 			low = round(temp);
+		gforecasts = gforecasts->next;
 	}
 }
 
@@ -452,6 +490,9 @@ void gather_forecasts(Weather *weather, GSList *gforecasts)
 char *strip_tags(const char *to_strip)
 {
 	char *stripped, *beginning, *end;
+
+	if (!to_strip)
+		return wstrdup("");
 
 	stripped = wstrdup(to_strip);
 	while ((beginning = strchr(stripped, '<')) &&
@@ -472,25 +513,54 @@ void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 	const char *code;
 	WMPixmap *icon;
 	Weather *weather;
-	Forecast *forecast;
-
 	GSList *gforecasts;
+	gboolean success;
+	gdouble dummy;
 
 	weather = newWeather();
 	weather->units = dockapp->prefs->units;
 
 	if (!gweather_info_is_valid(info))
-		setError(weather, dockapp->screen,
+		setError(weather,
 			 gweather_info_get_weather_summary(info));
 
-	temp = getTemp(info, dockapp->prefs->units);
-	text = gweather_info_get_weather_summary(info);
-	code = gweather_info_get_icon_name(info);
 	weather->attribution = strip_tags(gweather_info_get_attribution(info));
 
 	gforecasts = gweather_info_get_forecast_list(info);
 	if (gforecasts)
 		gather_forecasts(weather, gforecasts);
+
+	/* check if we have current conditions */
+	success = gweather_info_get_value_temp(info, dockapp->prefs->units,
+					       &dummy);
+	if (!success) {
+		/* if we don't, get the next forecasted conditions */
+		gforecasts = gweather_info_get_forecast_list(info);
+
+		if (!gforecasts)
+			setError(weather, "Retrieval failed");
+		else {
+			while (!success) {
+				success = gweather_info_get_value_temp(
+					gforecasts->data, dockapp->prefs->units,
+					&dummy);
+				if (success) {
+					info = gforecasts->data;
+					break;
+				}
+
+				gforecasts = gforecasts->next;
+				if (!gforecasts) {
+					setError(weather, "Retrieval failed");
+					break;
+				}
+			}
+		}
+	}
+
+	temp = getTemp(info, dockapp->prefs->units);
+	text = gweather_info_get_weather_summary(info);
+	code = gweather_info_get_icon_name(info);
 
 	setConditions(weather, dockapp->screen, temp, text, code,
 		      dockapp->prefs->background, dockapp->prefs->icondir);
@@ -547,8 +617,6 @@ static void updateDockapp(void *data)
 	WMColor *text;
 	WMScreen *screen = dockapp->screen;
 	Preferences *prefs = dockapp->prefs;
-	Weather *weather;
-	WMPixmap *icon;
 	GWeatherLocation *world, *loc;
 	GWeatherInfo *info;
 
@@ -648,7 +716,6 @@ void readPreferences(Preferences *prefs)
 
 Preferences *setPreferences(int argc, char **argv)
 {
-	int c;
 	Preferences *prefs = wmalloc(sizeof(Preferences));
 
 	/* set defaults */
@@ -668,6 +735,8 @@ Preferences *setPreferences(int argc, char **argv)
 
 	/* command line */
 	while (1) {
+		int c;
+
 		static struct option long_options[] = {
 			{"version", no_argument, 0, 'v'},
 			{"help", no_argument, 0, 'h'},
@@ -793,6 +862,7 @@ Preferences *setPreferences(int argc, char **argv)
 static void closePreferences(WMWidget *widget, void *data)
 {
 	Dockapp *d = (Dockapp *)data;
+	(void)widget;
 	WMDestroyWidget(d->prefsWindow->window);
 	d->prefsWindowPresent = 0;
 }
@@ -800,7 +870,7 @@ static void closePreferences(WMWidget *widget, void *data)
 static void savePreferences(WMWidget *widget, void *data)
 {
 	Dockapp *d = (Dockapp *)data;
-
+	(void)widget;
 	if (WMGetButtonSelected(d->prefsWindow->celsius))
 		WMSetUDStringForKey(d->prefs->defaults, "c", "units");
 	if (WMGetButtonSelected(d->prefsWindow->fahrenheit))
@@ -845,15 +915,18 @@ static void foundCoords(GObject *source_object, GAsyncResult *res,
 	GClueSimple *simple;
 	GError *error;
 	GClueLocation *location;
-	char latitude[10], longitude[10];
 
+	(void)source_object;
 	error = NULL;
 	simple = gclue_simple_new_finish(res, &error);
+	location = NULL;
 
 	if (simple)
 		location = gclue_simple_get_location(simple);
 
 	if (location) {
+		char latitude[10], longitude[10];
+
 		sprintf(latitude, "%.4f",
 			gclue_location_get_latitude(location));
 		sprintf(longitude, "%.4f",
@@ -870,7 +943,7 @@ static void foundCoords(GObject *source_object, GAsyncResult *res,
 static void findCoords(WMWidget *widget, void *data)
 {
 	Dockapp *d = (Dockapp *)data;
-
+	(void)widget;
 	WMSetButtonText(d->prefsWindow->find_coords, "Finding...");
 
 	gclue_simple_new("wmforecast", GCLUE_ACCURACY_LEVEL_CITY, NULL,
@@ -878,12 +951,27 @@ static void findCoords(WMWidget *widget, void *data)
 }
 #endif
 
+void restore_default_colors(WMWidget *widget, void *data)
+{
+	Dockapp *d = (Dockapp *)data;
+
+	(void)widget;
+
+	WMSetColorWellColor(d->prefsWindow->background,
+			    WMCreateNamedColor(d->screen, DEFAULT_BG_COLOR,
+					       True));
+	WMSetColorWellColor(d->prefsWindow->text,
+			    WMCreateNamedColor(d->screen, DEFAULT_TEXT_COLOR,
+					       True));
+}
+
 static void icon_chooser(WMWidget *widget, void *data)
 {
 
 	Dockapp *d = (Dockapp *)data;
 	char *icondir;
 
+	(void)widget;
 	if (!WMRunModalFilePanelForDirectory(
 		    d->prefsWindow->icon_chooser, NULL, d->prefsWindow->icondir,
 		    "Icon directory", NULL))
@@ -905,7 +993,6 @@ static void editPreferences(void *data)
 {
 	char intervalPtr[50];
 	Dockapp *d = (Dockapp *)data;
-	char *icondir;
 
 	d->prefsWindowPresent = 1;
 
@@ -918,7 +1005,7 @@ static void editPreferences(void *data)
 	d->prefsWindow->window = WMCreateWindow(d->prefsWindow->screen, "wmforecast");
 	WMSetWindowTitle(d->prefsWindow->window, "wmforecast");
 	WMSetWindowCloseAction(d->prefsWindow->window, closePreferences, d);
-	WMResizeWidget(d->prefsWindow->window, 424, 150);
+	WMResizeWidget(d->prefsWindow->window, 424, 180);
 	WMRealizeWidget(d->prefsWindow->window);
 	WMMapWidget(d->prefsWindow->window);
 
@@ -1026,7 +1113,7 @@ static void editPreferences(void *data)
 
 	d->prefsWindow->colors = WMCreateFrame(d->prefsWindow->window);
 	WMSetFrameTitle(d->prefsWindow->colors, "Colors");
-	WMResizeWidget(d->prefsWindow->colors, 265, 50);
+	WMResizeWidget(d->prefsWindow->colors, 265, 80);
 	WMMoveWidget(d->prefsWindow->colors, 10, 92);
 	WMRealizeWidget(d->prefsWindow->colors);
 	WMMapWidget(d->prefsWindow->colors);
@@ -1059,12 +1146,22 @@ static void editPreferences(void *data)
 	WMRealizeWidget(d->prefsWindow->text);
 	WMMapWidget(d->prefsWindow->text);
 
+	d->prefsWindow->restore_defaults = WMCreateButton(
+		d->prefsWindow->colors, WBTMomentaryPush);
+	WMSetButtonText(d->prefsWindow->restore_defaults, "Restore defaults");
+	WMSetButtonAction(d->prefsWindow->restore_defaults,
+			  restore_default_colors, d);
+	WMResizeWidget(d->prefsWindow->restore_defaults, 125, 20);
+	WMMoveWidget(d->prefsWindow->restore_defaults, 70, 55);
+	WMRealizeWidget(d->prefsWindow->restore_defaults);
+	WMMapWidget(d->prefsWindow->restore_defaults);
+
 	d->prefsWindow->open_icon_chooser = WMCreateButton(
 		d->prefsWindow->window, WBTMomentaryPush);
 	WMSetButtonText(d->prefsWindow->open_icon_chooser, "Icon directory");
 	WMSetButtonAction(d->prefsWindow->open_icon_chooser, icon_chooser, d);
 	WMResizeWidget(d->prefsWindow->open_icon_chooser, 128, 20);
-	WMMoveWidget(d->prefsWindow->open_icon_chooser, 285, 100);
+	WMMoveWidget(d->prefsWindow->open_icon_chooser, 285, 110);
 	WMRealizeWidget(d->prefsWindow->open_icon_chooser);
 	WMMapWidget(d->prefsWindow->open_icon_chooser);
 	WMSetBalloonTextForView(
@@ -1081,7 +1178,7 @@ static void editPreferences(void *data)
 	WMSetButtonText(d->prefsWindow->save, "Save");
 	WMSetButtonAction(d->prefsWindow->save, savePreferences, d);
 	WMResizeWidget(d->prefsWindow->save, 63, 20);
-	WMMoveWidget(d->prefsWindow->save, 285, 122);
+	WMMoveWidget(d->prefsWindow->save, 285, 137);
 	WMRealizeWidget(d->prefsWindow->save);
 	WMMapWidget(d->prefsWindow->save);
 
@@ -1089,7 +1186,7 @@ static void editPreferences(void *data)
 	WMSetButtonText(d->prefsWindow->close, "Close");
 	WMSetButtonAction(d->prefsWindow->close, closePreferences, d);
 	WMResizeWidget(d->prefsWindow->close, 63, 20);
-	WMMoveWidget(d->prefsWindow->close, 350, 122);
+	WMMoveWidget(d->prefsWindow->close, 350, 137);
 	WMRealizeWidget(d->prefsWindow->close);
 	WMMapWidget(d->prefsWindow->close);
 }
@@ -1118,6 +1215,7 @@ static void timerHandler(void *data)
 
 void do_glib_loop(void *data)
 {
+	(void)data;
 	g_main_context_iteration(NULL, 0);
 }
 

@@ -1,3 +1,77 @@
+2020-06-06  Doug Torrance <dtorrance@piedmont.edu>
+
+	* ChangeLog, NEWS.md, configure.ac: Bump to version 1.4
+
+2020-06-06  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Add button in preferences window for restoring
+	default colors Closes: #8
+
+2020-06-06  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Get attribution string sooner.  It's not included in the GWeatherInfo objects from the upcoming
+	forecasts, and if we end up using one of those for the current
+	conditions, then we lose the original object with the attribution
+	information.
+
+2020-06-06  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Don't skip the very first forecast!
+
+2020-06-06  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: If we can't get current conditions, then use the
+	next forecasted ones.  Closes: #10
+
+2020-06-06  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Fix segfault if our attribution string is null
+
+2020-06-06  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Use a generic error message if our error string is
+	null
+
+2020-05-19  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Add version information to balloon
+
+2020-05-19  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Use const qualifiers for strings where appropriate
+
+2020-05-19  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Add prototypes at beginning
+
+2020-05-19  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Use void for argument for strict prototypes
+
+2020-05-19  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Deal with unused parameters
+
+2020-05-18  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Use ISO C strftime format
+
+2020-05-18  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Don't append to an uninitialized string.
+
+2020-05-16  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Remove unused variables
+
+2020-05-16  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Reduce the scope of some variables
+
+2020-05-16  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Initialize geoclue location variable to NULL
+
 2020-05-14  Doug Torrance <dtorrance@piedmont.edu>
 
 	* ChangeLog, NEWS.md, configure.ac: Bump to version 1.3
