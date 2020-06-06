@@ -1,3 +1,10 @@
+version 1.4
+-----------
+* If there is no current weather data but there are upcoming
+  forecasts, then use the data from the first forecast.
+* New button to restore default colors in the preferences window.
+* Bug fixes.
+
 version 1.3
 -----------
 * git2cl is no longer a dependency if building from git
