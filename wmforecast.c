@@ -522,6 +522,8 @@ void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 		setError(weather,
 			 gweather_info_get_weather_summary(info));
 
+	weather->attribution = strip_tags(gweather_info_get_attribution(info));
+
 	gforecasts = gweather_info_get_forecast_list(info);
 	if (gforecasts)
 		gather_forecasts(weather, gforecasts);
@@ -557,8 +559,6 @@ void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 	temp = getTemp(info, dockapp->prefs->units);
 	text = gweather_info_get_weather_summary(info);
 	code = gweather_info_get_icon_name(info);
-	weather->attribution = strip_tags(gweather_info_get_attribution(info));
-
 
 	setConditions(weather, dockapp->screen, temp, text, code,
 		      dockapp->prefs->background, dockapp->prefs->icondir);
