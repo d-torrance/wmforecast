@@ -488,6 +488,9 @@ char *strip_tags(const char *to_strip)
 {
 	char *stripped, *beginning, *end;
 
+	if (!to_strip)
+		return wstrdup("");
+
 	stripped = wstrdup(to_strip);
 	while ((beginning = strchr(stripped, '<')) &&
 	       (end = strchr(stripped, '>'))) {
