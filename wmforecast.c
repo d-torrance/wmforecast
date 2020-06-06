@@ -61,6 +61,7 @@ typedef struct {
 	WMButton *save;
 	WMButton *find_coords;
 	WMButton *open_icon_chooser;
+	WMButton *restore_defaults;
 	WMColorWell *background;
 	WMColorWell *text;
 	WMFrame *intervalFrame;
@@ -144,6 +145,7 @@ GWeatherTemperatureUnit string_to_unit(char *unit_string);
 void readPreferences(Preferences *prefs);
 Preferences *setPreferences(int argc, char **argv);
 void do_glib_loop(void *data);
+void restore_default_colors(WMWidget *widget, void *data);
 
 Forecast *newForecast(void)
 {
@@ -949,6 +951,20 @@ static void findCoords(WMWidget *widget, void *data)
 }
 #endif
 
+void restore_default_colors(WMWidget *widget, void *data)
+{
+	Dockapp *d = (Dockapp *)data;
+
+	(void)widget;
+
+	WMSetColorWellColor(d->prefsWindow->background,
+			    WMCreateNamedColor(d->screen, DEFAULT_BG_COLOR,
+					       True));
+	WMSetColorWellColor(d->prefsWindow->text,
+			    WMCreateNamedColor(d->screen, DEFAULT_TEXT_COLOR,
+					       True));
+}
+
 static void icon_chooser(WMWidget *widget, void *data)
 {
 
@@ -989,7 +1005,7 @@ static void editPreferences(void *data)
 	d->prefsWindow->window = WMCreateWindow(d->prefsWindow->screen, "wmforecast");
 	WMSetWindowTitle(d->prefsWindow->window, "wmforecast");
 	WMSetWindowCloseAction(d->prefsWindow->window, closePreferences, d);
-	WMResizeWidget(d->prefsWindow->window, 424, 150);
+	WMResizeWidget(d->prefsWindow->window, 424, 180);
 	WMRealizeWidget(d->prefsWindow->window);
 	WMMapWidget(d->prefsWindow->window);
 
@@ -1097,7 +1113,7 @@ static void editPreferences(void *data)
 
 	d->prefsWindow->colors = WMCreateFrame(d->prefsWindow->window);
 	WMSetFrameTitle(d->prefsWindow->colors, "Colors");
-	WMResizeWidget(d->prefsWindow->colors, 265, 50);
+	WMResizeWidget(d->prefsWindow->colors, 265, 80);
 	WMMoveWidget(d->prefsWindow->colors, 10, 92);
 	WMRealizeWidget(d->prefsWindow->colors);
 	WMMapWidget(d->prefsWindow->colors);
@@ -1130,12 +1146,22 @@ static void editPreferences(void *data)
 	WMRealizeWidget(d->prefsWindow->text);
 	WMMapWidget(d->prefsWindow->text);
 
+	d->prefsWindow->restore_defaults = WMCreateButton(
+		d->prefsWindow->colors, WBTMomentaryPush);
+	WMSetButtonText(d->prefsWindow->restore_defaults, "Restore defaults");
+	WMSetButtonAction(d->prefsWindow->restore_defaults,
+			  restore_default_colors, d);
+	WMResizeWidget(d->prefsWindow->restore_defaults, 125, 20);
+	WMMoveWidget(d->prefsWindow->restore_defaults, 70, 55);
+	WMRealizeWidget(d->prefsWindow->restore_defaults);
+	WMMapWidget(d->prefsWindow->restore_defaults);
+
 	d->prefsWindow->open_icon_chooser = WMCreateButton(
 		d->prefsWindow->window, WBTMomentaryPush);
 	WMSetButtonText(d->prefsWindow->open_icon_chooser, "Icon directory");
 	WMSetButtonAction(d->prefsWindow->open_icon_chooser, icon_chooser, d);
 	WMResizeWidget(d->prefsWindow->open_icon_chooser, 128, 20);
-	WMMoveWidget(d->prefsWindow->open_icon_chooser, 285, 100);
+	WMMoveWidget(d->prefsWindow->open_icon_chooser, 285, 110);
 	WMRealizeWidget(d->prefsWindow->open_icon_chooser);
 	WMMapWidget(d->prefsWindow->open_icon_chooser);
 	WMSetBalloonTextForView(
@@ -1152,7 +1178,7 @@ static void editPreferences(void *data)
 	WMSetButtonText(d->prefsWindow->save, "Save");
 	WMSetButtonAction(d->prefsWindow->save, savePreferences, d);
 	WMResizeWidget(d->prefsWindow->save, 63, 20);
-	WMMoveWidget(d->prefsWindow->save, 285, 122);
+	WMMoveWidget(d->prefsWindow->save, 285, 137);
 	WMRealizeWidget(d->prefsWindow->save);
 	WMMapWidget(d->prefsWindow->save);
 
@@ -1160,7 +1186,7 @@ static void editPreferences(void *data)
 	WMSetButtonText(d->prefsWindow->close, "Close");
 	WMSetButtonAction(d->prefsWindow->close, closePreferences, d);
 	WMResizeWidget(d->prefsWindow->close, 63, 20);
-	WMMoveWidget(d->prefsWindow->close, 350, 122);
+	WMMoveWidget(d->prefsWindow->close, 350, 137);
 	WMRealizeWidget(d->prefsWindow->close);
 	WMMapWidget(d->prefsWindow->close);
 }
