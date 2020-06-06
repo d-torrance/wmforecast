@@ -511,6 +511,8 @@ void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 	WMPixmap *icon;
 	Weather *weather;
 	GSList *gforecasts;
+	gboolean success;
+	gdouble dummy;
 
 	weather = newWeather();
 	weather->units = dockapp->prefs->units;
@@ -519,14 +521,43 @@ void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 		setError(weather,
 			 gweather_info_get_weather_summary(info));
 
+	gforecasts = gweather_info_get_forecast_list(info);
+	if (gforecasts)
+		gather_forecasts(weather, gforecasts);
+
+	/* check if we have current conditions */
+	success = gweather_info_get_value_temp(info, dockapp->prefs->units,
+					       &dummy);
+	if (!success) {
+		/* if we don't, get the next forecasted conditions */
+		gforecasts = gweather_info_get_forecast_list(info);
+
+		if (!gforecasts)
+			setError(weather, "Retrieval failed");
+		else {
+			while (!success) {
+				success = gweather_info_get_value_temp(
+					gforecasts->data, dockapp->prefs->units,
+					&dummy);
+				if (success) {
+					info = gforecasts->data;
+					break;
+				}
+
+				gforecasts = gforecasts->next;
+				if (!gforecasts) {
+					setError(weather, "Retrieval failed");
+					break;
+				}
+			}
+		}
+	}
+
 	temp = getTemp(info, dockapp->prefs->units);
 	text = gweather_info_get_weather_summary(info);
 	code = gweather_info_get_icon_name(info);
 	weather->attribution = strip_tags(gweather_info_get_attribution(info));
 
-	gforecasts = gweather_info_get_forecast_list(info);
-	if (gforecasts)
-		gather_forecasts(weather, gforecasts);
 
 	setConditions(weather, dockapp->screen, temp, text, code,
 		      dockapp->prefs->background, dockapp->prefs->icondir);
