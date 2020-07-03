@@ -1079,11 +1079,11 @@ static void editPreferences(void *data)
 	WMSetButtonText(d->prefsWindow->find_coords, "Find Coords");
 #ifdef HAVE_GEOCLUE
 	WMSetButtonAction(d->prefsWindow->find_coords, findCoords, d);
+	WMSetButtonEnabled(d->prefsWindow->find_coords,
+			   d->prefs->geoclue);
 #else
 	WMSetButtonEnabled(d->prefsWindow->find_coords, False);
 #endif
-	WMSetButtonEnabled(d->prefsWindow->find_coords,
-			   d->prefs->geoclue);
 	WMResizeWidget(d->prefsWindow->find_coords, 120, 18);
 	WMMoveWidget(d->prefsWindow->find_coords, 20, 57);
 	WMRealizeWidget(d->prefsWindow->find_coords);
