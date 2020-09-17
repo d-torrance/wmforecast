@@ -1,9 +1,9 @@
-wmforecast (1.4-2) UNRELEASED; urgency=medium
+wmforecast (1.4-2) unstable; urgency=medium
 
   * debian/tests/control
     - Add Restrictions: superficial (Closes: #969881).
 
- -- Doug Torrance <dtorrance@piedmont.edu>  Tue, 08 Sep 2020 17:01:20 -0400
+ -- Doug Torrance <dtorrance@piedmont.edu>  Thu, 17 Sep 2020 07:29:51 -0400
 
 wmforecast (1.4-1) unstable; urgency=medium
 
