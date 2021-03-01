@@ -388,16 +388,28 @@ char *getBalloonText(Weather *weather, int days)
 	text = wstrappend(text, ", ");
 	text = wstrappend(text, weather->temp);
 
-	text = wstrappend(text, "°\n\nForecast:\n");
-	for (i = 0; i < weather->forecasts->length && i < days; i++) {
-		text = wstrappend(text, weather->forecasts->forecasts[i].day);
-		text = wstrappend(text, " - ");
-		text = wstrappend(text, weather->forecasts->forecasts[i].text);
-		text = wstrappend(text, ". High: ");
-		text = wstrappend(text, weather->forecasts->forecasts[i].high);
-		text = wstrappend(text, "° Low: ");
-		text = wstrappend(text, weather->forecasts->forecasts[i].low);
-		text = wstrappend(text, "°\n");
+	text = wstrappend(text, "°\n\nForecast");
+
+	if (weather->forecasts->length == 0)
+		text = wstrappend(text, " not available.");
+	else {
+		text = wstrappend(text, ":\n");
+		for (i = 0; i < weather->forecasts->length && i < days; i++) {
+			text = wstrappend(text,
+					  weather->forecasts->forecasts[i].day);
+			text = wstrappend(text, " - ");
+			text = wstrappend(text,
+					  weather->forecasts->forecasts[i].text);
+			text = wstrappend(text,
+					  ". High: ");
+			text = wstrappend(text,
+					  weather->forecasts->forecasts[i].high);
+			text = wstrappend(text,
+					  "° Low: ");
+			text = wstrappend(text,
+					  weather->forecasts->forecasts[i].low);
+			text = wstrappend(text, "°\n");
+		}
 	}
 
 	text = wstrappend(text, "\n");
