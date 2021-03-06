@@ -1269,4 +1269,6 @@ int main(int argc, char **argv)
 	WMAddPersistentTimerHandler(100, do_glib_loop, NULL);
 
 	WMScreenMainLoop(screen);
+
+	return 0;
 }
