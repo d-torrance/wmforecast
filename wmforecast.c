@@ -1251,6 +1251,11 @@ int main(int argc, char **argv)
 
 	display = XOpenDisplay("");
 
+	if (!display) {
+		werror("could not connect to the X server");
+		exit(EXIT_FAILURE);
+	}
+
 	screen = WMCreateScreen(display, DefaultScreen(display));
 	dockapp = newDockapp(screen, prefs, argc, argv);
 
