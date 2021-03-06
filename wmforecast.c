@@ -32,6 +32,8 @@
 
 #define DEFAULT_TEXT_COLOR "light sea green"
 #define DEFAULT_BG_COLOR "black"
+#define APPLICATION_ID "org.friedcheese.wmforecast"
+#define CONTACT_INFO "dtorrance@piedmont.edu"
 
 #define icondir_warning(tried, current) \
 	wwarning("%s is not a valid icon directory; falling back to %s", \
@@ -388,16 +390,28 @@ char *getBalloonText(Weather *weather, int days)
 	text = wstrappend(text, ", ");
 	text = wstrappend(text, weather->temp);
 
-	text = wstrappend(text, "°\n\nForecast:\n");
-	for (i = 0; i < weather->forecasts->length && i < days; i++) {
-		text = wstrappend(text, weather->forecasts->forecasts[i].day);
-		text = wstrappend(text, " - ");
-		text = wstrappend(text, weather->forecasts->forecasts[i].text);
-		text = wstrappend(text, ". High: ");
-		text = wstrappend(text, weather->forecasts->forecasts[i].high);
-		text = wstrappend(text, "° Low: ");
-		text = wstrappend(text, weather->forecasts->forecasts[i].low);
-		text = wstrappend(text, "°\n");
+	text = wstrappend(text, "°\n\nForecast");
+
+	if (weather->forecasts->length == 0)
+		text = wstrappend(text, " not available.");
+	else {
+		text = wstrappend(text, ":\n");
+		for (i = 0; i < weather->forecasts->length && i < days; i++) {
+			text = wstrappend(text,
+					  weather->forecasts->forecasts[i].day);
+			text = wstrappend(text, " - ");
+			text = wstrappend(text,
+					  weather->forecasts->forecasts[i].text);
+			text = wstrappend(text,
+					  ". High: ");
+			text = wstrappend(text,
+					  weather->forecasts->forecasts[i].high);
+			text = wstrappend(text,
+					  "° Low: ");
+			text = wstrappend(text,
+					  weather->forecasts->forecasts[i].low);
+			text = wstrappend(text, "°\n");
+		}
 	}
 
 	text = wstrappend(text, "\n");
@@ -635,6 +649,10 @@ static void updateDockapp(void *data)
 	loc = gweather_location_find_nearest_city(
 		world, prefs->latitude, prefs->longitude);
 	info = gweather_info_new(NULL);
+#ifdef HAVE_GWEATHER40
+	gweather_info_set_application_id(info, APPLICATION_ID);
+	gweather_info_set_contact_info(info, CONTACT_INFO);
+#endif
 	gweather_info_set_enabled_providers(info, GWEATHER_PROVIDER_ALL);
 	gweather_info_set_location(info, loc);
 	g_signal_connect(
@@ -1079,11 +1097,11 @@ static void editPreferences(void *data)
 	WMSetButtonText(d->prefsWindow->find_coords, "Find Coords");
 #ifdef HAVE_GEOCLUE
 	WMSetButtonAction(d->prefsWindow->find_coords, findCoords, d);
+	WMSetButtonEnabled(d->prefsWindow->find_coords,
+			   d->prefs->geoclue);
 #else
 	WMSetButtonEnabled(d->prefsWindow->find_coords, False);
 #endif
-	WMSetButtonEnabled(d->prefsWindow->find_coords,
-			   d->prefs->geoclue);
 	WMResizeWidget(d->prefsWindow->find_coords, 120, 18);
 	WMMoveWidget(d->prefsWindow->find_coords, 20, 57);
 	WMRealizeWidget(d->prefsWindow->find_coords);
@@ -1233,6 +1251,11 @@ int main(int argc, char **argv)
 
 	display = XOpenDisplay("");
 
+	if (!display) {
+		werror("could not connect to the X server");
+		exit(EXIT_FAILURE);
+	}
+
 	screen = WMCreateScreen(display, DefaultScreen(display));
 	dockapp = newDockapp(screen, prefs, argc, argv);
 
@@ -1246,4 +1269,6 @@ int main(int argc, char **argv)
 	WMAddPersistentTimerHandler(100, do_glib_loop, NULL);
 
 	WMScreenMainLoop(screen);
+
+	return 0;
 }

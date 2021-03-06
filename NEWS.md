@@ -1,3 +1,9 @@
+version 1.5
+-----------
+* Add support for libgweather 40; needed for fetching forecast data after
+  yr.no -> met.no change.
+* Bug fixes.
+
 version 1.4
 -----------
 * If there is no current weather data but there are upcoming

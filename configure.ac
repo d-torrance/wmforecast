@@ -1,4 +1,4 @@
-AC_INIT([wmforecast], [1.4], [https://github.com/d-torrance/wmforecast/issues],
+AC_INIT([wmforecast], [1.5], [https://github.com/d-torrance/wmforecast/issues],
 	[wmforecast], [http://wmforecast.friedcheese.org])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign -Wno-portability])
 AC_CONFIG_SRCDIR([configure.ac])
@@ -6,6 +6,25 @@ AC_CONFIG_HEADER([config.h])
 AC_PROG_CC
 PKG_CHECK_MODULES([X11],[x11])
 PKG_CHECK_MODULES([GWEATHER], [gweather-3.0 >= 3.27.4])
+AC_MSG_CHECKING([for gweather-3.0 >= 40])
+SAVE=$CPPFLAGS
+CPPFLAGS="$SAVE `pkg-config gweather-3.0 --cflags` \
+	-Werror=implicit-function-declaration"
+AC_COMPILE_IFELSE(
+	[AC_LANG_PROGRAM([
+		#define GWEATHER_I_KNOW_THIS_IS_UNSTABLE
+		#include <libgweather/gweather.h>
+	],
+	[
+		GWeatherInfo *info;
+		gweather_info_set_application_id(info, "application id");
+		gweather_info_set_contact_info(info, "contact info");
+	])],
+	[AC_MSG_RESULT([yes])
+	 AC_DEFINE(HAVE_GWEATHER40, 1,
+		   [Define if libgweather >= 40 is available])],
+	AC_MSG_RESULT([no]))
+CPPFLAGS=$SAVE
 AC_ARG_WITH([geoclue],
 	    [AS_HELP_STRING([--with-geoclue],
 		   [build with geoclue (provides location information)])],

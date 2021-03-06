@@ -1,3 +1,39 @@
+2021-03-06  Doug Torrance <dtorrance@piedmont.edu>
+
+	* ChangeLog, NEWS.md, configure.ac: Bump to version 1.5
+
+2021-03-06  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Return 0 from main
+
+2021-03-06  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Add check to ensure that XOpenDisplay was successful Exit with an informative message instead of just segfaulting.
+
+2021-03-06  Doug Torrance <dtorrance@piedmont.edu>
+
+	* configure.ac: Fix gweather configure check
+
+2021-03-06  Doug Torrance <dtorrance@piedmont.edu>
+
+	* configure.ac, wmforecast.c: Add check for libgweather >= 40 to
+	configure
+
+2021-03-06  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Set application ID and contact info; needed for
+	libgweather 40 Closes: #13
+
+2021-03-01  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Display message when forecasts not available
+
+2020-07-02  Doug Torrance <dtorrance@piedmont.edu>
+
+	* wmforecast.c: Fix geoclue button bug.  One of the WMSetButtonEnabled's was outside the #ifdef HAVE_GEOCLUE
+	statement and so was always being run whether we have geoclue or
+	not.
+
 2020-06-06  Doug Torrance <dtorrance@piedmont.edu>
 
 	* ChangeLog, NEWS.md, configure.ac: Bump to version 1.4
