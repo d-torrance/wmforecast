@@ -7,6 +7,9 @@ AC_PROG_CC
 PKG_CHECK_MODULES([X11],[x11])
 PKG_CHECK_MODULES([GWEATHER], [gweather-3.0 >= 3.27.4])
 AC_MSG_CHECKING([for gweather-3.0 >= 40])
+SAVE=$CPPFLAGS
+CPPFLAGS="$SAVE `pkg-config gweather-3.0 --cflags` \
+	-Werror=implicit-function-declaration"
 AC_COMPILE_IFELSE(
 	[AC_LANG_PROGRAM([
 		#define GWEATHER_I_KNOW_THIS_IS_UNSTABLE
@@ -21,6 +24,7 @@ AC_COMPILE_IFELSE(
 	 AC_DEFINE(HAVE_GWEATHER40, 1,
 		   [Define if libgweather >= 40 is available])],
 	AC_MSG_RESULT([no]))
+CPPFLAGS=$SAVE
 AC_ARG_WITH([geoclue],
 	    [AS_HELP_STRING([--with-geoclue],
 		   [build with geoclue (provides location information)])],
