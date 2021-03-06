@@ -32,6 +32,8 @@
 
 #define DEFAULT_TEXT_COLOR "light sea green"
 #define DEFAULT_BG_COLOR "black"
+#define APPLICATION_ID "org.friedcheese.wmforecast"
+#define CONTACT_INFO "dtorrance@piedmont.edu"
 
 #define icondir_warning(tried, current) \
 	wwarning("%s is not a valid icon directory; falling back to %s", \
@@ -647,6 +649,8 @@ static void updateDockapp(void *data)
 	loc = gweather_location_find_nearest_city(
 		world, prefs->latitude, prefs->longitude);
 	info = gweather_info_new(NULL);
+	gweather_info_set_application_id(info, APPLICATION_ID);
+	gweather_info_set_contact_info(info, CONTACT_INFO);
 	gweather_info_set_enabled_providers(info, GWEATHER_PROVIDER_ALL);
 	gweather_info_set_location(info, loc);
 	g_signal_connect(
