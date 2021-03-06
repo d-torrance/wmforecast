@@ -649,8 +649,10 @@ static void updateDockapp(void *data)
 	loc = gweather_location_find_nearest_city(
 		world, prefs->latitude, prefs->longitude);
 	info = gweather_info_new(NULL);
+#ifdef HAVE_GWEATHER40
 	gweather_info_set_application_id(info, APPLICATION_ID);
 	gweather_info_set_contact_info(info, CONTACT_INFO);
+#endif
 	gweather_info_set_enabled_providers(info, GWEATHER_PROVIDER_ALL);
 	gweather_info_set_location(info, loc);
 	g_signal_connect(
