@@ -653,7 +653,7 @@ static void updateDockapp(void *data)
 #else
 	info = gweather_info_new(NULL, GWEATHER_FORECAST_LIST);
 #endif
-#ifdef HAVE_GWEATHER40
+#ifdef HAVE_GWEATHER_40
 	gweather_info_set_application_id(info, APPLICATION_ID);
 	gweather_info_set_contact_info(info, CONTACT_INFO);
 #endif

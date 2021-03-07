@@ -34,7 +34,7 @@ AC_COMPILE_IFELSE(
 		gweather_info_set_contact_info(info, "contact info");
 	])],
 	[AC_MSG_RESULT([yes])
-	 AC_DEFINE(HAVE_GWEATHER40, 1,
+	 AC_DEFINE(HAVE_GWEATHER_40, 1,
 		   [Define if libgweather >= 40 is available])],
 	AC_MSG_RESULT([no]))
 CPPFLAGS=$SAVE
