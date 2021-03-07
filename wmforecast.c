@@ -653,8 +653,8 @@ static void updateDockapp(void *data)
 	gweather_info_set_application_id(info, APPLICATION_ID);
 	gweather_info_set_contact_info(info, CONTACT_INFO);
 #endif
-	gweather_info_set_enabled_providers(info, GWEATHER_PROVIDER_ALL);
 	gweather_info_set_location(info, loc);
+	gweather_info_set_enabled_providers(info, GWEATHER_PROVIDER_ALL);
 	g_signal_connect(
 		G_OBJECT(info), "updated", G_CALLBACK(getWeather), dockapp);
 	gweather_info_update(info);
