@@ -19,17 +19,3 @@ wmforecast.1: wmforecast.1.in $(srcdir)/ChangeLog
 		tr -d '\n'))
 	sed -e 's|@pkgdatadir[@]|$(pkgdatadir)|g' -e 's|@DATE[@]|$(DATE)|g' \
 		-e 's|@PACKAGE_VERSION[@]|$(PACKAGE_VERSION)|g' $< > $@
-
-$(srcdir)/ChangeLog:
-	git2cl > $@
-
-rmChangeLog:
-	rm -f $(srcdir)/ChangeLog
-
-updateChangeLog: rmChangeLog $(srcdir)/ChangeLog
-
-dist-hook:
-	@echo " +-------------------------------------+"
-	@echo " | new release?                        | "
-	@echo " | did you run 'make updateChangeLog'? | "
-	@echo " +-------------------------------------+"
