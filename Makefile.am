@@ -14,8 +14,8 @@ EXTRA_DIST = autogen.sh README.md wmforecast.1.in NEWS.md
 
 CLEANFILES = wmforecast.1
 
-wmforecast.1: wmforecast.1.in $(srcdir)/ChangeLog
-	$(eval DATE = $(shell head -n 1 $(word 2,$^) | cut -d' ' -f1 | \
-		tr -d '\n'))
+wmforecast.1: wmforecast.1.in $(srcdir)/NEWS.md
+	$(eval DATE = $(shell grep "Release date:" $(word 2,$^) | \
+		head -1 | cut -d ' ' -f 4 | tr -d '\n'))
 	sed -e 's|@pkgdatadir[@]|$(pkgdatadir)|g' -e 's|@DATE[@]|$(DATE)|g' \
 		-e 's|@PACKAGE_VERSION[@]|$(PACKAGE_VERSION)|g' $< > $@
