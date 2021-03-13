@@ -1,15 +1,28 @@
-AC_INIT([wmforecast], [1.5], [https://github.com/d-torrance/wmforecast/issues],
+AC_INIT([wmforecast], [1.6], [https://github.com/d-torrance/wmforecast/issues],
 	[wmforecast], [http://wmforecast.friedcheese.org])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign -Wno-portability])
 AC_CONFIG_SRCDIR([configure.ac])
 AC_CONFIG_HEADER([config.h])
 AC_PROG_CC
 PKG_CHECK_MODULES([X11],[x11])
-PKG_CHECK_MODULES([GWEATHER], [gweather-3.0 >= 3.27.4])
-AC_MSG_CHECKING([for gweather-3.0 >= 40])
+PKG_CHECK_MODULES([GWEATHER], [gweather-3.0 >= 3.11.3])
 SAVE=$CPPFLAGS
 CPPFLAGS="$SAVE `pkg-config gweather-3.0 --cflags` \
 	-Werror=implicit-function-declaration"
+AC_MSG_CHECKING([for gweather-3.0 >= 3.27.4])
+AC_COMPILE_IFELSE(
+	[AC_LANG_PROGRAM([
+		#define GWEATHER_I_KNOW_THIS_IS_UNSTABLE
+		#include <libgweather/gweather.h>
+	],
+	[
+		gweather_info_new(NULL);
+	])],
+	[AC_MSG_RESULT([yes])
+	 AC_DEFINE(HAVE_GWEATHER_3_27_4, 1,
+		   [Define if libgweather >= 3.27.4 is available])],
+	AC_MSG_RESULT([no]))
+AC_MSG_CHECKING([for gweather-3.0 >= 40])
 AC_COMPILE_IFELSE(
 	[AC_LANG_PROGRAM([
 		#define GWEATHER_I_KNOW_THIS_IS_UNSTABLE
@@ -21,7 +34,7 @@ AC_COMPILE_IFELSE(
 		gweather_info_set_contact_info(info, "contact info");
 	])],
 	[AC_MSG_RESULT([yes])
-	 AC_DEFINE(HAVE_GWEATHER40, 1,
+	 AC_DEFINE(HAVE_GWEATHER_40, 1,
 		   [Define if libgweather >= 40 is available])],
 	AC_MSG_RESULT([no]))
 CPPFLAGS=$SAVE
