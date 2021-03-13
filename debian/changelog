@@ -1,3 +1,11 @@
+wmforecast (1.6-0ppa2) hirsute; urgency=medium
+
+  * Switch back to debhelper compatibility 11.  Attempted dropping to 9
+    for xenial support, but it ended up breaking everything due to the
+    dh_autoreconf changes since then.
+
+ -- Doug Torrance <dtorrance@piedmont.edu>  Sat, 13 Mar 2021 18:34:43 -0500
+
 wmforecast (1.6-0ppa1) hirsute; urgency=medium
 
   * New upstream release (PPA build).
