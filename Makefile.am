@@ -19,3 +19,10 @@ wmforecast.1: wmforecast.1.in $(srcdir)/NEWS.md
 		head -1 | cut -d ' ' -f 4 | tr -d '\n'))
 	sed -e 's|@pkgdatadir[@]|$(pkgdatadir)|g' -e 's|@DATE[@]|$(DATE)|g' \
 		-e 's|@PACKAGE_VERSION[@]|$(PACKAGE_VERSION)|g' $< > $@
+
+sign: wmforecast-@PACKAGE_VERSION@.tar.gz.asc
+
+%.asc: %
+	gpg --detach-sign --armor $<
+
+.PHONY: sign
