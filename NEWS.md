@@ -1,3 +1,12 @@
+version 1.6
+-----------
+* Release date: 2021-03-13
+* Add support for older libgweather versions (>= 3.11.3).  Note that with the
+  recent yr.no -> met.no change, using a version < 40 will only display current
+  conditions and no forecast data.
+* Add release dates to previous NEWS.md entries.
+* Stop generating and shipping ChangeLog.
+
 version 1.5
 -----------
 * Release date: 2021-03-06
