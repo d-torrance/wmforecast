@@ -3,7 +3,7 @@ Section: utils
 Priority: optional
 Maintainer: Debian Window Maker Team <pkg-wmaker-devel@lists.alioth.debian.org>
 Uploaders: Doug Torrance <dtorrance@piedmont.edu>
-Build-Depends: debhelper-compat (= 11),
+Build-Depends: debhelper (>= 9),
                libgeoclue-2-dev,
                libgweather-3-dev,
                libwings-dev
