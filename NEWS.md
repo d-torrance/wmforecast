@@ -1,11 +1,13 @@
 version 1.5
 -----------
+* Release date: 2021-03-06
 * Add support for libgweather 40; needed for fetching forecast data after
   yr.no -> met.no change.
 * Bug fixes.
 
 version 1.4
 -----------
+* Release date: 2020-06-06
 * If there is no current weather data but there are upcoming
   forecasts, then use the data from the first forecast.
 * New button to restore default colors in the preferences window.
@@ -13,20 +15,24 @@ version 1.4
 
 version 1.3
 -----------
+* Release date: 2020-05-14
 * git2cl is no longer a dependency if building from git
 
 version 1.2
 -----------
+* Release date: 2020-05-12
 * Bug fix.
   - You can now build wmforecast from a directory other than the source
     directory without needing git2cl to regenerate ChangeLog.
 
 version 1.1
 -----------
+* Release date: 2020-05-04
 * Bug fix.
 
 version 1.0
 -----------
+* Release date: 2020-04-29
 * Due to changes in the Yahoo! weather API, we have switched to using
   [libgweather](https://wiki.gnome.org/Projects/LibGWeather).
   This brings with it several interface changes:
@@ -49,6 +55,7 @@ version 1.0
 
 version 0.11
 ------------
+* Release date: 2016-04-01
 * New Yahoo! API gives us bad xml pretty frequently, which was causing
   frequent segfaults.  We display an error instead.
 * If we get an error, we try again in 1 minute.
@@ -60,10 +67,12 @@ version 0.11
 
 version 0.10
 ------------
+* Release date: 2016-03-26
 * Update to work with new Yahoo! Weather API.
 
 version 0.9
 -----------
+* Release date: 2016-01-17
 * New feature!
   - You may change the background or text colors either using the command line
     (-b or --background for background, -t or --text for text), or by using the
@@ -76,24 +85,29 @@ version 0.9
 
 version 0.8
 -----------
+* Release date: 2014-10-21
 * Update license information in svg icon.
 * New homepage on github.
 
 version 0.7
 -----------
+* Release date: 2014-07-17
 * Update copyright information for icons.
 
 version 0.6
 -----------
+* Release date: 2014-06-03
 * Bug fixes
 
 version 0.5
 -----------
+* Release date: 2014-05-11
 * Now appears, with icon, in most desktop environment menus
 * Bug fix
 
 version 0.4
 -----------
+* Release date: 2014-05-07
 * New features!
   - Right click the icon to edit preferences in a GUI
   - Preferences may also be manually configured in XDG_CONFIG_DIR/wmforecast/
@@ -103,6 +117,7 @@ version 0.4
 
 version 0.3
 -----------
+* Release date: 2014-04-21
 * New features!
   - Double click icon to refresh data
   - Use -i or --interval option to set how frequently data is automatically
