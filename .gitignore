@@ -1,4 +1,4 @@
-config.h.in~
+*~
 autom4te.cache/
 .deps/
 Makefile
@@ -22,3 +22,4 @@ INSTALL
 config.h.in
 depcomp
 install-sh
+README.html
