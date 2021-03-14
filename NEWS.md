@@ -136,9 +136,11 @@ version 0.3
 
 version 0.2
 -----------
+* Release date: 2014-04-17
 * Added manpage
 * Bug fixes
 
 version 0.1
 -----------
+* Release date: 2014-04-15
 * Initial release
