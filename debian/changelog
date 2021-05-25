@@ -1,3 +1,14 @@
+wmforecast (1.6-1) UNRELEASED; urgency=medium
+
+  * New upstream release:
+    - Add support for libgweather 40; needed for fetching forecast data after
+      yr.no -> met.no change
+    - Add support for older libgweather versions (>= 3.11.3).
+      Note that with the recent yr.no -> met.no change, using a version < 40
+      will only display current conditions and no forecast data.
+
+ -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Tue, 25 May 2021 18:33:36 +0200
+
 wmforecast (1.4-2) unstable; urgency=medium
 
   * debian/tests/control
