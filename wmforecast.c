@@ -1,4 +1,4 @@
-/* Copyright (C) 2014-2020 Doug Torrance <dtorrance@piedmont.edu>
+/* Copyright (C) 2014-2021 Doug Torrance <dtorrance@piedmont.edu>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,8 @@
 
 #define DEFAULT_TEXT_COLOR "light sea green"
 #define DEFAULT_BG_COLOR "black"
+#define APPLICATION_ID "org.friedcheese.wmforecast"
+#define CONTACT_INFO "dtorrance@piedmont.edu"
 
 #define icondir_warning(tried, current) \
 	wwarning("%s is not a valid icon directory; falling back to %s", \
@@ -388,16 +390,28 @@ char *getBalloonText(Weather *weather, int days)
 	text = wstrappend(text, ", ");
 	text = wstrappend(text, weather->temp);
 
-	text = wstrappend(text, "°\n\nForecast:\n");
-	for (i = 0; i < weather->forecasts->length && i < days; i++) {
-		text = wstrappend(text, weather->forecasts->forecasts[i].day);
-		text = wstrappend(text, " - ");
-		text = wstrappend(text, weather->forecasts->forecasts[i].text);
-		text = wstrappend(text, ". High: ");
-		text = wstrappend(text, weather->forecasts->forecasts[i].high);
-		text = wstrappend(text, "° Low: ");
-		text = wstrappend(text, weather->forecasts->forecasts[i].low);
-		text = wstrappend(text, "°\n");
+	text = wstrappend(text, "°\n\nForecast");
+
+	if (weather->forecasts->length == 0)
+		text = wstrappend(text, " not available.");
+	else {
+		text = wstrappend(text, ":\n");
+		for (i = 0; i < weather->forecasts->length && i < days; i++) {
+			text = wstrappend(text,
+					  weather->forecasts->forecasts[i].day);
+			text = wstrappend(text, " - ");
+			text = wstrappend(text,
+					  weather->forecasts->forecasts[i].text);
+			text = wstrappend(text,
+					  ". High: ");
+			text = wstrappend(text,
+					  weather->forecasts->forecasts[i].high);
+			text = wstrappend(text,
+					  "° Low: ");
+			text = wstrappend(text,
+					  weather->forecasts->forecasts[i].low);
+			text = wstrappend(text, "°\n");
+		}
 	}
 
 	text = wstrappend(text, "\n");
@@ -634,9 +648,17 @@ static void updateDockapp(void *data)
 	world = gweather_location_get_world();
 	loc = gweather_location_find_nearest_city(
 		world, prefs->latitude, prefs->longitude);
+#ifdef HAVE_GWEATHER_3_27_4
 	info = gweather_info_new(NULL);
-	gweather_info_set_enabled_providers(info, GWEATHER_PROVIDER_ALL);
+#else
+	info = gweather_info_new(NULL, GWEATHER_FORECAST_LIST);
+#endif
+#ifdef HAVE_GWEATHER_40
+	gweather_info_set_application_id(info, APPLICATION_ID);
+	gweather_info_set_contact_info(info, CONTACT_INFO);
+#endif
 	gweather_info_set_location(info, loc);
+	gweather_info_set_enabled_providers(info, GWEATHER_PROVIDER_ALL);
 	g_signal_connect(
 		G_OBJECT(info), "updated", G_CALLBACK(getWeather), dockapp);
 	gweather_info_update(info);
@@ -772,7 +794,7 @@ Preferences *setPreferences(int argc, char **argv)
 
 		case 'v':
 			printf("%s\n"
-			       "Copyright © 2014-2020 Doug Torrance\n"
+			       "Copyright © 2014-2021 Doug Torrance\n"
 			       "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
 			       "This is free software: you are free to change and redistribute it.\n"
 			       "There is NO WARRANTY, to the extent permitted by law.\n"
@@ -1079,11 +1101,11 @@ static void editPreferences(void *data)
 	WMSetButtonText(d->prefsWindow->find_coords, "Find Coords");
 #ifdef HAVE_GEOCLUE
 	WMSetButtonAction(d->prefsWindow->find_coords, findCoords, d);
+	WMSetButtonEnabled(d->prefsWindow->find_coords,
+			   d->prefs->geoclue);
 #else
 	WMSetButtonEnabled(d->prefsWindow->find_coords, False);
 #endif
-	WMSetButtonEnabled(d->prefsWindow->find_coords,
-			   d->prefs->geoclue);
 	WMResizeWidget(d->prefsWindow->find_coords, 120, 18);
 	WMMoveWidget(d->prefsWindow->find_coords, 20, 57);
 	WMRealizeWidget(d->prefsWindow->find_coords);
@@ -1233,6 +1255,11 @@ int main(int argc, char **argv)
 
 	display = XOpenDisplay("");
 
+	if (!display) {
+		werror("could not connect to the X server");
+		exit(EXIT_FAILURE);
+	}
+
 	screen = WMCreateScreen(display, DefaultScreen(display));
 	dockapp = newDockapp(screen, prefs, argc, argv);
 
@@ -1246,4 +1273,6 @@ int main(int argc, char **argv)
 	WMAddPersistentTimerHandler(100, do_glib_loop, NULL);
 
 	WMScreenMainLoop(screen);
+
+	return 0;
 }
