@@ -6,6 +6,10 @@ wmforecast (1.6-1) UNRELEASED; urgency=medium
     - Add support for older libgweather versions (>= 3.11.3).
       Note that with the recent yr.no -> met.no change, using a version < 40
       will only display current conditions and no forecast data.
+  * debian/control: Build depend on libgweather 40.
+    Even though upstream supports both versions we're going to only support
+    libgweather 40 in debian, so we need to ensure that we're rebuilding
+    against it.
 
  -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Tue, 25 May 2021 18:33:36 +0200
 
