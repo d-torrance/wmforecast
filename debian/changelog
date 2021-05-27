@@ -1,5 +1,6 @@
-wmforecast (1.6-1) UNRELEASED; urgency=medium
+wmforecast (1.6-1~exp1) UNRELEASED; urgency=medium
 
+  [ Marco Trevisan (Treviño) ]
   * New upstream release:
     - Add support for libgweather 40; needed for fetching forecast data after
       yr.no -> met.no change
@@ -11,7 +12,15 @@ wmforecast (1.6-1) UNRELEASED; urgency=medium
     libgweather 40 in debian, so we need to ensure that we're rebuilding
     against it.
 
- -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Tue, 25 May 2021 18:33:36 +0200
+  [ Doug Torrance ]
+  * debian/control
+    - Bump Standards-Version to 4.5.1.
+    - Add ca-certificates to Depends; needed to avoid "Unacceptable
+      TLS certificate" warnings when getting IWIN forecast data.
+  * debian/salsa-ci.yml
+    - Set RELEASE to 'experimental' for now.
+
+ -- Doug Torrance <dtorrance@piedmont.edu>  Thu, 27 May 2021 11:54:26 -0400
 
 wmforecast (1.4-2) unstable; urgency=medium
 
