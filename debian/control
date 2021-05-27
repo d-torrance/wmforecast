@@ -15,7 +15,7 @@ Rules-Requires-Root: no
 
 Package: wmforecast
 Architecture: any
-Depends: ${misc:Depends}, ${shlibs:Depends}
+Depends: ca-certificates, ${misc:Depends}, ${shlibs:Depends}
 Description: weather dockapp for Window Maker using libgweather
  wmforecast is a weather dockapp for Window Maker. It displays the current
  temperature and an icon representing the current conditions.  A balloon
