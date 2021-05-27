@@ -1,4 +1,4 @@
-wmforecast (1.6-1~exp1) UNRELEASED; urgency=medium
+wmforecast (1.6-1~exp1) experimental; urgency=medium
 
   [ Marco Trevisan (Treviño) ]
   * New upstream release:
@@ -20,7 +20,7 @@ wmforecast (1.6-1~exp1) UNRELEASED; urgency=medium
   * debian/salsa-ci.yml
     - Set RELEASE to 'experimental' for now.
 
- -- Doug Torrance <dtorrance@piedmont.edu>  Thu, 27 May 2021 11:54:26 -0400
+ -- Doug Torrance <dtorrance@piedmont.edu>  Thu, 27 May 2021 13:24:51 -0400
 
 wmforecast (1.4-2) unstable; urgency=medium
 
