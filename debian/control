@@ -5,7 +5,7 @@ Maintainer: Debian Window Maker Team <pkg-wmaker-devel@lists.alioth.debian.org>
 Uploaders: Doug Torrance <dtorrance@piedmont.edu>
 Build-Depends: debhelper-compat (= 11),
                libgeoclue-2-dev,
-               libgweather-3-dev (>= 40.0),
+               libgweather-3-dev,
                libwings-dev
 Standards-Version: 4.5.1
 Homepage: https://wmforecast.friedcheese.org
