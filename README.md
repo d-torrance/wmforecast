@@ -27,14 +27,13 @@ There are several options for obtaining wmforecast:
 
 * Packages are available for Debian-based distributions.
 
-        sudo apt-get install wmforecast
+        sudo apt install wmforecast
 
   This may give you an older version.  To obtain the latest version in
   Ubuntu, you may use the PPA.
 
         sudo add-apt-repository ppa:profzoom/dockapps
-        sudo apt-get update
-        sudo apt-get install wmforecast
+        sudo apt install wmforecast
 
 Installation
 ------------
