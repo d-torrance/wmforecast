@@ -5,9 +5,9 @@ Maintainer: Debian Window Maker Team <pkg-wmaker-devel@lists.alioth.debian.org>
 Uploaders: Doug Torrance <dtorrance@piedmont.edu>
 Build-Depends: debhelper-compat (= 11),
                libgeoclue-2-dev,
-               libgweather-3-dev,
+               libgweather-3-dev (>= 40.0),
                libwings-dev
-Standards-Version: 4.5.0
+Standards-Version: 4.5.1
 Homepage: https://wmforecast.friedcheese.org
 Vcs-Browser: https://salsa.debian.org/wmaker-team/wmforecast
 Vcs-Git: https://salsa.debian.org/wmaker-team/wmforecast.git
@@ -15,7 +15,7 @@ Rules-Requires-Root: no
 
 Package: wmforecast
 Architecture: any
-Depends: ${misc:Depends}, ${shlibs:Depends}
+Depends: ca-certificates, ${misc:Depends}, ${shlibs:Depends}
 Description: weather dockapp for Window Maker using libgweather
  wmforecast is a weather dockapp for Window Maker. It displays the current
  temperature and an icon representing the current conditions.  A balloon
