@@ -78,6 +78,26 @@ Usage
     -w, --windowed           run in windowed mode
     -d, --days               number of days to show in forecast (default 7)
 
+### Geoclue
+If using Geoclue >= 2.5.7, then you may get the following error after clicking
+the "Find Coords" button in the preferences window:
+
+```
+./wmforecast(foundCoords(wmforecast.c:963)): error: GDBus.Error:org.freedesktop.
+DBus.Error.AccessDenied: 'wmforecast' disallowed, no agent for UID 1000
+```
+
+To fix this, run Geoclue's demo agent.  On Debian-based systems, this
+is located at `/usr/libexec/geoclue-2.0/demos/agent`.  In Window
+Maker, you can run this at startup by adding the following line to
+`~/GNUstep/Library/WindowMaker/autostart`:
+
+```
+/usr/libexec/geoclue-2.0/demos/agent &
+```
+
+See also: https://gitlab.freedesktop.org/geoclue/geoclue/-/issues/143
+
 Bugs
 ----
 
