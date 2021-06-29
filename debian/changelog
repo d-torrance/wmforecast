@@ -1,3 +1,14 @@
+wmforecast (1.7-0ppa1) impish; urgency=medium
+
+  * New upstream release (PPA build).
+  * debian/control
+    - Drop versioned dependency for libgweather-3-dev.  We still want
+      to support lower versions in Ubuntu releases.
+  * debian/source/options
+    - New file; ignore .github directory.
+
+ -- Doug Torrance <dtorrance@piedmont.edu>  Tue, 29 Jun 2021 12:41:32 -0400
+
 wmforecast (1.6-1~exp1) experimental; urgency=medium
 
   [ Marco Trevisan (Treviño) ]
