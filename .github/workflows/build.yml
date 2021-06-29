@@ -10,8 +10,8 @@ jobs:
       - uses: actions/checkout@v2
       - name: Install dependencies
         run: |
-          sudo apt update
-          sudo apt install libwings-dev libgweather-3-dev libgeoclue-2-dev
+          sudo apt-get update
+          sudo apt-get install libwings-dev libgweather-3-dev libgeoclue-2-dev
       - name: Build
         run: |
           ./autogen.sh
