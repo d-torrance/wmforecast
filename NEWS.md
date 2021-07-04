@@ -1,3 +1,9 @@
+version 1.7
+-----------
+* Release date: 2021-06-29
+* Print error message from Geoclue when "Find Coords" button doesn't work.
+* Add section to README about running Geoclue's demo agent.
+
 version 1.6
 -----------
 * Release date: 2021-03-13
