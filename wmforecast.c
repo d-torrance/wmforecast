@@ -959,6 +959,10 @@ static void foundCoords(GObject *source_object, GAsyncResult *res,
 	} else {
 		WMSetButtonText(d->prefsWindow->find_coords,
 				"Error. Try again?");
+		if (error) {
+			werror("%s\n", error->message);
+			g_error_free(error);
+		}
 	}
 }
 
