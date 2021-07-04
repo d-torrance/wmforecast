@@ -1,8 +1,9 @@
-wmforecast (1.7-1) UNRELEASED; urgency=medium
+wmforecast (1.7-1) experimental; urgency=medium
 
   * New upstream release.
+  * Add myself to uploaders.
 
- -- Andreas Metzler <ametzler@debian.org>  Sun, 04 Jul 2021 11:16:26 +0200
+ -- Andreas Metzler <ametzler@debian.org>  Sun, 04 Jul 2021 11:32:13 +0200
 
 wmforecast (1.6-1~exp1) experimental; urgency=medium
 
