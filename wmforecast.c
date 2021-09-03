@@ -255,7 +255,7 @@ void setConditions(Weather *weather,
 	}
 
 	currentTime = time(NULL);
-	strftime(weather->retrieved, sizeof weather->retrieved, "%I:%M %p %Z",
+	strftime(weather->retrieved, sizeof weather->retrieved, "%l:%M %p %Z",
 		 localtime(&currentTime));
 }
 
