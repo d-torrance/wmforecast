@@ -1,4 +1,4 @@
-wmforecast (1.7-1.1) UNRELEASED; urgency=medium
+wmforecast (1.7-1.1) unstable; urgency=medium
 
   * Non-maintainer upload
 
@@ -9,7 +9,7 @@ wmforecast (1.7-1.1) UNRELEASED; urgency=medium
   [ Simon McVittie ]
   * Upload to unstable for transition #993934
 
- -- Simon McVittie <smcv@debian.org>  Sun, 19 Sep 2021 13:27:45 +0100
+ -- Simon McVittie <smcv@debian.org>  Mon, 20 Sep 2021 21:07:20 +0100
 
 wmforecast (1.7-1) experimental; urgency=medium
 
