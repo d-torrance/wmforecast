@@ -1,3 +1,23 @@
+wmforecast (1.7-1.1) unstable; urgency=medium
+
+  * Non-maintainer upload
+
+  [ Doug Torrance ]
+  * d/control: Update Maintainer email address to use tracker.d.o.
+  * d/control: Bump Standards-Version to 4.6.0.
+
+  [ Simon McVittie ]
+  * Upload to unstable for transition #993934
+
+ -- Simon McVittie <smcv@debian.org>  Mon, 20 Sep 2021 21:07:20 +0100
+
+wmforecast (1.7-1) experimental; urgency=medium
+
+  * New upstream release.
+  * Add myself to uploaders.
+
+ -- Andreas Metzler <ametzler@debian.org>  Sun, 04 Jul 2021 11:32:13 +0200
+
 wmforecast (1.7-0ppa1) impish; urgency=medium
 
   * New upstream release (PPA build).

@@ -1,13 +1,14 @@
 Source: wmforecast
 Section: utils
 Priority: optional
-Maintainer: Debian Window Maker Team <pkg-wmaker-devel@lists.alioth.debian.org>
-Uploaders: Doug Torrance <dtorrance@piedmont.edu>
+Maintainer: Debian Window Maker Team <team+wmaker@tracker.debian.org>
+Uploaders: Doug Torrance <dtorrance@piedmont.edu>,
+           Andreas Metzler <ametzler@debian.org>
 Build-Depends: debhelper-compat (= 11),
                libgeoclue-2-dev,
                libgweather-3-dev,
                libwings-dev
-Standards-Version: 4.5.1
+Standards-Version: 4.6.0
 Homepage: https://wmforecast.friedcheese.org
 Vcs-Browser: https://salsa.debian.org/wmaker-team/wmforecast
 Vcs-Git: https://salsa.debian.org/wmaker-team/wmforecast.git
