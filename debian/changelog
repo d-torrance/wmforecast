@@ -1,3 +1,9 @@
+wmforecast (1.7-1.1ppa1) impish; urgency=medium
+
+  * Merge latest Debian updates.
+
+ -- Doug Torrance <dtorrance@piedmont.edu>  Tue, 21 Sep 2021 06:44:55 -0400
+
 wmforecast (1.7-1.1) unstable; urgency=medium
 
   * Non-maintainer upload
