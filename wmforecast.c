@@ -960,7 +960,9 @@ static void foundCoords(GObject *source_object, GAsyncResult *res,
 		WMSetButtonText(d->prefsWindow->find_coords,
 				"Error. Try again?");
 		if (error) {
-			werror("%s\n", error->message);
+			WMSetBalloonTextForView(
+				error->message,
+				WMWidgetView(d->prefsWindow->find_coords));
 			g_error_free(error);
 		}
 	}
@@ -971,6 +973,9 @@ static void findCoords(WMWidget *widget, void *data)
 	Dockapp *d = (Dockapp *)data;
 	(void)widget;
 	WMSetButtonText(d->prefsWindow->find_coords, "Finding...");
+	WMSetBalloonTextForView(
+		NULL,
+		WMWidgetView(d->prefsWindow->find_coords));
 
 	gclue_simple_new("wmforecast", GCLUE_ACCURACY_LEVEL_CITY, NULL,
 			 foundCoords, d);
