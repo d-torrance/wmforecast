@@ -82,8 +82,7 @@ If using Geoclue >= 2.5.7, then you may get the following error after clicking
 the "Find Coords" button in the preferences window:
 
 ```
-./wmforecast(foundCoords(wmforecast.c:963)): error: GDBus.Error:org.freedesktop.
-DBus.Error.AccessDenied: 'wmforecast' disallowed, no agent for UID 1000
+GDBus.Error:org.freedesktop.DBus.Error.AccessDenied: 'wmforecast' disallowed, no agent for UID 1000
 ```
 
 To fix this, run Geoclue's demo agent.  On Debian-based systems, this
