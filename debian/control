@@ -6,7 +6,7 @@ Uploaders: Doug Torrance <dtorrance@piedmont.edu>,
            Andreas Metzler <ametzler@debian.org>
 Build-Depends: debhelper-compat (= 13),
                libgeoclue-2-dev,
-               libgweather-3-dev (>= 40.0),
+               libgweather-4-dev,
                libwings-dev
 Standards-Version: 4.6.0
 Homepage: https://wmforecast.friedcheese.org
