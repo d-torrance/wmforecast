@@ -1,3 +1,8 @@
+version 1.8.1
+-------------
+* Release date: 2022-03-21
+* Bug fix.
+
 version 1.8
 -----------
 * Release date: 2022-03-20
