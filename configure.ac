@@ -37,10 +37,10 @@ PKG_CHECK_MODULES([GWEATHER], [gweather4], [
 	])],
 	[AC_MSG_RESULT([yes])
 	 HAVE_GWEATHER_VERSION=3040000],
-	AC_MSG_RESULT([no]))])
+	AC_MSG_RESULT([no]))
+    CPPFLAGS=$SAVE])
 AC_DEFINE_UNQUOTED([HAVE_GWEATHER_VERSION], [$HAVE_GWEATHER_VERSION],
 	  [Available version of libgweather])
-CPPFLAGS=$SAVE
 AC_ARG_WITH([geoclue],
 	    [AS_HELP_STRING([--with-geoclue],
 		   [build with geoclue (provides location information)])],
