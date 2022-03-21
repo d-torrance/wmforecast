@@ -1,3 +1,22 @@
+wmforecast (1.8-1) unstable; urgency=medium
+
+  * New upstream release.
+  * debian/control
+    - Bump to libgweather-4-dev in Build-Depends.
+    - Update my email address; now a Debian Developer.
+  * debian/copyright
+    - Update my copyright years and email address.
+  * debian/gbp.conf
+    - Set default debian-branch name to "debian/latest"; recommended by
+      DEP-14.
+  * debian/source/options
+    - New file; ignore .github directory; present in upstream git repo but
+      not tarball.
+  * debian/upstream/metadata
+    - Add "---" for document start.
+
+ -- Doug Torrance <dtorrance@debian.org>  Sun, 20 Mar 2022 23:02:14 -0400
+
 wmforecast (1.7-1.1) unstable; urgency=medium
 
   * Non-maintainer upload
