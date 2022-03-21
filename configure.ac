@@ -5,7 +5,7 @@ AC_CONFIG_SRCDIR([configure.ac])
 AC_CONFIG_HEADER([config.h])
 AC_PROG_CC
 PKG_CHECK_MODULES([X11],[x11])
-PKG_CHECK_MODULES([GWEATHER], [gweather-4.0],, [
+PKG_CHECK_MODULES([GWEATHER], [gweather4],, [
     PKG_CHECK_MODULES([GWEATHER], [gweather-3.0 >= 3.11.3])
     SAVE=$CPPFLAGS
     CPPFLAGS="$SAVE `pkg-config gweather-3.0 --cflags` \
