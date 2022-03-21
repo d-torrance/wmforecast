@@ -648,12 +648,12 @@ static void updateDockapp(void *data)
 	world = gweather_location_get_world();
 	loc = gweather_location_find_nearest_city(
 		world, prefs->latitude, prefs->longitude);
-#ifdef HAVE_GWEATHER_3_27_4
+#if HAVE_GWEATHER_VERSION >= 3027004
 	info = gweather_info_new(NULL);
 #else
 	info = gweather_info_new(NULL, GWEATHER_FORECAST_LIST);
 #endif
-#ifdef HAVE_GWEATHER_40
+#if HAVE_GWEATHER_VERSION >= 3040000
 	gweather_info_set_application_id(info, APPLICATION_ID);
 	gweather_info_set_contact_info(info, CONTACT_INFO);
 #endif
