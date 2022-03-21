@@ -2,11 +2,11 @@ Source: wmforecast
 Section: utils
 Priority: optional
 Maintainer: Debian Window Maker Team <team+wmaker@tracker.debian.org>
-Uploaders: Doug Torrance <dtorrance@piedmont.edu>,
+Uploaders: Doug Torrance <dtorrance@debian.org>
            Andreas Metzler <ametzler@debian.org>
 Build-Depends: debhelper-compat (= 11),
                libgeoclue-2-dev,
-               libgweather-3-dev,
+               libgweather-4-dev,
                libwings-dev
 Standards-Version: 4.6.0
 Homepage: https://wmforecast.friedcheese.org
