@@ -1,4 +1,5 @@
-AC_INIT([wmforecast], [1.8], [https://github.com/d-torrance/wmforecast/issues],
+AC_INIT([wmforecast], [1.8.1],
+	[https://github.com/d-torrance/wmforecast/issues],
 	[wmforecast], [http://wmforecast.friedcheese.org])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign -Wno-portability])
 AC_CONFIG_SRCDIR([configure.ac])
@@ -37,10 +38,10 @@ PKG_CHECK_MODULES([GWEATHER], [gweather4], [
 	])],
 	[AC_MSG_RESULT([yes])
 	 HAVE_GWEATHER_VERSION=3040000],
-	AC_MSG_RESULT([no]))])
+	AC_MSG_RESULT([no]))
+    CPPFLAGS=$SAVE])
 AC_DEFINE_UNQUOTED([HAVE_GWEATHER_VERSION], [$HAVE_GWEATHER_VERSION],
 	  [Available version of libgweather])
-CPPFLAGS=$SAVE
 AC_ARG_WITH([geoclue],
 	    [AS_HELP_STRING([--with-geoclue],
 		   [build with geoclue (provides location information)])],
