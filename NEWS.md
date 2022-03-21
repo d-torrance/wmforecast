@@ -1,3 +1,8 @@
+version 1.8
+-----------
+* Release date: 2022-03-20
+* Add support for libgweather 4.
+
 version 1.7
 -----------
 * Release date: 2021-06-29
