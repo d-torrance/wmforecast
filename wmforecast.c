@@ -255,7 +255,7 @@ void setConditions(Weather *weather,
 	}
 
 	currentTime = time(NULL);
-	strftime(weather->retrieved, sizeof weather->retrieved, "%I:%M %p %Z",
+	strftime(weather->retrieved, sizeof weather->retrieved, "%l:%M %p %Z",
 		 localtime(&currentTime));
 }
 
@@ -648,12 +648,12 @@ static void updateDockapp(void *data)
 	world = gweather_location_get_world();
 	loc = gweather_location_find_nearest_city(
 		world, prefs->latitude, prefs->longitude);
-#ifdef HAVE_GWEATHER_3_27_4
+#if HAVE_GWEATHER_VERSION >= 3027004
 	info = gweather_info_new(NULL);
 #else
 	info = gweather_info_new(NULL, GWEATHER_FORECAST_LIST);
 #endif
-#ifdef HAVE_GWEATHER_40
+#if HAVE_GWEATHER_VERSION >= 3040000
 	gweather_info_set_application_id(info, APPLICATION_ID);
 	gweather_info_set_contact_info(info, CONTACT_INFO);
 #endif
@@ -960,7 +960,9 @@ static void foundCoords(GObject *source_object, GAsyncResult *res,
 		WMSetButtonText(d->prefsWindow->find_coords,
 				"Error. Try again?");
 		if (error) {
-			werror("%s\n", error->message);
+			WMSetBalloonTextForView(
+				error->message,
+				WMWidgetView(d->prefsWindow->find_coords));
 			g_error_free(error);
 		}
 	}
@@ -971,6 +973,9 @@ static void findCoords(WMWidget *widget, void *data)
 	Dockapp *d = (Dockapp *)data;
 	(void)widget;
 	WMSetButtonText(d->prefsWindow->find_coords, "Finding...");
+	WMSetBalloonTextForView(
+		NULL,
+		WMWidgetView(d->prefsWindow->find_coords));
 
 	gclue_simple_new("wmforecast", GCLUE_ACCURACY_LEVEL_CITY, NULL,
 			 foundCoords, d);
