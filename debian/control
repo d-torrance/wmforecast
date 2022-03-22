@@ -2,7 +2,7 @@ Source: wmforecast
 Section: utils
 Priority: optional
 Maintainer: Debian Window Maker Team <team+wmaker@tracker.debian.org>
-Uploaders: Doug Torrance <dtorrance@debian.org>
+Uploaders: Doug Torrance <dtorrance@debian.org>,
            Andreas Metzler <ametzler@debian.org>
 Build-Depends: debhelper-compat (= 11),
                libgeoclue-2-dev,
