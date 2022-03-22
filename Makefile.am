@@ -12,6 +12,9 @@ LIBS += $(GEOCLUE_LIBS) $(GWEATHER_LIBS) $(X11_LIBS) $(WINGS_LIBS) \
 desktopdir = $(datadir)/applications
 dist_desktop_DATA = wmforecast.desktop
 
+metainfodir = $(datadir)/metainfo
+dist_metainfo_DATA = org.friedcheese.wmforecast.metainfo.xml
+
 EXTRA_DIST = autogen.sh README.md wmforecast.1.in NEWS.md
 
 CLEANFILES = wmforecast.1
