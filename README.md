@@ -8,7 +8,7 @@ wmforecast
 <http://wmforecast.friedcheese.org>
 
 wmforecast is a weather dockapp for Window Maker using
-[libgweather](https://wiki.gnome.org/Projects/LibGWeather).
+[libgweather](https://gnome.pages.gitlab.gnome.org/libgweather/).
 
 The icons were designed by MerlinTheRed and are available at
 <http://merlinthered.deviantart.com/art/plain-weather-icons-157162192>.
@@ -40,7 +40,7 @@ Installation
 
 * To compile wmforecast from source, you will need the following.
 
-  - [libgweather](https://wiki.gnome.org/Projects/LibGWeather)
+  - [libgweather](https://gnome.pages.gitlab.gnome.org/libgweather/)
   - [WINGs](http://windowmaker.org/)
   - *(optional)* [GeoClue](
     https://gitlab.freedesktop.org/geoclue/geoclue/-/wikis/home)
