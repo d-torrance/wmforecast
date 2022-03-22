@@ -34,6 +34,7 @@
 #define DEFAULT_BG_COLOR "black"
 #define APPLICATION_ID "org.friedcheese.wmforecast"
 #define CONTACT_INFO "dtorrance@piedmont.edu"
+#define COPYRIGHT_YEARS "2014-2022"
 
 #define icondir_warning(tried, current) \
 	wwarning("%s is not a valid icon directory; falling back to %s", \
@@ -794,7 +795,7 @@ Preferences *setPreferences(int argc, char **argv)
 
 		case 'v':
 			printf("%s\n"
-			       "Copyright © 2014-2021 Doug Torrance\n"
+			       "Copyright © " COPYRIGHT_YEARS " Doug Torrance\n"
 			       "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
 			       "This is free software: you are free to change and redistribute it.\n"
 			       "There is NO WARRANTY, to the extent permitted by law.\n"
