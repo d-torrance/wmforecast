@@ -27,14 +27,13 @@ There are several options for obtaining wmforecast:
 
 * Packages are available for Debian-based distributions.
 
-        sudo apt-get install wmforecast
+        sudo apt install wmforecast
 
   This may give you an older version.  To obtain the latest version in
   Ubuntu, you may use the PPA.
 
         sudo add-apt-repository ppa:profzoom/dockapps
-        sudo apt-get update
-        sudo apt-get install wmforecast
+        sudo apt install wmforecast
 
 Installation
 ------------
@@ -83,8 +82,7 @@ If using Geoclue >= 2.5.7, then you may get the following error after clicking
 the "Find Coords" button in the preferences window:
 
 ```
-./wmforecast(foundCoords(wmforecast.c:963)): error: GDBus.Error:org.freedesktop.
-DBus.Error.AccessDenied: 'wmforecast' disallowed, no agent for UID 1000
+GDBus.Error:org.freedesktop.DBus.Error.AccessDenied: 'wmforecast' disallowed, no agent for UID 1000
 ```
 
 To fix this, run Geoclue's demo agent.  On Debian-based systems, this
@@ -108,7 +106,7 @@ Copyright
 ---------
 
 ### wmforecast
-2014-2021 Doug Torrance  
+2014-2022 Doug Torrance  
 <dtorrance@piedmont.edu>  
 GNU General Public License v3+
 
