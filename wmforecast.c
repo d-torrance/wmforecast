@@ -1221,6 +1221,13 @@ static void editPreferences(void *data)
 	WMMoveWidget(d->prefsWindow->close, 350, 137);
 	WMRealizeWidget(d->prefsWindow->close);
 	WMMapWidget(d->prefsWindow->close);
+
+	WMSetTextFieldNextTextField(d->prefsWindow->latitude,
+				    d->prefsWindow->longitude);
+	WMSetTextFieldNextTextField(d->prefsWindow->longitude,
+				    d->prefsWindow->interval);
+	WMSetTextFieldNextTextField(d->prefsWindow->interval,
+				    d->prefsWindow->latitude);
 }
 
 static void refresh(XEvent *event, void *data)
