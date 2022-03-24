@@ -138,7 +138,7 @@ WMWindow *WMCreateDockapp(WMScreen *screen, const char *name, int argc,
 			  char **argv, Bool windowed);
 Dockapp *newDockapp(WMScreen *screen, Preferences *prefs,
 		    int argc, char **argv);
-char *getBalloonText(Weather *weather, int days);
+char *getForecastText(Weather *weather, int days);
 char *getTemp(GWeatherInfo *info, GWeatherTemperatureUnit unit);
 void gather_forecasts(Weather *weather, GSList *gforecasts);
 char *strip_tags(const char *to_strip);
@@ -378,7 +378,7 @@ Dockapp *newDockapp(WMScreen *screen, Preferences *prefs, int argc, char **argv)
 	return dockapp;
 }
 
-char *getBalloonText(Weather *weather, int days)
+char *getForecastText(Weather *weather, int days)
 {
 	char *text;
 	int i;
@@ -615,7 +615,7 @@ void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 		WMSetLabelImage(dockapp->icon, icon);
 
 		WMSetBalloonTextForView(
-			getBalloonText(weather, dockapp->prefs->days),
+			getForecastText(weather, dockapp->prefs->days),
 			WMWidgetView(dockapp->icon));
 	}
 
