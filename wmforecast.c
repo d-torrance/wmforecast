@@ -87,6 +87,7 @@ typedef struct {
 
 typedef struct {
 	int prefsWindowPresent;
+	int showForecast;
 	long int minutesLeft;
 	Preferences *prefs;
 	PreferencesWindow *prefsWindow;
@@ -330,6 +331,7 @@ Dockapp *newDockapp(WMScreen *screen, Preferences *prefs, int argc, char **argv)
 	dockapp->prefs = prefs;
 	dockapp->minutesLeft = prefs->interval;
 	dockapp->prefsWindowPresent = 0;
+	dockapp->showForecast = 1;
 
 	window = WMCreateDockapp(screen, "", argc, argv, prefs->windowed);
 	WMSetWindowTitle(window, "wmforecast");
@@ -614,9 +616,10 @@ void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 						weather->icon, 0);
 		WMSetLabelImage(dockapp->icon, icon);
 
-		WMSetBalloonTextForView(
-			getForecastText(weather, dockapp->prefs->days),
-			WMWidgetView(dockapp->icon));
+		if (dockapp->showForecast)
+			WMSetBalloonTextForView(
+				getForecastText(weather, dockapp->prefs->days),
+				WMWidgetView(dockapp->icon));
 	}
 
 	WMRedisplayWidget(dockapp->icon);
