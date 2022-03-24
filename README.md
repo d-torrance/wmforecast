@@ -77,6 +77,10 @@ Usage
     -w, --windowed           run in windowed mode
     -d, --days               number of days to show in forecast (default 7)
 
+Hover the mouse over the icon to display a balloon with the forecast
+for the next several days.  Middle click to switch the balloon to
+display the current conditions.
+
 ### Geoclue
 If using Geoclue >= 2.5.7, then you may get the following error after clicking
 the "Find Coords" button in the preferences window:
