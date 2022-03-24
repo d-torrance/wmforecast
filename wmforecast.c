@@ -140,6 +140,7 @@ WMWindow *WMCreateDockapp(WMScreen *screen, const char *name, int argc,
 Dockapp *newDockapp(WMScreen *screen, Preferences *prefs,
 		    int argc, char **argv);
 char *getForecastText(Weather *weather, int days);
+char *getConditionsText(GWeatherInfo *info);
 char *getTemp(GWeatherInfo *info, GWeatherTemperatureUnit unit);
 void gather_forecasts(Weather *weather, GSList *gforecasts);
 char *strip_tags(const char *to_strip);
@@ -423,6 +424,41 @@ char *getForecastText(Weather *weather, int days)
 	return text;
 }
 
+char *getConditionsText(GWeatherInfo *info)
+{
+	char text[1024];
+
+	snprintf(text, 1024, "\n"
+		 "City:\t\t\t\t%s\n"
+		 "Last update:\t\t%s\n"
+		 "Conditions:\t\t%s\n"
+		 "Sky:\t\t\t\t%s\n"
+		 "Temperature:\t\t%s\n"
+		 "Feels like:\t\t\t%s\n"
+		 "Dew point:\t\t%s\n"
+		 "Relative humidity:\t%s\n"
+		 "Wind:\t\t\t%s\n"
+		 "Pressure:\t\t\t%s\n"
+		 "Visibility:\t\t\t%s\n"
+		 "Sunrise:\t\t\t%s\n"
+		 "Sunset:\t\t\t%s\n\n",
+		 gweather_info_get_location_name(info),
+		 gweather_info_get_update(info),
+		 gweather_info_get_conditions(info),
+		 gweather_info_get_sky(info),
+		 gweather_info_get_temp(info),
+		 gweather_info_get_apparent(info),
+		 gweather_info_get_dew(info),
+		 gweather_info_get_humidity(info),
+		 gweather_info_get_wind(info),
+		 gweather_info_get_pressure(info),
+		 gweather_info_get_visibility(info),
+		 gweather_info_get_sunrise(info),
+		 gweather_info_get_sunset(info));
+
+	return wstrdup(text);
+}
+
 char *getTemp(GWeatherInfo *info, GWeatherTemperatureUnit unit)
 {
 	double temp_double;
@@ -622,7 +658,7 @@ void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 				WMWidgetView(dockapp->icon));
 		else
 			WMSetBalloonTextForView(
-				"TODO",
+				getConditionsText(info),
 				WMWidgetView(dockapp->icon));
 	}
 
