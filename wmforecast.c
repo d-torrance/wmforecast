@@ -1236,12 +1236,23 @@ static void editPreferences(void *data)
 static void refresh(XEvent *event, void *data)
 {
 	Dockapp *d = (Dockapp *)data;
-	if (WMIsDoubleClick(event) && event->xbutton.button == Button1) {
-		d->minutesLeft = d->prefs->interval;
-		updateDockapp(d);
+
+	switch (event->xbutton.button) {
+	case Button1:
+		if (WMIsDoubleClick(event)) {
+			d->minutesLeft = d->prefs->interval;
+			updateDockapp(d);
+		}
+		break;
+
+	case Button3:
+		if (!d->prefsWindowPresent)
+			editPreferences(d);
+		break;
+
+	default:
+		break;
 	}
-	if (event->xbutton.button == Button3 && !d->prefsWindowPresent)
-		editPreferences(d);
 }
 
 static void timerHandler(void *data)
