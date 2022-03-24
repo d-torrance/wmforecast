@@ -620,6 +620,10 @@ void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 			WMSetBalloonTextForView(
 				getForecastText(weather, dockapp->prefs->days),
 				WMWidgetView(dockapp->icon));
+		else
+			WMSetBalloonTextForView(
+				"TODO",
+				WMWidgetView(dockapp->icon));
 	}
 
 	WMRedisplayWidget(dockapp->icon);
@@ -1243,6 +1247,11 @@ static void refresh(XEvent *event, void *data)
 			d->minutesLeft = d->prefs->interval;
 			updateDockapp(d);
 		}
+		break;
+
+	case Button2:
+		d->showForecast = 1 - d->showForecast;
+		updateDockapp(d);
 		break;
 
 	case Button3:
