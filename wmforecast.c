@@ -540,6 +540,7 @@ void gather_forecasts(Weather *weather, GSList *gforecasts)
 			high = round(temp);
 		if (temp < low)
 			low = round(temp);
+		g_date_time_unref(d);
 	}
 }
 
