@@ -481,7 +481,7 @@ void gather_forecasts(Weather *weather, GSList *gforecasts)
 	low = INT_MAX;
 	conditions = "";
 
-	while (gforecasts) {
+	for (; gforecasts; gforecasts = gforecasts->next) {
 		time_t time;
 		double temp;
 		int weekday;
@@ -535,7 +535,6 @@ void gather_forecasts(Weather *weather, GSList *gforecasts)
 			high = round(temp);
 		if (temp < low)
 			low = round(temp);
-		gforecasts = gforecasts->next;
 	}
 }
 
