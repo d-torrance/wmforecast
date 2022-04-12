@@ -486,8 +486,13 @@ void gather_forecasts(Weather *weather, GSList *gforecasts)
 		double temp;
 		int weekday;
 
-		gweather_info_get_value_update(gforecasts->data, &time);
+		if (!gweather_info_get_value_update(gforecasts->data, &time))
+			continue;
+
 		d = g_date_time_new_from_unix_utc(time);
+		if (!d)
+			continue;
+
 		weekday = g_date_time_get_day_of_week(d);
 
 		/* follow gnome weather's convention of using 2 pm for
