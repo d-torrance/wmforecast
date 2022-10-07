@@ -98,7 +98,7 @@ Maker, you can run this at startup by adding the following line to
 /usr/libexec/geoclue-2.0/demos/agent &
 ```
 
-See also: https://gitlab.freedesktop.org/geoclue/geoclue/-/issues/143
+See also: <https://gitlab.freedesktop.org/geoclue/geoclue/-/issues/143>
 
 Bugs
 ----
