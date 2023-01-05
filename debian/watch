@@ -1,6 +1,4 @@
 version=4
-opts="downloadurlmangle=s%archive/refs/tags/v((?:\d+\.)+\d+)(@ARCHIVE_EXT@)$%releases/download/v$1/@PACKAGE@-$1$2%,\
-      pgpsigurlmangle=s%$%.asc%,\
-      filenamemangle=s%v((?:\d+\.\d+))%@PACKAGE@-$1%" \
-  https://github.com/d-torrance/@PACKAGE@/tags/ \
-  (?:.*?/)?v?@ANY_VERSION@@ARCHIVE_EXT@
+opts=pgpsigurlmangle=s/$/.asc/,searchmode=plain \
+https://api.github.com/repos/d-torrance/wmforecast/releases \
+https://github.com/d-torrance/wmforecast/releases/[^\"]*/wmforecast@ANY_VERSION@@ARCHIVE_EXT@
