@@ -1,3 +1,9 @@
+wmforecast (1.9.0-1ppa1) jammy; urgency=medium
+
+  * PPA build.
+
+ -- Doug Torrance <dtorrance@debian.org>  Wed, 04 Jan 2023 21:39:24 -0500
+
 wmforecast (1.9.0-1) unstable; urgency=medium
 
   * New upstream release.
