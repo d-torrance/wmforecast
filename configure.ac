@@ -1,9 +1,9 @@
-AC_INIT([wmforecast], [1.8.1],
+AC_INIT([wmforecast], [1.9.0],
 	[https://github.com/d-torrance/wmforecast/issues],
 	[wmforecast], [http://wmforecast.friedcheese.org])
-AM_INIT_AUTOMAKE([-Wall -Werror foreign -Wno-portability])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign -Wno-portability subdir-objects])
 AC_CONFIG_SRCDIR([configure.ac])
-AC_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 AC_PROG_CC
 PKG_CHECK_MODULES([X11],[x11])
 PKG_CHECK_MODULES([GWEATHER], [gweather4], [

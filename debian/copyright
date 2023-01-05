@@ -4,7 +4,7 @@ Upstream-Contact: Doug Torrance <dtorrance@piedmont.edu>
 Source: https://github.com/d-torrance/wmforecast
 
 Files: *
-Copyright: 2014-2022 Doug Torrance <dtorrance@debian.org>
+Copyright: 2014-2023 Doug Torrance <dtorrance@debian.org>
 License: GPL-3+
 
 Files: icons/*

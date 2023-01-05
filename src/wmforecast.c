@@ -34,6 +34,7 @@
 #define DEFAULT_BG_COLOR "black"
 #define APPLICATION_ID "org.friedcheese.wmforecast"
 #define CONTACT_INFO "dtorrance@piedmont.edu"
+#define COPYRIGHT_YEARS "2014-2022"
 
 #define icondir_warning(tried, current) \
 	wwarning("%s is not a valid icon directory; falling back to %s", \
@@ -86,6 +87,7 @@ typedef struct {
 
 typedef struct {
 	int prefsWindowPresent;
+	int showForecast;
 	long int minutesLeft;
 	Preferences *prefs;
 	PreferencesWindow *prefsWindow;
@@ -137,7 +139,8 @@ WMWindow *WMCreateDockapp(WMScreen *screen, const char *name, int argc,
 			  char **argv, Bool windowed);
 Dockapp *newDockapp(WMScreen *screen, Preferences *prefs,
 		    int argc, char **argv);
-char *getBalloonText(Weather *weather, int days);
+char *getForecastText(Weather *weather, int days);
+char *getConditionsText(GWeatherInfo *info);
 char *getTemp(GWeatherInfo *info, GWeatherTemperatureUnit unit);
 void gather_forecasts(Weather *weather, GSList *gforecasts);
 char *strip_tags(const char *to_strip);
@@ -329,6 +332,7 @@ Dockapp *newDockapp(WMScreen *screen, Preferences *prefs, int argc, char **argv)
 	dockapp->prefs = prefs;
 	dockapp->minutesLeft = prefs->interval;
 	dockapp->prefsWindowPresent = 0;
+	dockapp->showForecast = 1;
 
 	window = WMCreateDockapp(screen, "", argc, argv, prefs->windowed);
 	WMSetWindowTitle(window, "wmforecast");
@@ -377,7 +381,7 @@ Dockapp *newDockapp(WMScreen *screen, Preferences *prefs, int argc, char **argv)
 	return dockapp;
 }
 
-char *getBalloonText(Weather *weather, int days)
+char *getForecastText(Weather *weather, int days)
 {
 	char *text;
 	int i;
@@ -420,6 +424,41 @@ char *getBalloonText(Weather *weather, int days)
 	return text;
 }
 
+char *getConditionsText(GWeatherInfo *info)
+{
+	char text[1024];
+
+	snprintf(text, 1024, "\n"
+		 "City:\t\t\t\t%s\n"
+		 "Last update:\t\t%s\n"
+		 "Conditions:\t\t%s\n"
+		 "Sky:\t\t\t\t%s\n"
+		 "Temperature:\t\t%s\n"
+		 "Feels like:\t\t\t%s\n"
+		 "Dew point:\t\t%s\n"
+		 "Relative humidity:\t%s\n"
+		 "Wind:\t\t\t%s\n"
+		 "Pressure:\t\t\t%s\n"
+		 "Visibility:\t\t\t%s\n"
+		 "Sunrise:\t\t\t%s\n"
+		 "Sunset:\t\t\t%s\n\n",
+		 gweather_info_get_location_name(info),
+		 gweather_info_get_update(info),
+		 gweather_info_get_conditions(info),
+		 gweather_info_get_sky(info),
+		 gweather_info_get_temp(info),
+		 gweather_info_get_apparent(info),
+		 gweather_info_get_dew(info),
+		 gweather_info_get_humidity(info),
+		 gweather_info_get_wind(info),
+		 gweather_info_get_pressure(info),
+		 gweather_info_get_visibility(info),
+		 gweather_info_get_sunrise(info),
+		 gweather_info_get_sunset(info));
+
+	return wstrdup(text);
+}
+
 char *getTemp(GWeatherInfo *info, GWeatherTemperatureUnit unit)
 {
 	double temp_double;
@@ -442,13 +481,18 @@ void gather_forecasts(Weather *weather, GSList *gforecasts)
 	low = INT_MAX;
 	conditions = "";
 
-	while (gforecasts) {
+	for (; gforecasts; gforecasts = gforecasts->next) {
 		time_t time;
 		double temp;
 		int weekday;
 
-		gweather_info_get_value_update(gforecasts->data, &time);
+		if (!gweather_info_get_value_update(gforecasts->data, &time))
+			continue;
+
 		d = g_date_time_new_from_unix_utc(time);
+		if (!d)
+			continue;
+
 		weekday = g_date_time_get_day_of_week(d);
 
 		/* follow gnome weather's convention of using 2 pm for
@@ -496,7 +540,7 @@ void gather_forecasts(Weather *weather, GSList *gforecasts)
 			high = round(temp);
 		if (temp < low)
 			low = round(temp);
-		gforecasts = gforecasts->next;
+		g_date_time_unref(d);
 	}
 }
 
@@ -613,9 +657,14 @@ void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 						weather->icon, 0);
 		WMSetLabelImage(dockapp->icon, icon);
 
-		WMSetBalloonTextForView(
-			getBalloonText(weather, dockapp->prefs->days),
-			WMWidgetView(dockapp->icon));
+		if (dockapp->showForecast)
+			WMSetBalloonTextForView(
+				getForecastText(weather, dockapp->prefs->days),
+				WMWidgetView(dockapp->icon));
+		else
+			WMSetBalloonTextForView(
+				getConditionsText(info),
+				WMWidgetView(dockapp->icon));
 	}
 
 	WMRedisplayWidget(dockapp->icon);
@@ -794,7 +843,7 @@ Preferences *setPreferences(int argc, char **argv)
 
 		case 'v':
 			printf("%s\n"
-			       "Copyright © 2014-2021 Doug Torrance\n"
+			       "Copyright © " COPYRIGHT_YEARS " Doug Torrance\n"
 			       "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>\n"
 			       "This is free software: you are free to change and redistribute it.\n"
 			       "There is NO WARRANTY, to the extent permitted by law.\n"
@@ -1220,17 +1269,40 @@ static void editPreferences(void *data)
 	WMMoveWidget(d->prefsWindow->close, 350, 137);
 	WMRealizeWidget(d->prefsWindow->close);
 	WMMapWidget(d->prefsWindow->close);
+
+	WMSetTextFieldNextTextField(d->prefsWindow->latitude,
+				    d->prefsWindow->longitude);
+	WMSetTextFieldNextTextField(d->prefsWindow->longitude,
+				    d->prefsWindow->interval);
+	WMSetTextFieldNextTextField(d->prefsWindow->interval,
+				    d->prefsWindow->latitude);
 }
 
 static void refresh(XEvent *event, void *data)
 {
 	Dockapp *d = (Dockapp *)data;
-	if (WMIsDoubleClick(event) && event->xbutton.button == Button1) {
-		d->minutesLeft = d->prefs->interval;
+
+	switch (event->xbutton.button) {
+	case Button1:
+		if (WMIsDoubleClick(event)) {
+			d->minutesLeft = d->prefs->interval;
+			updateDockapp(d);
+		}
+		break;
+
+	case Button2:
+		d->showForecast = 1 - d->showForecast;
 		updateDockapp(d);
+		break;
+
+	case Button3:
+		if (!d->prefsWindowPresent)
+			editPreferences(d);
+		break;
+
+	default:
+		break;
 	}
-	if (event->xbutton.button == Button3 && !d->prefsWindowPresent)
-		editPreferences(d);
 }
 
 static void timerHandler(void *data)

@@ -8,7 +8,7 @@ wmforecast
 <http://wmforecast.friedcheese.org>
 
 wmforecast is a weather dockapp for Window Maker using
-[libgweather](https://wiki.gnome.org/Projects/LibGWeather).
+[libgweather](https://gnome.pages.gitlab.gnome.org/libgweather/).
 
 The icons were designed by MerlinTheRed and are available at
 <http://merlinthered.deviantart.com/art/plain-weather-icons-157162192>.
@@ -40,7 +40,7 @@ Installation
 
 * To compile wmforecast from source, you will need the following.
 
-  - [libgweather](https://wiki.gnome.org/Projects/LibGWeather)
+  - [libgweather](https://gnome.pages.gitlab.gnome.org/libgweather/)
   - [WINGs](http://windowmaker.org/)
   - *(optional)* [GeoClue](
     https://gitlab.freedesktop.org/geoclue/geoclue/-/wikis/home)
@@ -77,6 +77,10 @@ Usage
     -w, --windowed           run in windowed mode
     -d, --days               number of days to show in forecast (default 7)
 
+Hover the mouse over the icon to display a balloon with the forecast
+for the next several days.  Middle click to switch the balloon to
+display the current conditions.
+
 ### Geoclue
 If using Geoclue >= 2.5.7, then you may get the following error after clicking
 the "Find Coords" button in the preferences window:
@@ -94,7 +98,7 @@ Maker, you can run this at startup by adding the following line to
 /usr/libexec/geoclue-2.0/demos/agent &
 ```
 
-See also: https://gitlab.freedesktop.org/geoclue/geoclue/-/issues/143
+See also: <https://gitlab.freedesktop.org/geoclue/geoclue/-/issues/143>
 
 Bugs
 ----
