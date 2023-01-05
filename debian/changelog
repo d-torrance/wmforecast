@@ -1,3 +1,12 @@
+wmforecast (1.9.0-1) UNRELEASED; urgency=medium
+
+  * New upstream release.
+  * debian/watch
+    - Use GitHub API JSON page (with searchmode=plain) to for URL since
+      Releases page no longer works.
+
+ -- Doug Torrance <dtorrance@debian.org>  Wed, 04 Jan 2023 21:11:08 -0500
+
 wmforecast (1.8.1-1) unstable; urgency=medium
 
   * New upstream release.
