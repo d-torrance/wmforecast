@@ -1,0 +1,7 @@
+title: wmforecast
+email: dtorrance@piedmont.edu
+description: Weather dockapp for Window Maker using libgweather
+url: "https://wmforecast.friedcheese.org"
+github_username:  d-torrance
+markdown: kramdown
+theme: minima

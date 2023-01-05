@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>org.friedcheese.wmforecast</id>
+  <name>wmforecast</name>
+  <summary>weather dockapp for Window Maker using libgweather</summary>
+  <metadata_license>CC-BY-SA-4.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <description>
+    <p>
+      wmforecast is a weather dockapp for Window Maker. It displays the current
+      temperature and an icon representing the current conditions.  A balloon
+      tooltip displays forecast information.
+    </p>
+  </description>
+  <launchable type="desktop-id">wmforecast.desktop</launchable>
+  <screenshots>
+    <screenshot type="default">
+      <caption>wmforecast screenshot on a sunny, 78 degree day</caption>
+      <image>https://wmforecast.friedcheese.org/wmforecast.png</image>
+    </screenshot>
+  </screenshots>
+  <content_rating type="oars-1.0" />
+</component>

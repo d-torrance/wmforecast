@@ -1,6 +1,6 @@
 SUBDIRS = icons
 bin_PROGRAMS = wmforecast
-wmforecast_SOURCES = wmforecast.c
+wmforecast_SOURCES = src/wmforecast.c
 dist_man_MANS = wmforecast.1
 
 AM_CFLAGS = $(GEOCLUE_CFLAGS) $(GWEATHER_CFLAGS) $(X11_CFLAGS) $(WINGS_CFLAGS) \
@@ -11,6 +11,9 @@ LIBS += $(GEOCLUE_LIBS) $(GWEATHER_LIBS) $(X11_LIBS) $(WINGS_LIBS) \
 
 desktopdir = $(datadir)/applications
 dist_desktop_DATA = wmforecast.desktop
+
+metainfodir = $(datadir)/metainfo
+dist_metainfo_DATA = org.friedcheese.wmforecast.metainfo.xml
 
 EXTRA_DIST = autogen.sh README.md wmforecast.1.in NEWS.md
 

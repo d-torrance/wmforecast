@@ -1,3 +1,13 @@
+version 1.9.0
+-------------
+* Release date: 2023-01-04
+* Middle click now toggles the balloon from displaying the forecast and more
+  detailed current conditions.
+* The tab key may now be used to cycle through the text fields in the
+  preferences window.
+* An AppStream metadata file is now distributed.
+* Various behind-the-scenes changes and bug fixes.
+
 version 1.8.1
 -------------
 * Release date: 2022-03-21
