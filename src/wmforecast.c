@@ -1,4 +1,4 @@
-/* Copyright (C) 2014-2022 Doug Torrance <dtorrance@piedmont.edu>
+/* Copyright (C) 2014-2023 Doug Torrance <dtorrance@piedmont.edu>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@
 #define DEFAULT_BG_COLOR "black"
 #define APPLICATION_ID "org.friedcheese.wmforecast"
 #define CONTACT_INFO "dtorrance@piedmont.edu"
-#define COPYRIGHT_YEARS "2014-2022"
+#define COPYRIGHT_YEARS "2014-2023"
 
 #define icondir_warning(tried, current) \
 	wwarning("%s is not a valid icon directory; falling back to %s", \
