@@ -110,7 +110,7 @@ Copyright
 ---------
 
 ### wmforecast
-2014-2022 Doug Torrance  
+2014-2023 Doug Torrance  
 <dtorrance@piedmont.edu>  
 GNU General Public License v3+
 
