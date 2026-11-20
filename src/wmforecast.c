@@ -286,6 +286,10 @@ void close_window(WMWidget *self, void *data)
 	exit(0);
 }
 
+/* Bare X11 icon window created for dock mode; set once and reused by
+ * newDockapp to reparent content into it after widget creation. */
+static Window dockIconWin = 0;
+
 WMWindow *WMCreateDockapp(WMScreen *screen, const char *name, int argc,
 			  char **argv, Bool windowed)
 {
@@ -305,8 +309,19 @@ WMWindow *WMCreateDockapp(WMScreen *screen, const char *name, int argc,
 	hints->window_group = window;
 
 	if (!windowed) {
+		/* Create a bare X11 icon window as a child of the app window.
+		 * Using XCreateSimpleWindow (not WMCreateWindow) avoids WINGs
+		 * setting its own WM_HINTS on the icon window, which would
+		 * confuse the WM with a nested icon_window chain.
+		 * The WM reparents dockIconWin into the dock on map; keeping it
+		 * separate from the app window prevents ghost icons when the
+		 * dock repositions after a screen resize (ICCCM §4.1.9). */
+		dockIconWin = XCreateSimpleWindow(
+			display, window, 0, 0, 56, 56, 0, 0, 0);
+		XMapWindow(display, dockIconWin);
+
 		hints->flags |= IconWindowHint | StateHint;
-		hints->icon_window = window;
+		hints->icon_window = dockIconWin;
 		hints->initial_state = WithdrawnState;
 	}
 
@@ -314,9 +329,7 @@ WMWindow *WMCreateDockapp(WMScreen *screen, const char *name, int argc,
 	XFree(hints);
 
 	WMSetWindowCloseAction(dockapp, close_window, NULL);
-
 	XSetCommand(display, window, argv, argc);
-
 	WMResizeWidget(dockapp, 56, 56);
 	return dockapp;
 }
@@ -373,6 +386,12 @@ Dockapp *newDockapp(WMScreen *screen, Preferences *prefs, int argc, char **argv)
 	WMSetLabelImagePosition(dockapp->icon, WIPImageOnly);
 	WMResizeWidget(dockapp->icon, 32, 32);
 	WMMoveWidget(dockapp->icon, 12, 5);
+
+	/* In dock mode, reparent the frame into the bare icon window so
+	 * content is visible when the WM places dockIconWin in the dock. */
+	if (!prefs->windowed && dockIconWin)
+		XReparentWindow(WMScreenDisplay(screen),
+				WMWidgetXID(dockapp->frame), dockIconWin, 0, 0);
 
 	WMMapWidget(window);
 	WMMapWidget(dockapp->frame);
