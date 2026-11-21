@@ -203,8 +203,8 @@ void freeForecastArray(ForecastArray *array)
 {
 	int i;
 	for (i = 0; i < array->length; i++)
-		if (&array->forecasts[i])
-			freeForecast(&array->forecasts[i]);
+		freeForecast(&array->forecasts[i]);
+	wfree(array->forecasts);
 	wfree(array);
 }
 
@@ -546,6 +546,7 @@ void gather_forecasts(Weather *weather, GSList *gforecasts)
 				setForecast(forecast, day_name, low_text,
 					    high_text, conditions);
 				appendForecast(weather->forecasts, forecast);
+				wfree(forecast);
 			}
 
 			current_weekday = weekday;
