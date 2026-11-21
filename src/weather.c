@@ -17,7 +17,6 @@
 #include <config.h>
 #endif
 
-#include <stdio.h>
 #include <string.h>
 #include <time.h>
 
@@ -28,39 +27,44 @@
 
 #define round(x) (int)(x + 0.5)
 
+/* append a line to the conditions text, freeing the value from libgweather */
+static void appendCondition(GString *text, const char *label, char *value)
+{
+	g_string_append_printf(text, "%s%s\n", label, value);
+	g_free(value);
+}
+
 static char *getConditionsText(GWeatherInfo *info)
 {
-	char text[1024];
+	GString *text;
 
-	snprintf(text, 1024, "\n"
-		 "City:\t\t\t\t%s\n"
-		 "Last update:\t\t%s\n"
-		 "Conditions:\t\t%s\n"
-		 "Sky:\t\t\t\t%s\n"
-		 "Temperature:\t\t%s\n"
-		 "Feels like:\t\t\t%s\n"
-		 "Dew point:\t\t%s\n"
-		 "Relative humidity:\t%s\n"
-		 "Wind:\t\t\t%s\n"
-		 "Pressure:\t\t\t%s\n"
-		 "Visibility:\t\t\t%s\n"
-		 "Sunrise:\t\t\t%s\n"
-		 "Sunset:\t\t\t%s\n\n",
-		 gweather_info_get_location_name(info),
-		 gweather_info_get_update(info),
-		 gweather_info_get_conditions(info),
-		 gweather_info_get_sky(info),
-		 gweather_info_get_temp(info),
-		 gweather_info_get_apparent(info),
-		 gweather_info_get_dew(info),
-		 gweather_info_get_humidity(info),
-		 gweather_info_get_wind(info),
-		 gweather_info_get_pressure(info),
-		 gweather_info_get_visibility(info),
-		 gweather_info_get_sunrise(info),
-		 gweather_info_get_sunset(info));
+	text = g_string_new("\n");
+	appendCondition(text, "City:\t\t\t\t",
+			gweather_info_get_location_name(info));
+	appendCondition(text, "Last update:\t\t",
+			gweather_info_get_update(info));
+	appendCondition(text, "Conditions:\t\t",
+			gweather_info_get_conditions(info));
+	appendCondition(text, "Sky:\t\t\t\t", gweather_info_get_sky(info));
+	appendCondition(text, "Temperature:\t\t",
+			gweather_info_get_temp(info));
+	appendCondition(text, "Feels like:\t\t\t",
+			gweather_info_get_apparent(info));
+	appendCondition(text, "Dew point:\t\t", gweather_info_get_dew(info));
+	appendCondition(text, "Relative humidity:\t",
+			gweather_info_get_humidity(info));
+	appendCondition(text, "Wind:\t\t\t", gweather_info_get_wind(info));
+	appendCondition(text, "Pressure:\t\t\t",
+			gweather_info_get_pressure(info));
+	appendCondition(text, "Visibility:\t\t\t",
+			gweather_info_get_visibility(info));
+	appendCondition(text, "Sunrise:\t\t\t",
+			gweather_info_get_sunrise(info));
+	appendCondition(text, "Sunset:\t\t\t",
+			gweather_info_get_sunset(info));
+	g_string_append(text, "\n");
 
-	return g_strdup(text);
+	return g_string_free(text, FALSE);
 }
 
 static char *getTemp(GWeatherInfo *info, GWeatherTemperatureUnit unit)
@@ -74,20 +78,23 @@ static char *getTemp(GWeatherInfo *info, GWeatherTemperatureUnit unit)
 /* strip html from attribution string */
 static char *strip_tags(const char *to_strip)
 {
-	char *stripped, *beginning, *end;
+	char *stripped, *end;
+	gboolean in_tag;
 
 	if (!to_strip)
-		return wstrdup("");
+		return g_strdup("");
 
-	stripped = wstrdup(to_strip);
-	while ((beginning = strchr(stripped, '<')) &&
-	       (end = strchr(stripped, '>'))) {
-		int length;
-
-		length = end - beginning + 1;
-		memmove(stripped + length, stripped, beginning - stripped);
-		stripped += length;
+	stripped = end = g_strdup(to_strip);
+	in_tag = FALSE;
+	for (; *to_strip; to_strip++) {
+		if (*to_strip == '<')
+			in_tag = TRUE;
+		else if (*to_strip == '>')
+			in_tag = FALSE;
+		else if (!in_tag)
+			*end++ = *to_strip;
 	}
+	*end = '\0';
 
 	return stripped;
 }
@@ -185,7 +192,7 @@ static char *getForecastText(GWeatherInfo *info, GWeatherInfo *current,
 			     Preferences *prefs)
 {
 	GString *text, *forecasts;
-	char retrieved[20], *summary, *temp;
+	char retrieved[20], *summary, *temp, *attribution;
 	time_t now;
 
 	now = time(NULL);
@@ -212,8 +219,9 @@ static char *getForecastText(GWeatherInfo *info, GWeatherInfo *current,
 		g_string_append_printf(text, ":\n%s", forecasts->str);
 	g_string_free(forecasts, TRUE);
 
-	g_string_append_printf(text, "\n%s\n\n",
-			       strip_tags(gweather_info_get_attribution(info)));
+	attribution = strip_tags(gweather_info_get_attribution(info));
+	g_string_append_printf(text, "\n%s\n\n", attribution);
+	g_free(attribution);
 
 	return g_string_free(text, FALSE);
 }
@@ -266,6 +274,12 @@ static WMPixmap *loadIcon(Dockapp *dockapp, const char *name, char **error)
 	icon = WMCreatePixmapFromRImage(dockapp->screen, image, 0);
 	RReleaseImage(image);
 	return icon;
+}
+
+static gboolean unrefInfo(gpointer info)
+{
+	g_object_unref(info);
+	return G_SOURCE_REMOVE;
 }
 
 static void getWeather(GWeatherInfo *info, Dockapp *dockapp)
@@ -322,6 +336,12 @@ static void getWeather(GWeatherInfo *info, Dockapp *dockapp)
 
 	WMRedisplayWidget(dockapp->icon);
 	WMRedisplayWidget(dockapp->text);
+
+	/* we're done with this update, but libgweather may still be using
+	 * info while emitting this signal, so free it once we're idle */
+	g_signal_handlers_disconnect_by_func(info, G_CALLBACK(getWeather),
+					     dockapp);
+	g_idle_add(unrefInfo, info);
 }
 
 void updateDockapp(void *data)
@@ -344,6 +364,8 @@ void updateDockapp(void *data)
 
 	WMSetWidgetBackgroundColor(dockapp->frame, background);
 	WMSetWidgetBackgroundColor(dockapp->icon, background);
+	WMReleaseColor(background);
+	WMReleaseColor(text);
 
 	world = gweather_location_get_world();
 	loc = gweather_location_find_nearest_city(
@@ -358,6 +380,12 @@ void updateDockapp(void *data)
 	gweather_info_set_contact_info(info, CONTACT_INFO);
 #endif
 	gweather_info_set_location(info, loc);
+#if HAVE_GWEATHER_VERSION >= 4000000
+	g_object_unref(loc);
+	g_object_unref(world);
+#else
+	gweather_location_unref(loc);
+#endif
 	gweather_info_set_enabled_providers(info, GWEATHER_PROVIDER_ALL);
 	g_signal_connect(
 		G_OBJECT(info), "updated", G_CALLBACK(getWeather), dockapp);
