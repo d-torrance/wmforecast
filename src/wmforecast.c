@@ -553,12 +553,15 @@ void gather_forecasts(Weather *weather, GSList *gforecasts)
 			low = INT_MAX;
 			conditions = "";
 		}
-		gweather_info_get_value_temp(gforecasts->data,
-					     weather->units, &temp);
-		if (temp > high)
-			high = round(temp);
-		if (temp < low)
-			low = round(temp);
+		/* skip forecasts with unknown temperatures, which
+		 * libgweather reports as 0 */
+		if (gweather_info_get_value_temp(gforecasts->data,
+						 weather->units, &temp)) {
+			if (temp > high)
+				high = round(temp);
+			if (temp < low)
+				low = round(temp);
+		}
 		g_date_time_unref(d);
 	}
 }
