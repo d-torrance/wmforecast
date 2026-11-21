@@ -1,6 +1,7 @@
 SUBDIRS = icons
 bin_PROGRAMS = wmforecast
-wmforecast_SOURCES = src/wmforecast.c
+wmforecast_SOURCES = src/dockapp.c src/preferences.c src/weather.c \
+	src/wmforecast.c src/wmforecast.h
 dist_man_MANS = wmforecast.1
 
 AM_CFLAGS = $(GEOCLUE_CFLAGS) $(GWEATHER_CFLAGS) $(X11_CFLAGS) $(WINGS_CFLAGS) \
