@@ -29,6 +29,7 @@
 #include <string.h>
 #include <time.h>
 #include <WINGs/WINGs.h>
+#include <X11/Xatom.h>
 
 #define DEFAULT_TEXT_COLOR "light sea green"
 #define DEFAULT_BG_COLOR "black"
@@ -135,8 +136,9 @@ void setConditions(
 void setForecast(Forecast *forecast, const char *day, const char *low,
 		 const char *high, const char *text);
 void close_window(WMWidget *self, void *data);
-WMWindow *WMCreateDockapp(WMScreen *screen, const char *name, int argc,
-			  char **argv, Bool windowed);
+WMWindow *WMCreateDockapp(WMScreen *screen, const char *name,
+			  const char *title, int argc, char **argv,
+			  Bool windowed);
 Dockapp *newDockapp(WMScreen *screen, Preferences *prefs,
 		    int argc, char **argv);
 char *getForecastText(Weather *weather, int days);
@@ -286,16 +288,25 @@ void close_window(WMWidget *self, void *data)
 	exit(0);
 }
 
-WMWindow *WMCreateDockapp(WMScreen *screen, const char *name, int argc,
-			  char **argv, Bool windowed)
+/* Create and map the application window and return the window that the
+ * dockapp's contents should be placed in.  In windowed mode, this is the
+ * application window itself.  Otherwise, it is a separate icon window,
+ * which the window manager will reparent into the dock.  (The application
+ * window must not be its own icon window: Window Maker skips icon windows
+ * when it adopts existing windows on restart, which would leave the old
+ * dockapp stranded on the root window.) */
+WMWindow *WMCreateDockapp(WMScreen *screen, const char *name,
+			  const char *title, int argc, char **argv,
+			  Bool windowed)
 {
-	WMWindow *dockapp;
+	WMWindow *dockapp, *iconwin;
 	XWMHints *hints;
 	Display *display;
 	Window window;
 
 	display = WMScreenDisplay(screen);
 	dockapp = WMCreateWindow(screen, name);
+	WMSetWindowTitle(dockapp, title);
 	WMRealizeWidget(dockapp);
 
 	window = WMWidgetXID(dockapp);
@@ -304,9 +315,17 @@ WMWindow *WMCreateDockapp(WMScreen *screen, const char *name, int argc,
 	hints->flags |= WindowGroupHint;
 	hints->window_group = window;
 
-	if (!windowed) {
+	if (windowed)
+		iconwin = dockapp;
+	else {
+		iconwin = WMCreateWindow(screen, name);
+		WMResizeWidget(iconwin, 56, 56);
+		WMRealizeWidget(iconwin);
+		/* the icon window shouldn't look like a client window */
+		XDeleteProperty(display, WMWidgetXID(iconwin), XA_WM_HINTS);
+
 		hints->flags |= IconWindowHint | StateHint;
-		hints->icon_window = window;
+		hints->icon_window = WMWidgetXID(iconwin);
 		hints->initial_state = WithdrawnState;
 	}
 
@@ -318,7 +337,8 @@ WMWindow *WMCreateDockapp(WMScreen *screen, const char *name, int argc,
 	XSetCommand(display, window, argv, argc);
 
 	WMResizeWidget(dockapp, 56, 56);
-	return dockapp;
+	WMMapWidget(dockapp);
+	return iconwin;
 }
 
 Dockapp *newDockapp(WMScreen *screen, Preferences *prefs, int argc, char **argv)
@@ -334,8 +354,8 @@ Dockapp *newDockapp(WMScreen *screen, Preferences *prefs, int argc, char **argv)
 	dockapp->prefsWindowPresent = 0;
 	dockapp->showForecast = 1;
 
-	window = WMCreateDockapp(screen, "", argc, argv, prefs->windowed);
-	WMSetWindowTitle(window, "wmforecast");
+	window = WMCreateDockapp(screen, "", "wmforecast", argc, argv,
+				 prefs->windowed);
 
 	background = WMCreateNamedColor(screen, prefs->background, True);
 	if (!background) {
@@ -374,7 +394,6 @@ Dockapp *newDockapp(WMScreen *screen, Preferences *prefs, int argc, char **argv)
 	WMResizeWidget(dockapp->icon, 32, 32);
 	WMMoveWidget(dockapp->icon, 12, 5);
 
-	WMMapWidget(window);
 	WMMapWidget(dockapp->frame);
 	WMMapSubwidgets(dockapp->frame);
 
