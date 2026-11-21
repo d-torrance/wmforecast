@@ -12,6 +12,7 @@
       tooltip displays forecast information.
     </p>
   </description>
+  <url type="homepage">https://wmforecast.friedcheese.org/</url>
   <launchable type="desktop-id">wmforecast.desktop</launchable>
   <screenshots>
     <screenshot type="default">
