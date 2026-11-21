@@ -11,7 +11,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install libwings-dev libgweather-3-dev libgeoclue-2-dev
+          sudo apt-get install libwings-dev libgweather-4-dev libgeoclue-2-dev
       - name: Build
         run: |
           ./autogen.sh
