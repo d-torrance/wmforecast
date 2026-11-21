@@ -98,53 +98,14 @@ typedef struct {
 	WMScreen *screen;
 } Dockapp;
 
-typedef struct {
-	char *day;
-	char *low;
-	char *high;
-	char *text;
-} Forecast;
-
-typedef struct {
-	int length;
-	Forecast *forecasts;
-} ForecastArray;
-
-typedef struct {
-	char *temp;
-	char *text;
-	ForecastArray *forecasts;
-	RImage *icon;
-	int errorFlag;
-	char *errorText;
-	char retrieved[20];
-	const char *attribution;
-	GWeatherTemperatureUnit units;
-} Weather;
-
-Forecast *newForecast(void);
-ForecastArray *newForecastArray(void);
-void appendForecast(ForecastArray *array, Forecast *forecast);
-Weather *newWeather(void);
-void freeForecast(Forecast *forecast);
-void freeForecastArray(ForecastArray *array);
-void freeWeather(Weather *weather);
-void setError(Weather *weather, const char *errorText);
-void setConditions(
-	Weather *weather, WMScreen *screen, const char *temp, const char *text,
-	const char *code, const char *background, const char *icondir);
-void setForecast(Forecast *forecast, const char *day, const char *low,
-		 const char *high, const char *text);
 void close_window(WMWidget *self, void *data);
 WMWindow *WMCreateDockapp(WMScreen *screen, const char *name,
 			  const char *title, int argc, char **argv,
 			  Bool windowed);
 Dockapp *newDockapp(WMScreen *screen, Preferences *prefs,
 		    int argc, char **argv);
-char *getForecastText(Weather *weather, int days);
 char *getConditionsText(GWeatherInfo *info);
 char *getTemp(GWeatherInfo *info, GWeatherTemperatureUnit unit);
-void gather_forecasts(Weather *weather, GSList *gforecasts);
 char *strip_tags(const char *to_strip);
 void getWeather(GWeatherInfo *info, Dockapp *dockapp);
 Bool check_icondir(char *icondir);
@@ -153,133 +114,6 @@ void readPreferences(Preferences *prefs);
 Preferences *setPreferences(int argc, char **argv);
 void do_glib_loop(void *data);
 void restore_default_colors(WMWidget *widget, void *data);
-
-Forecast *newForecast(void)
-{
-	Forecast *forecast = wmalloc(sizeof(Forecast));
-	forecast->day = NULL;
-	forecast->low = NULL;
-	forecast->high = NULL;
-	forecast->text = NULL;
-	return forecast;
-}
-
-ForecastArray *newForecastArray(void)
-{
-	ForecastArray *array = wmalloc(sizeof(ForecastArray));
-	array->length = 0;
-	array->forecasts = NULL;
-	return array;
-}
-
-void appendForecast(ForecastArray *array, Forecast *forecast)
-{
-	array->length++;
-	array->forecasts = (Forecast *)wrealloc(array->forecasts, sizeof(Forecast)*(array->length));
-	array->forecasts[(array->length)-1] = *forecast;
-}
-
-Weather *newWeather(void)
-{
-	Weather *weather = wmalloc(sizeof(Weather));
-	weather->temp = NULL;
-	weather->text = NULL;
-	weather->icon = NULL;
-	weather->forecasts = newForecastArray();
-	weather->errorFlag = 0;
-	weather->errorText = NULL;
-	return weather;
-}
-
-void freeForecast(Forecast *forecast)
-{
-	wfree(forecast->day);
-	wfree(forecast->low);
-	wfree(forecast->high);
-	wfree(forecast->text);
-}
-
-void freeForecastArray(ForecastArray *array)
-{
-	int i;
-	for (i = 0; i < array->length; i++)
-		freeForecast(&array->forecasts[i]);
-	wfree(array->forecasts);
-	wfree(array);
-}
-
-void freeWeather(Weather *weather)
-{
-	wfree(weather->temp);
-	wfree(weather->text);
-	if (weather->forecasts)
-		freeForecastArray(weather->forecasts);
-	wfree(weather->errorText);
-	wfree(weather);
-}
-
-void setError(Weather *weather, const char *errorText)
-{
-	weather->errorFlag = 1;
-	if (errorText) {
-		weather->errorText = wrealloc(
-			weather->errorText, strlen(errorText) + 1);
-		strcpy(weather->errorText, errorText);
-	} else
-		weather->errorText = wstrdup("An error occurred");
-}
-
-void setConditions(Weather *weather,
-		   WMScreen *screen,
-		   const char *temp,
-		   const char *text,
-		   const char *code,
-		   const char *background,
-		   const char *icondir
-	)
-{
-	RContext *context;
-	char filename[1024];
-	time_t currentTime;
-
-
-	weather->temp = wstrdup(temp);
-	weather->text = wstrdup(text);
-
-	context = WMScreenRContext(screen);
-	sprintf(filename, "%s/%s.png", icondir, code);
-
-	weather->icon = RLoadImage(context, filename, 0);
-	if (!weather->icon) {
-		setError(weather, wstrconcat(filename, " not found"));
-	} else {
-		RColor color;
-		color = WMGetRColorFromColor(
-			WMCreateNamedColor(screen, background, True));
-		RCombineImageWithColor(weather->icon, &color);
-	}
-
-	currentTime = time(NULL);
-	strftime(weather->retrieved, sizeof weather->retrieved, "%l:%M %p %Z",
-		 localtime(&currentTime));
-}
-
-void setForecast(Forecast *forecast,
-		 const char *day,
-		 const char *low,
-		 const char *high,
-		 const char *text
-	)
-{
-	forecast->day = wrealloc(forecast->day, strlen(day) + 1);
-	strcpy(forecast->day, day);
-	forecast->low = wrealloc(forecast->low, strlen(low) + 1);
-	strcpy(forecast->low, low);
-	forecast->high = wrealloc(forecast->high, strlen(high) + 1);
-	strcpy(forecast->high, high);
-	forecast->text = wrealloc(forecast->text, strlen(text) + 1);
-	strcpy(forecast->text, text);
-}
 
 void close_window(WMWidget *self, void *data)
 {
@@ -400,49 +234,6 @@ Dockapp *newDockapp(WMScreen *screen, Preferences *prefs, int argc, char **argv)
 	return dockapp;
 }
 
-char *getForecastText(Weather *weather, int days)
-{
-	char *text;
-	int i;
-
-	text = wstrdup("\n"PACKAGE_STRING);
-	text = wstrappend(text, "\n\nRetrieved: ");
-	text = wstrappend(text, weather->retrieved);
-	text = wstrappend(text, "\n\nCurrent Conditions:\n");
-	text = wstrappend(text, weather->text);
-	text = wstrappend(text, ", ");
-	text = wstrappend(text, weather->temp);
-
-	text = wstrappend(text, "°\n\nForecast");
-
-	if (weather->forecasts->length == 0)
-		text = wstrappend(text, " not available.");
-	else {
-		text = wstrappend(text, ":\n");
-		for (i = 0; i < weather->forecasts->length && i < days; i++) {
-			text = wstrappend(text,
-					  weather->forecasts->forecasts[i].day);
-			text = wstrappend(text, " - ");
-			text = wstrappend(text,
-					  weather->forecasts->forecasts[i].text);
-			text = wstrappend(text,
-					  ". High: ");
-			text = wstrappend(text,
-					  weather->forecasts->forecasts[i].high);
-			text = wstrappend(text,
-					  "° Low: ");
-			text = wstrappend(text,
-					  weather->forecasts->forecasts[i].low);
-			text = wstrappend(text, "°\n");
-		}
-	}
-
-	text = wstrappend(text, "\n");
-	text = wstrappend(text, weather->attribution);
-	text = wstrappend(text, "\n\n");
-	return text;
-}
-
 char *getConditionsText(GWeatherInfo *info)
 {
 	char text[1024];
@@ -475,96 +266,15 @@ char *getConditionsText(GWeatherInfo *info)
 		 gweather_info_get_sunrise(info),
 		 gweather_info_get_sunset(info));
 
-	return wstrdup(text);
+	return g_strdup(text);
 }
 
 char *getTemp(GWeatherInfo *info, GWeatherTemperatureUnit unit)
 {
-	double temp_double;
-	char temp[4];
+	double temp;
 
-	gweather_info_get_value_temp(info, unit, &temp_double);
-	sprintf(temp, "%d", round(temp_double));
-	return wstrdup(temp);
-}
-
-void gather_forecasts(Weather *weather, GSList *gforecasts)
-{
-	GDateTime *d;
-	int current_weekday, high, low;
-	const char *conditions;
-
-	d = g_date_time_new_now_local();
-	current_weekday = g_date_time_get_day_of_week(d);
-	high = INT_MIN;
-	low = INT_MAX;
-	conditions = "";
-
-	for (; gforecasts; gforecasts = gforecasts->next) {
-		time_t time;
-		double temp;
-		int weekday;
-
-		if (!gweather_info_get_value_update(gforecasts->data, &time))
-			continue;
-
-		d = g_date_time_new_from_unix_utc(time);
-		if (!d)
-			continue;
-
-		weekday = g_date_time_get_day_of_week(d);
-
-		/* follow gnome weather's convention of using 2 pm for
-		 * conditions */
-		if (g_date_time_get_hour(d) >= 14 &&
-		    strcmp(conditions, "") == 0) {
-			conditions = gweather_info_get_conditions(
-				gforecasts->data);
-			if (strcmp(conditions, "-") == 0)
-				conditions = gweather_info_get_sky(
-					gforecasts->data);
-		}
-
-		if (weekday != current_weekday) {
-			/* don't create forecast if we don't have any info
-			 * (e.g., for today if it's almost midnight) */
-			if (high != INT_MIN && low != INT_MAX) {
-				Forecast *forecast;
-				char high_text[12], low_text[12];
-				char *day_name;
-
-				forecast = newForecast();
-
-				/* subtract one since we've already advanced to
-				 * the next day */
-				day_name = g_date_time_format(
-					g_date_time_add_days(d, -1), "%a");
-
-				snprintf(high_text, 12, "%d", high);
-				snprintf(low_text, 12, "%d", low);
-
-				setForecast(forecast, day_name, low_text,
-					    high_text, conditions);
-				appendForecast(weather->forecasts, forecast);
-				wfree(forecast);
-			}
-
-			current_weekday = weekday;
-			high = INT_MIN;
-			low = INT_MAX;
-			conditions = "";
-		}
-		/* skip forecasts with unknown temperatures, which
-		 * libgweather reports as 0 */
-		if (gweather_info_get_value_temp(gforecasts->data,
-						 weather->units, &temp)) {
-			if (temp > high)
-				high = round(temp);
-			if (temp < low)
-				low = round(temp);
-		}
-		g_date_time_unref(d);
-	}
+	gweather_info_get_value_temp(info, unit, &temp);
+	return g_strdup_printf("%d", round(temp));
 }
 
 /* strip html from attribution string */
@@ -588,112 +298,236 @@ char *strip_tags(const char *to_strip)
 	return stripped;
 }
 
-void getWeather(GWeatherInfo *info, Dockapp *dockapp)
+/* append a line for each day's forecast to lines, up to the given number of
+ * days, and return the total number of days forecasted */
+static int getForecasts(GString *lines, GSList *gforecasts,
+			GWeatherTemperatureUnit units, int days)
 {
-	char *temp, *text;
-	const char *code;
-	WMPixmap *icon;
-	Weather *weather;
-	GSList *gforecasts;
-	gboolean success;
-	gdouble dummy;
+	GDateTime *d;
+	int current_weekday, high, low, count;
+	char *conditions;
 
-	weather = newWeather();
-	weather->units = dockapp->prefs->units;
+	d = g_date_time_new_now_local();
+	current_weekday = g_date_time_get_day_of_week(d);
+	g_date_time_unref(d);
+	high = INT_MIN;
+	low = INT_MAX;
+	conditions = NULL;
+	count = 0;
 
-	if (!gweather_info_is_valid(info))
-		setError(weather,
-			 gweather_info_get_weather_summary(info));
+	for (; gforecasts; gforecasts = gforecasts->next) {
+		time_t time;
+		double temp;
+		int weekday;
 
-	weather->attribution = strip_tags(gweather_info_get_attribution(info));
+		if (!gweather_info_get_value_update(gforecasts->data, &time))
+			continue;
 
-	gforecasts = gweather_info_get_forecast_list(info);
-	if (gforecasts)
-		gather_forecasts(weather, gforecasts);
+		d = g_date_time_new_from_unix_utc(time);
+		if (!d)
+			continue;
 
-	/* check if we have current conditions */
-	success = gweather_info_get_value_temp(info, dockapp->prefs->units,
-					       &dummy);
-	if (!success) {
-		/* if we don't, get the next forecasted conditions */
-		gforecasts = gweather_info_get_forecast_list(info);
+		weekday = g_date_time_get_day_of_week(d);
 
-		if (!gforecasts)
-			setError(weather, "Retrieval failed");
-		else {
-			while (!success) {
-				success = gweather_info_get_value_temp(
-					gforecasts->data, dockapp->prefs->units,
-					&dummy);
-				if (success) {
-					info = gforecasts->data;
-					break;
-				}
-
-				gforecasts = gforecasts->next;
-				if (!gforecasts) {
-					setError(weather, "Retrieval failed");
-					break;
-				}
+		/* follow gnome weather's convention of using 2 pm for
+		 * conditions */
+		if (g_date_time_get_hour(d) >= 14 && !conditions) {
+			conditions = gweather_info_get_conditions(
+				gforecasts->data);
+			if (strcmp(conditions, "-") == 0) {
+				g_free(conditions);
+				conditions = gweather_info_get_sky(
+					gforecasts->data);
 			}
 		}
+
+		if (weekday != current_weekday) {
+			/* don't create forecast if we don't have any info
+			 * (e.g., for today if it's almost midnight) */
+			if (high != INT_MIN && low != INT_MAX) {
+				if (count < days) {
+					GDateTime *day;
+					char *day_name;
+
+					/* subtract one since we've already
+					 * advanced to the next day */
+					day = g_date_time_add_days(d, -1);
+					day_name = g_date_time_format(day, "%a");
+					g_string_append_printf(
+						lines,
+						"%s - %s. High: %d° Low: %d°\n",
+						day_name,
+						conditions ? conditions : "",
+						high, low);
+					g_free(day_name);
+					g_date_time_unref(day);
+				}
+				count++;
+			}
+
+			current_weekday = weekday;
+			high = INT_MIN;
+			low = INT_MAX;
+			g_free(conditions);
+			conditions = NULL;
+		}
+		/* skip forecasts with unknown temperatures, which
+		 * libgweather reports as 0 */
+		if (gweather_info_get_value_temp(gforecasts->data,
+						 units, &temp)) {
+			if (temp > high)
+				high = round(temp);
+			if (temp < low)
+				low = round(temp);
+		}
+		g_date_time_unref(d);
 	}
 
-	temp = getTemp(info, dockapp->prefs->units);
-	text = gweather_info_get_weather_summary(info);
-	code = gweather_info_get_icon_name(info);
+	g_free(conditions);
+	return count;
+}
 
-	setConditions(weather, dockapp->screen, temp, text, code,
-		      dockapp->prefs->background, dockapp->prefs->icondir);
+static char *getForecastText(GWeatherInfo *info, GWeatherInfo *current,
+			     Preferences *prefs)
+{
+	GString *text, *forecasts;
+	char retrieved[20], *summary, *temp;
+	time_t now;
 
-	if (weather->errorFlag) {
-		RContext *context;
+	now = time(NULL);
+	strftime(retrieved, sizeof retrieved, "%l:%M %p %Z", localtime(&now));
+	summary = gweather_info_get_weather_summary(current);
+	temp = getTemp(current, prefs->units);
 
+	text = g_string_new(NULL);
+	g_string_append_printf(text,
+			       "\n" PACKAGE_STRING "\n\n"
+			       "Retrieved: %s\n\n"
+			       "Current Conditions:\n"
+			       "%s, %s°\n\n"
+			       "Forecast",
+			       retrieved, summary, temp);
+	g_free(summary);
+	g_free(temp);
+
+	forecasts = g_string_new(NULL);
+	if (getForecasts(forecasts, gweather_info_get_forecast_list(info),
+			 prefs->units, prefs->days) == 0)
+		g_string_append(text, " not available.");
+	else
+		g_string_append_printf(text, ":\n%s", forecasts->str);
+	g_string_free(forecasts, TRUE);
+
+	g_string_append_printf(text, "\n%s\n\n",
+			       strip_tags(gweather_info_get_attribution(info)));
+
+	return g_string_free(text, FALSE);
+}
+
+/* return the current conditions, or the first forecast if they're not
+ * available */
+static GWeatherInfo *getCurrentConditions(GWeatherInfo *info,
+					  GWeatherTemperatureUnit units)
+{
+	GSList *gforecasts;
+	double temp;
+
+	if (gweather_info_get_value_temp(info, units, &temp))
+		return info;
+
+	for (gforecasts = gweather_info_get_forecast_list(info); gforecasts;
+	     gforecasts = gforecasts->next)
+		if (gweather_info_get_value_temp(gforecasts->data, units, &temp))
+			return gforecasts->data;
+
+	return NULL;
+}
+
+/* load an icon from the icon directory and blend it with the background
+ * color; if it's missing and error is non-NULL, set it to an error message */
+static WMPixmap *loadIcon(Dockapp *dockapp, const char *name, char **error)
+{
+	WMColor *background;
+	WMPixmap *icon;
+	RColor color;
+	RImage *image;
+	char *filename;
+
+	filename = g_strdup_printf("%s/%s.png", dockapp->prefs->icondir, name);
+	image = RLoadImage(WMScreenRContext(dockapp->screen), filename, 0);
+	if (!image) {
+		if (error)
+			*error = g_strconcat(filename, " not found", NULL);
+		g_free(filename);
+		return NULL;
+	}
+	g_free(filename);
+
+	background = WMCreateNamedColor(dockapp->screen,
+					dockapp->prefs->background, True);
+	color = WMGetRColorFromColor(background);
+	WMReleaseColor(background);
+	RCombineImageWithColor(image, &color);
+
+	icon = WMCreatePixmapFromRImage(dockapp->screen, image, 0);
+	RReleaseImage(image);
+	return icon;
+}
+
+void getWeather(GWeatherInfo *info, Dockapp *dockapp)
+{
+	GWeatherInfo *current;
+	WMPixmap *icon;
+	char *error, *balloon;
+
+	error = NULL;
+	icon = NULL;
+
+	if (!gweather_info_is_valid(info)) {
+		error = gweather_info_get_weather_summary(info);
+		if (!error)
+			error = g_strdup("An error occurred");
+	}
+
+	current = getCurrentConditions(info, dockapp->prefs->units);
+	if (!current) {
+		g_free(error);
+		error = g_strdup("Retrieval failed");
+	} else if (!error)
+		icon = loadIcon(dockapp, gweather_info_get_icon_name(current),
+				&error);
+
+	if (error) {
 		WMSetLabelText(dockapp->text, "ERROR");
-
-		context = WMScreenRContext(dockapp->screen);
-		weather->icon = RLoadImage(
-			context, wstrconcat(dockapp->prefs->icondir,
-					    "/dialog-error.png"), 0);
-		if (weather->icon) {
-			RColor color;
-
-			color = WMGetRColorFromColor(
-				WMCreateNamedColor(dockapp->screen,
-						   dockapp->prefs->background,
-						   True));
-			RCombineImageWithColor(weather->icon, &color);
-			icon = WMCreatePixmapFromRImage(
-				dockapp->screen, weather->icon, 0);
-			WMSetLabelImage(dockapp->icon, icon);
-		}
-
-		WMSetBalloonTextForView(weather->errorText,
-					WMWidgetView(dockapp->icon));
+		icon = loadIcon(dockapp, "dialog-error", NULL);
+		balloon = error;
 
 		/* try again in 1 minute */
 		dockapp->minutesLeft = 1;
 	} else {
-		WMSetLabelText(dockapp->text, wstrconcat(weather->temp, "°"));
+		char *temp, *label;
 
-		icon = WMCreatePixmapFromRImage(dockapp->screen,
-						weather->icon, 0);
-		WMSetLabelImage(dockapp->icon, icon);
+		temp = getTemp(current, dockapp->prefs->units);
+		label = g_strconcat(temp, "°", NULL);
+		WMSetLabelText(dockapp->text, label);
+		g_free(label);
+		g_free(temp);
 
 		if (dockapp->showForecast)
-			WMSetBalloonTextForView(
-				getForecastText(weather, dockapp->prefs->days),
-				WMWidgetView(dockapp->icon));
+			balloon = getForecastText(info, current, dockapp->prefs);
 		else
-			WMSetBalloonTextForView(
-				getConditionsText(info),
-				WMWidgetView(dockapp->icon));
+			balloon = getConditionsText(current);
 	}
+
+	if (icon) {
+		WMSetLabelImage(dockapp->icon, icon);
+		WMReleasePixmap(icon);
+	}
+	WMSetBalloonTextForView(balloon, WMWidgetView(dockapp->icon));
+	g_free(balloon);
 
 	WMRedisplayWidget(dockapp->icon);
 	WMRedisplayWidget(dockapp->text);
-
-	freeWeather(weather);
 }
 
 static void updateDockapp(void *data)
