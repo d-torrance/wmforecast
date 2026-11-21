@@ -110,8 +110,8 @@ Copyright
 ---------
 
 ### wmforecast
-2014-2023 Doug Torrance  
-<dtorrance@piedmont.edu>  
+2014-2026 Doug Torrance  
+<dtorrance9@gatech.edu>  
 GNU General Public License v3+
 
 ### icons

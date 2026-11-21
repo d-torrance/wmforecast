@@ -1,4 +1,4 @@
-/* Copyright (C) 2014-2023 Doug Torrance <dtorrance@piedmont.edu>
+/* Copyright (C) 2014-2026 Doug Torrance <dtorrance9@gatech.edu>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@
 
 #include "wmforecast.h"
 
-#define COPYRIGHT_YEARS "2014-2023"
+#define COPYRIGHT_YEARS "2014-2026"
 
 #define icondir_warning(tried, current) \
 	wwarning("%s is not a valid icon directory; falling back to %s", \
