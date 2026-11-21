@@ -1,4 +1,4 @@
-/* Copyright (C) 2014-2023 Doug Torrance <dtorrance@piedmont.edu>
+/* Copyright (C) 2014-2026 Doug Torrance <dtorrance9@gatech.edu>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
 #include "wmforecast.h"
 
 #define APPLICATION_ID "org.friedcheese.wmforecast"
-#define CONTACT_INFO "dtorrance@piedmont.edu"
+#define CONTACT_INFO "dtorrance9@gatech.edu"
 
 #define round(x) (int)(x + 0.5)
 
