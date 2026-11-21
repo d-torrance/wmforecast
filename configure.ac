@@ -1,4 +1,4 @@
-AC_INIT([wmforecast], [1.9.0],
+AC_INIT([wmforecast], [1.9.1],
 	[https://github.com/d-torrance/wmforecast/issues],
 	[wmforecast], [http://wmforecast.friedcheese.org])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign -Wno-portability subdir-objects])

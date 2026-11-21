@@ -1,3 +1,14 @@
+version 1.9.1
+-------------
+* Release date: 2026-11-20
+* Fix a second copy of the dockapp appearing on the desktop when Window Maker
+  restarts, e.g., after changing the screen resolution.  Thanks to Rory Hinnen
+  for tracking down the cause and proposing a fix.
+* Don't show temperatures of 0° in the forecast when some temperatures are
+  missing.
+* Fix memory leaks.
+* Various behind-the-scenes changes.
+
 version 1.9.0
 -------------
 * Release date: 2023-01-04
